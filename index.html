@@ -56,7 +56,11 @@
     height: 64px;
   }
   .nav-brand { display: flex; align-items: center; gap: 0.75rem; }
-  .nav-logo { width: 38px; height: 38px; object-fit: contain; }
+  .nav-logo { 
+    width: auto; 
+    height: 38px; 
+    object-fit: contain; 
+  }
   .nav-title { font-family: 'Space Mono', monospace; font-size: 0.75rem; color: var(--upla-gold); line-height: 1.2; text-transform: uppercase; letter-spacing: 0.05em; }
   .nav-links { display: flex; gap: 2rem; list-style: none; }
   .nav-links a { color: var(--muted); text-decoration: none; font-size: 0.8rem; letter-spacing: 0.08em; text-transform: uppercase; transition: color 0.2s; font-family: 'Space Mono', monospace; }
@@ -69,7 +73,13 @@
   .hero-bg::after { content: ''; position: absolute; bottom: -20%; right: -10%; width: 50vw; height: 50vw; background: radial-gradient(circle, rgba(212,172,13,0.08) 0%, transparent 65%); animation: pulse 10s ease-in-out infinite alternate-reverse; }
   @keyframes pulse { from { transform: scale(1) translate(0,0); } to { transform: scale(1.1) translate(2%, 2%); } }
   .hero-inner { position: relative; z-index: 1; display: flex; flex-direction: column; align-items: center; text-align: center; gap: 2.5rem; max-width: 860px; }
-  .upla-emblem { width: 140px; height: auto; object-fit: contain; filter: drop-shadow(0 0 24px rgba(0,100,200,0.4)); animation: float 6s ease-in-out infinite; }
+  .upla-emblem { 
+    width: 160px; 
+    height: auto; 
+    object-fit: contain; 
+    filter: drop-shadow(0 0 24px rgba(0,100,200,0.4)); 
+    animation: float 6s ease-in-out infinite; 
+  }
   @keyframes float { 0%, 100% { transform: translateY(0px); } 50% { transform: translateY(-10px); } }
   .upla-label { font-family: 'Space Mono', monospace; font-size: 0.7rem; color: var(--upla-gold); letter-spacing: 0.2em; text-transform: uppercase; opacity: 0.9; }
   .hero-name { font-family: 'Sora', sans-serif; font-weight: 800; font-size: clamp(2.2rem, 6vw, 4.5rem); line-height: 1.05; background: linear-gradient(135deg, #fff 30%, var(--upla-gold) 80%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
@@ -564,8 +574,8 @@
 <!-- ═══════════════ NAV ═══════════════ -->
 <nav>
   <div class="nav-brand">
-    <img src="https://www.google.com/search?sca_esv=8019248285bfd55b&sxsrf=ANbL-n6Jp7FGZ_2tsv1U1G_2oG3Ix06l5A:1780002055754&udm=2&fbs=ADc_l-bpk8W4E-qsVlOvbGJcDwpn60DczFdcvPnuv8WQohHLTbSVldBrj9mdwFjfwIgEUgSngOnSDVho99FxfCho2PSKWFrG-0tujUbE5EZVZqGupTbQGV5NVpWJMM-DeTjCddJUlZf7WhJK-_N_NDzNGOL1FdZbmmd9QjT37DP41fycuHqkn3z5ytZO0y37a5ZgJt6CejlEaWmCQPueCJXw2lI1scKiZA&q=logo+upla&sa=X&sqi=2&ved=2ahUKEwjB_u2x8NyUAxWCqJUCHYChBEQQtKgLegQIFxAB&biw=1707&bih=932&dpr=1.5#sv=CAMSWBoyKhBlLWg4eEhDai15YWFTWDBNMg5oOHhIQ2oteWFhU1gwTToORzhDS3d2ZlItY2llR00gBCocCgZtb3NhaWMSEGUtaDh4SENqLXlhYVNYME0YADABOAAYByCBqdjWDjoASggQARgBIAEoAQ" class="nav-logo" alt="UPLA Logo">
-      <div class="nav-title">Matias Saforas Gomez<br>Portafolio Académico</div>
+    <img src="https://upla.edu.pe/web/wp-content/uploads/2025/06/upla-white.png" class="nav-logo" alt="UPLA Logo">
+    <div class="nav-title">Matias Saforas Gomez<br>Portafolio Académico</div>
   </div>
   <ul class="nav-links">
     <li><a href="#perfil">Perfil</a></li>
@@ -579,7 +589,7 @@
   <div class="hero-bg"></div>
   <div class="hero-inner">
     <div style="display:flex;flex-direction:column;align-items:center;gap:0.75rem;">
-      <img src="https://www.google.com/search?sca_esv=8019248285bfd55b&sxsrf=ANbL-n6Jp7FGZ_2tsv1U1G_2oG3Ix06l5A:1780002055754&udm=2&fbs=ADc_l-bpk8W4E-qsVlOvbGJcDwpn60DczFdcvPnuv8WQohHLTbSVldBrj9mdwFjfwIgEUgSngOnSDVho99FxfCho2PSKWFrG-0tujUbE5EZVZqGupTbQGV5NVpWJMM-DeTjCddJUlZf7WhJK-_N_NDzNGOL1FdZbmmd9QjT37DP41fycuHqkn3z5ytZO0y37a5ZgJt6CejlEaWmCQPueCJXw2lI1scKiZA&q=logo+upla&sa=X&sqi=2&ved=2ahUKEwjB_u2x8NyUAxWCqJUCHYChBEQQtKgLegQIFxAB&biw=1707&bih=932&dpr=1.5#sv=CAMSWBoyKhBlLWg4eEhDai15YWFTWDBNMg5oOHhIQ2oteWFhU1gwTToORzhDS3d2ZlItY2llR00gBCocCgZtb3NhaWMSEGUtaDh4SENqLXlhYVNYME0YADABOAAYByCBqdjWDjoASggQARgBIAEoAQ" class="nav-logo" alt="UPLA Logo">
+      <img src="https://upla.edu.pe/web/wp-content/uploads/2025/06/upla-white.png" class="upla-emblem" alt="UPLA Logo">
       <p class="upla-label">Universidad Peruana Los Andes — UPLA</p>
     </div>
     <div>
