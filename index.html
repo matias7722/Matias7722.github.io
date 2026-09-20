@@ -4,14 +4,21 @@
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700;900&family=Cormorant+Garamond:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
 :root{--gold:#C9A227;--gold2:#E8CE7A;--blood:#6E1B1B;--iron:#3B3B3B;--dark:#050403;--dark2:#0C0906;--panel:#14100B;--panel2:#1C160E;--border:rgba(201,162,39,.35);--text:#E9DFC5;--muted:#9C8F6E;--danger:#8B1E1E}
-*{box-sizing:border-box;margin:0;padding:0}html{scroll-behavior:smooth}body{background:var(--dark);color:var(--text);font-family:'Cormorant Garamond',serif;font-size:1.08rem;min-height:100vh;overflow-x:hidden}body:before{content:"";position:fixed;inset:0;background:radial-gradient(ellipse at 50% 0%,rgba(201,162,39,.06),transparent 60%),radial-gradient(ellipse at 50% 100%,rgba(110,27,27,.08),transparent 60%),repeating-linear-gradient(0deg,rgba(255,255,255,.012) 0px,transparent 1px,transparent 3px),repeating-linear-gradient(90deg,rgba(255,255,255,.012) 0px,transparent 1px,transparent 3px);pointer-events:none;z-index:0}h1,h2,h3{letter-spacing:.02em;font-family:'Cinzel',serif;font-weight:700}button,input{font:inherit}button{cursor:pointer;font-family:'Cinzel',serif}
-#login-screen{min-height:100vh;display:grid;place-items:center;padding:24px;position:relative;z-index:10;background:#000 url('login-bg.png') center/cover no-repeat}
-#login-screen:before{content:"";position:absolute;inset:0;background:radial-gradient(ellipse at 50% 45%,rgba(0,0,0,.15),rgba(0,0,0,.55) 75%);pointer-events:none}
-.login-card{position:relative;width:min(460px,100%);padding:38px 42px 34px;background:linear-gradient(180deg,rgba(10,9,7,.94),rgba(5,4,3,.96));border:1px solid var(--gold);outline:1px solid rgba(201,162,39,.25);outline-offset:5px;box-shadow:0 30px 100px rgba(0,0,0,.85),inset 0 0 60px rgba(0,0,0,.5);clip-path:polygon(0% 3%,4% 0%,96% 0%,100% 3%,100% 97%,96% 100%,4% 100%,0% 97%)}
+*{box-sizing:border-box;margin:0;padding:0}html{scroll-behavior:smooth}body{background:var(--dark);color:var(--text);font-family:'Cormorant Garamond',serif;font-size:1.08rem;min-height:100vh;overflow-x:hidden}body:before{content:"";position:fixed;inset:0;background:radial-gradient(ellipse at 50% 0%,rgba(201,162,39,.10),transparent 60%),radial-gradient(ellipse at 50% 100%,rgba(110,27,27,.14),transparent 60%),repeating-linear-gradient(0deg,rgba(255,255,255,.012) 0px,transparent 1px,transparent 3px),repeating-linear-gradient(90deg,rgba(255,255,255,.012) 0px,transparent 1px,transparent 3px),linear-gradient(180deg,rgba(5,4,3,.80),rgba(5,4,3,.62) 22%,rgba(5,4,3,.72) 55%,rgba(5,4,3,.93) 100%),url('fondo-trono.jpg') center 28%/cover no-repeat;pointer-events:none;z-index:0}h1,h2,h3{letter-spacing:.02em;font-family:'Cinzel',serif;font-weight:700}button,input,textarea{font:inherit}button{cursor:pointer;font-family:'Cinzel',serif}
+:focus-visible{outline:2px solid var(--gold2);outline-offset:2px}
+#login-screen{min-height:100vh;display:grid;place-items:center;padding:24px;position:relative;z-index:10;background:#000 url('fondo-trono.jpg') center 32%/cover no-repeat}
+#login-screen:before{content:"";position:absolute;inset:0;background:radial-gradient(ellipse at 50% 45%,rgba(0,0,0,.12),rgba(0,0,0,.62) 78%),linear-gradient(180deg,rgba(0,0,0,.45),rgba(0,0,0,.35) 40%,rgba(0,0,0,.7));pointer-events:none}
+#login-screen:after{content:"";position:absolute;inset:0;background:repeating-linear-gradient(0deg,rgba(255,255,255,.012) 0px,transparent 1px,transparent 3px);pointer-events:none;mix-blend-mode:overlay}
+.login-card{position:relative;width:min(460px,100%);padding:38px 42px 34px;background:linear-gradient(180deg,rgba(10,9,7,.94),rgba(5,4,3,.96));border:1px solid var(--gold);outline:1px solid rgba(201,162,39,.25);outline-offset:5px;box-shadow:0 30px 100px rgba(0,0,0,.85),inset 0 0 60px rgba(0,0,0,.5);clip-path:polygon(0% 3%,4% 0%,96% 0%,100% 3%,100% 97%,96% 100%,4% 100%,0% 97%);animation:fadeUp .6s ease}
+@keyframes fadeUp{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:translateY(0)}}
 .login-crest{width:74px;height:74px;margin:-70px auto 18px;position:relative;display:grid;place-items:center;background:radial-gradient(circle,rgba(5,4,3,.97) 60%,transparent 100%)}
 .login-crest svg{width:60px;height:60px;filter:drop-shadow(0 3px 6px rgba(0,0,0,.8))}
 .login-title{text-align:center;font-size:2.05rem;color:var(--gold2);text-transform:uppercase;letter-spacing:.08em;text-shadow:0 2px 10px rgba(0,0,0,.7)}
 .login-sub{text-align:center;color:var(--muted);font-size:.78rem;margin-top:10px;letter-spacing:.22em;text-transform:uppercase;font-style:normal}
+.login-tabs{display:flex;gap:8px;margin-top:20px}
+.login-tab{flex:1;padding:11px 8px;border:1px solid var(--border);background:rgba(5,4,3,.6);color:var(--muted);font:700 .72rem 'Cinzel',serif;text-transform:uppercase;letter-spacing:.05em;transition:.2s}
+.login-tab.active{border-color:var(--gold);color:var(--gold2);background:linear-gradient(180deg,rgba(201,162,39,.14),transparent)}
+.login-tab:hover{color:var(--gold2)}
 .login-divider{display:flex;align-items:center;gap:12px;margin:18px 0 6px;color:var(--gold)}
 .login-divider:before,.login-divider:after{content:"";flex:1;height:1px;background:linear-gradient(90deg,transparent,var(--border),transparent)}
 .login-divider span{font-size:.7rem;letter-spacing:.1em}
@@ -19,7 +26,7 @@
 .login-foot{text-align:center;color:var(--muted);font-size:.85rem;margin-top:2px;font-style:italic;text-transform:none;letter-spacing:normal}
 .login-form{display:grid;gap:16px;margin-top:22px}
 label{display:none}
-.input-group{position:relative;display:flex;align-items:center;border:1px solid var(--border);background:rgba(5,4,3,.7)}
+.input-group{position:relative;display:flex;align-items:center;border:1px solid var(--border);background:rgba(5,4,3,.7);transition:.2s}
 .input-group svg{width:18px;height:18px;margin-left:14px;flex-shrink:0;color:var(--muted)}
 .input-group:focus-within{border-color:var(--gold2)}
 .input-group:focus-within svg{color:var(--gold2)}
@@ -35,34 +42,116 @@ input::placeholder{color:var(--muted);opacity:.8}
 .checkbox-label input:checked:after{content:'✓';position:absolute;inset:0;display:grid;place-items:center;font-size:.7rem;color:#1a1204}
 .forgot-link{color:var(--muted);font-size:.85rem;text-decoration:none;font-style:italic}
 .forgot-link:hover{color:var(--gold2)}
-.login-submit{margin-top:6px;padding:15px;border:1px solid var(--gold);background:linear-gradient(180deg,#8a2323,var(--blood) 55%,#4a1010);color:var(--gold2);font-weight:700;text-transform:uppercase;letter-spacing:.14em;font-size:.88rem;box-shadow:0 10px 25px rgba(110,27,27,.45),inset 0 1px 0 rgba(255,255,255,.08)}
+.login-submit{margin-top:6px;padding:15px;border:1px solid var(--gold);background:linear-gradient(180deg,#8a2323,var(--blood) 55%,#4a1010);color:var(--gold2);font-weight:700;text-transform:uppercase;letter-spacing:.14em;font-size:.88rem;box-shadow:0 10px 25px rgba(110,27,27,.45),inset 0 1px 0 rgba(255,255,255,.08);transition:.2s}
 .login-submit:hover{filter:brightness(1.12)}
-.register-btn{width:100%;padding:13px;border:1px solid var(--border);background:transparent;color:var(--text);font-weight:700;text-transform:uppercase;letter-spacing:.12em;font-size:.82rem}
+.register-btn{width:100%;padding:13px;border:1px solid var(--border);background:transparent;color:var(--text);font-weight:700;text-transform:uppercase;letter-spacing:.12em;font-size:.82rem;transition:.2s}
 .register-btn:hover{border-color:var(--gold);color:var(--gold2)}
 .login-error{display:none;color:#e08b7b;font-size:.8rem;text-align:center;font-style:italic}
-.hint{font-size:.74rem;color:var(--muted);text-align:center;margin-top:18px;letter-spacing:.02em;opacity:.75}
-#app-screen{display:none;position:relative;z-index:1}nav{position:sticky;top:0;z-index:20;height:70px;display:flex;align-items:center;justify-content:space-between;padding:0 clamp(18px,4vw,56px);background:rgba(5,4,3,.94);backdrop-filter:blur(12px);border-bottom:1px solid var(--border)}.nav-brand{font:700 .74rem 'Cinzel',serif;color:var(--gold2);line-height:1.5;text-transform:uppercase;letter-spacing:.06em}.nav-links{display:flex;align-items:center;gap:26px;list-style:none}.nav-links a{font:700 .7rem 'Cinzel',serif;color:var(--muted);text-decoration:none;text-transform:uppercase;letter-spacing:.08em}.nav-links a:hover{color:var(--gold2)}.logout{border:1px solid var(--border);background:transparent;color:var(--text);padding:9px 14px;font-size:.72rem;text-transform:uppercase;letter-spacing:.06em}
-.hero{min-height:calc(100vh - 70px);display:grid;place-items:center;padding:70px 24px 54px;border-bottom:1px solid var(--border);background:radial-gradient(ellipse at 50% 30%,rgba(110,27,27,.08),transparent 65%)}.hero-inner{max-width:920px;text-align:center}.eyebrow,.section-label{font:700 .75rem 'Cinzel',serif;color:var(--gold);text-transform:uppercase;letter-spacing:.18em}.hero-name{font-family:'Cinzel',serif;font-size:clamp(2.6rem,7.5vw,5.8rem);line-height:1.05;margin:24px 0;color:var(--text);text-transform:uppercase;letter-spacing:.03em}.hero-name span{background:linear-gradient(180deg,var(--gold2),var(--gold));-webkit-background-clip:text;background-clip:text;color:transparent}.hero-desc{max-width:720px;margin:auto;color:var(--muted);line-height:1.9;font-size:1.12rem}.profile-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:var(--border);border:1px solid var(--border);margin-top:40px;text-align:left}.profile-grid div{background:var(--panel);padding:19px}.profile-grid small{display:block;font:700 .66rem 'Cinzel',serif;color:var(--gold);text-transform:uppercase;letter-spacing:.1em;margin-bottom:7px}.profile-grid strong{font-size:.92rem;font-weight:600}
-main section{padding:90px clamp(18px,6vw,90px);max-width:1250px;margin:auto}.section-title{font-family:'Cinzel',serif;font-size:clamp(1.9rem,3.6vw,2.9rem);margin:10px 0 34px;text-transform:uppercase;letter-spacing:.03em;color:var(--gold2)}.codex-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}.codex-card,.week-card,.question-card{background:linear-gradient(180deg,var(--panel),var(--panel2));border:1px solid var(--border);border-top:2px solid var(--gold);padding:24px;position:relative}.codex-card span{font:700 .72rem 'Cinzel',serif;color:var(--gold)}.codex-card h3{font-size:1.05rem;margin:25px 0 10px;color:var(--gold2);text-transform:uppercase;letter-spacing:.03em}.codex-card p,.week-card p,.question-card p{color:var(--muted);font-size:.98rem;line-height:1.75}
-#unidades{max-width:none;background:var(--dark2);border-block:1px solid var(--border)}#unidades>.inner{max-width:1120px;margin:auto}.unit-tabs{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:24px}.unit-tab{border:1px solid var(--border);background:var(--panel);color:var(--muted);padding:12px 18px;font:700 .72rem 'Cinzel',serif;text-transform:uppercase;letter-spacing:.05em}.unit-tab.active{background:linear-gradient(180deg,var(--blood),#4a1010);color:var(--gold2);border-color:var(--gold)}.unit-tab.locked{opacity:.4}.unit-panel{display:none}.unit-panel.active{display:block}.capacity{border-left:3px solid var(--gold);background:var(--panel);padding:19px;color:var(--muted);line-height:1.7;margin-bottom:18px;font-style:italic}.weeks-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:14px}.week-card{position:relative}.week-num{font:700 .72rem 'Cinzel',serif;color:var(--gold2);text-transform:uppercase;letter-spacing:.08em}.week-card h3{font-size:1.32rem;margin:14px 0 18px;color:var(--gold2);text-transform:uppercase;letter-spacing:.025em;line-height:1.32;text-shadow:0 2px 6px rgba(0,0,0,.55);position:relative;padding-bottom:15px}
+.hint{font-size:.74rem;color:var(--muted);text-align:center;margin-top:18px;letter-spacing:.02em;opacity:.85}
+.fill-demo-btn{display:block;width:100%;margin-top:10px;padding:9px;border:1px dashed var(--border);background:transparent;color:var(--muted);font:700 .66rem 'Cinzel',serif;text-transform:uppercase;letter-spacing:.05em;transition:.2s}
+.fill-demo-btn:hover{border-color:var(--gold);color:var(--gold2)}
+#app-screen{display:none;position:relative;z-index:1}
+nav{position:sticky;top:0;z-index:20;min-height:70px;display:flex;align-items:center;justify-content:space-between;padding:0 clamp(18px,4vw,56px);background:rgba(5,4,3,.94);backdrop-filter:blur(12px);border-bottom:1px solid var(--border);flex-wrap:wrap;gap:10px 0}
+.nav-brand{font:700 .74rem 'Cinzel',serif;color:var(--gold2);line-height:1.5;text-transform:uppercase;letter-spacing:.06em;padding:14px 0}
+.nav-toggle{display:none;width:36px;height:36px;align-items:center;justify-content:center;border:1px solid var(--border);background:transparent;color:var(--text);font-size:1.1rem}
+.nav-links{display:flex;align-items:center;gap:20px;list-style:none;flex-wrap:wrap}
+.nav-links a{font:700 .7rem 'Cinzel',serif;color:var(--muted);text-decoration:none;text-transform:uppercase;letter-spacing:.08em}
+.nav-links a:hover{color:var(--gold2)}
+.logout{border:1px solid var(--border);background:transparent;color:var(--text);padding:9px 14px;font-size:.72rem;text-transform:uppercase;letter-spacing:.06em;transition:.2s;white-space:nowrap}
+.logout:hover{border-color:var(--gold);color:var(--gold2)}
+#editModeBtn.active{background:linear-gradient(180deg,var(--gold2),var(--gold));color:#1a1204;border-color:var(--gold)}
+.role-badge{font:700 .66rem 'Cinzel',serif;color:var(--gold2);border:1px solid var(--border);padding:7px 12px;text-transform:uppercase;letter-spacing:.06em;background:rgba(201,162,39,.08);white-space:nowrap}
+body[data-role="user"] .role-badge{color:var(--muted)}
+.admin-flag{display:none}
+body[data-role="admin"] li.admin-flag{display:list-item}
+.helper-note{grid-column:1/-1;color:var(--muted);font-size:.85rem;font-style:italic;border-left:3px solid var(--gold);padding:12px 16px;background:rgba(255,255,255,.02);margin-top:10px}
+.edit-ctrl{display:none}
+body[data-editmode="1"] .entity-toolbar.edit-ctrl{display:flex}
+body[data-editmode="1"] button.edit-ctrl{display:inline-flex}
+body[data-editmode="1"] span.edit-ctrl{display:inline-flex}
+.hero{position:relative;overflow:hidden;min-height:calc(100vh - 70px);display:grid;place-items:center;padding:70px 24px 54px;border-bottom:1px solid var(--border);
+  background:
+    linear-gradient(180deg,rgba(5,4,3,.32) 0%,rgba(5,4,3,.38) 35%,rgba(5,4,3,.72) 78%,rgba(5,4,3,.94) 100%),
+    radial-gradient(ellipse at 50% 30%,rgba(110,27,27,.18),transparent 65%),
+    url('fondo-trono.jpg') center 30%/cover fixed no-repeat;
+}
+.hero-embers{position:absolute;inset:0;pointer-events:none;overflow:hidden;z-index:1}
+.hero-inner{position:relative;z-index:2;max-width:920px;text-align:center;animation:fadeUp .7s ease}
+.eyebrow,.section-label{font:700 .75rem 'Cinzel',serif;color:var(--gold);text-transform:uppercase;letter-spacing:.18em}
+.eyebrow{display:inline-block;padding:6px 16px;border:1px solid var(--border);background:rgba(5,4,3,.45);backdrop-filter:blur(3px)}
+.hero-name{font-family:'Cinzel',serif;font-size:clamp(2.6rem,7.5vw,5.8rem);line-height:1.05;margin:24px 0;color:var(--text);text-transform:uppercase;letter-spacing:.03em;text-shadow:0 6px 30px rgba(0,0,0,.75)}
+.hero-name span{background:linear-gradient(120deg,var(--gold) 0%,var(--gold2) 22%,#fff6d8 42%,var(--gold2) 62%,var(--gold) 100%);background-size:220% auto;-webkit-background-clip:text;background-clip:text;color:transparent;animation:shimmer 7s linear infinite}
+@keyframes shimmer{to{background-position:-220% center}}
+@media(max-width:800px){.hero{background:linear-gradient(180deg,rgba(5,4,3,.4) 0%,rgba(5,4,3,.45) 35%,rgba(5,4,3,.78) 78%,rgba(5,4,3,.95) 100%),radial-gradient(ellipse at 50% 30%,rgba(110,27,27,.18),transparent 65%),url('fondo-trono.jpg') center 30%/cover no-repeat}}
+.hero-desc{max-width:720px;margin:auto;color:var(--muted);line-height:1.9;font-size:1.12rem}
+.profile-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:var(--border);border:1px solid var(--border);margin-top:40px;text-align:left}
+.profile-grid div{background:var(--panel);padding:19px}
+.profile-grid small{display:block;font:700 .66rem 'Cinzel',serif;color:var(--gold);text-transform:uppercase;letter-spacing:.1em;margin-bottom:7px}
+.profile-grid strong{font-size:.92rem;font-weight:600}
+main section{padding:90px clamp(18px,6vw,90px);max-width:1250px;margin:auto}
+.section-title{font-family:'Cinzel',serif;font-size:clamp(1.9rem,3.6vw,2.9rem);margin:10px 0 34px;text-transform:uppercase;letter-spacing:.03em;color:var(--gold2);position:relative}
+.section-title:before{content:'❖';display:block;color:var(--gold);font-size:.85rem;letter-spacing:.35em;margin-bottom:12px}
+.codex-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}
+.codex-card,.week-card,.question-card{background:linear-gradient(180deg,var(--panel),var(--panel2));border:1px solid var(--border);border-top:2px solid var(--gold);padding:24px;position:relative;transition:.2s;overflow:hidden}
+.codex-card:before{content:'';position:absolute;inset:0;background:radial-gradient(circle at 50% -10%,rgba(201,162,39,.14),transparent 60%);opacity:0;transition:opacity .3s}
+.codex-card:hover:before{opacity:1}
+.codex-emblem{width:48px;height:48px;margin-bottom:16px;border:1px solid var(--gold);border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:'Cinzel',serif;font-weight:700;font-size:1.15rem;color:var(--gold2);background:radial-gradient(circle,rgba(201,162,39,.18),rgba(5,4,3,.4) 72%);box-shadow:inset 0 0 12px rgba(0,0,0,.5);position:relative;z-index:1;transition:.3s}
+.codex-card:hover .codex-emblem{box-shadow:inset 0 0 12px rgba(0,0,0,.5),0 0 18px rgba(201,162,39,.5);transform:scale(1.08)}
+.codex-card span{font:700 .72rem 'Cinzel',serif;color:var(--gold)}
+.codex-card h3{font-size:1.05rem;margin:20px 0 10px;color:var(--gold2);text-transform:uppercase;letter-spacing:.03em;position:relative;z-index:1}
+.codex-card p{position:relative;z-index:1}
+.codex-card p,.week-card p,.question-card p{color:var(--muted);font-size:.98rem;line-height:1.75}
+#unidades{max-width:none;background:var(--dark2);border-block:1px solid var(--border)}
+#unidades>.inner{max-width:1120px;margin:auto}
+.unit-tabs{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:24px}
+.unit-tab{border:1px solid var(--border);background:var(--panel);color:var(--muted);padding:12px 18px;font:700 .72rem 'Cinzel',serif;text-transform:uppercase;letter-spacing:.05em;display:inline-flex;align-items:center;gap:8px;transition:.2s}
+.unit-tab:hover:not(.active){border-color:var(--gold2);color:var(--gold2);transform:translateY(-2px)}
+.unit-tab.active{background:linear-gradient(180deg,var(--blood),#4a1010);color:var(--gold2);border-color:var(--gold);box-shadow:0 8px 22px rgba(110,27,27,.4)}
+.unit-tab.locked{opacity:.55}
+.unit-tab.locked.active{opacity:1}
+.unit-icon{font-size:.95rem}
+.lock-toggle{border:1px solid var(--border);background:rgba(0,0,0,.3);border-radius:0;width:22px;height:22px;align-items:center;justify-content:center;font-size:.75rem}
+.lock-toggle:hover{border-color:var(--gold2)}
+.capacity{border-left:3px solid var(--gold);background:linear-gradient(90deg,var(--panel),var(--panel2));padding:19px;color:var(--muted);line-height:1.7;margin-bottom:18px;font-style:italic;display:flex;align-items:flex-start;gap:14px;flex-wrap:wrap;box-shadow:0 10px 30px rgba(0,0,0,.25)}
+.capacity>span:first-child{flex-shrink:0;font-size:1.3rem;filter:drop-shadow(0 0 4px rgba(201,162,39,.5))}
+.capacity-text{flex:1;min-width:220px}
+.weeks-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:14px}
+.week-card{position:relative}
+.week-num{font:700 .72rem 'Cinzel',serif;color:var(--gold2);text-transform:uppercase;letter-spacing:.08em}
+.week-card h3{font-size:1.32rem;margin:14px 0 18px;color:var(--gold2);text-transform:uppercase;letter-spacing:.025em;line-height:1.32;text-shadow:0 2px 6px rgba(0,0,0,.55);position:relative;padding-bottom:15px}
 .week-card h3::before{content:'❖';display:block;color:var(--gold);font-size:.7rem;margin-bottom:8px;letter-spacing:.3em}
-.week-card h3::after{content:'';position:absolute;left:0;bottom:0;width:52px;height:2px;background:linear-gradient(90deg,var(--gold),transparent)}.progress{height:4px;background:var(--dark);margin:22px 0 8px}.progress i{display:block;height:100%;background:linear-gradient(90deg,var(--blood),var(--gold))}.week-card small{font:400 .68rem 'Cinzel',serif;color:var(--muted);text-transform:uppercase;letter-spacing:.04em}
-.questions-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px}.question-card{display:grid;grid-template-columns:44px 1fr;gap:14px;transition:.2s}.question-card:hover{border-color:var(--gold2);transform:translateY(-2px)}.q-number{font:700 .74rem 'Cinzel',serif;color:var(--gold2);border-right:1px solid var(--border);padding-top:3px}.question-card h3{font-size:1rem;margin-bottom:9px;color:var(--text)}footer{padding:35px 20px;text-align:center;border-top:1px solid var(--border);color:var(--muted);font-size:.8rem;font-family:'Cinzel',serif;text-transform:uppercase;letter-spacing:.06em}
-.bot-toggle{position:fixed;right:22px;bottom:22px;z-index:30;width:54px;height:54px;border:1px solid var(--gold);background:linear-gradient(180deg,var(--gold2),var(--gold));color:#1a1204;font-size:1.3rem;box-shadow:0 12px 35px rgba(0,0,0,.55);border-radius:2px}.bot-panel{display:none;position:fixed;right:22px;bottom:86px;z-index:30;width:min(360px,calc(100vw - 28px));background:var(--panel);border:1px solid var(--border);box-shadow:0 20px 60px rgba(0,0,0,.7)}.bot-panel.open{display:block}.bot-head{padding:15px 16px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;font-family:'Cinzel',serif;text-transform:uppercase;font-size:.8rem;letter-spacing:.06em}.bot-messages{height:230px;overflow:auto;padding:15px;display:grid;gap:10px}.msg{padding:11px;background:var(--dark2);font-size:.9rem;line-height:1.6;border-left:2px solid var(--gold)}.bot-form{display:flex;border-top:1px solid var(--border)}.bot-form input{border:0}.bot-form button{width:48px;border:0;background:var(--blood);color:var(--gold2)}
-@media(max-width:800px){nav{height:auto;padding:14px 18px;align-items:flex-start}.nav-links{gap:10px;flex-wrap:wrap;justify-content:flex-end}.nav-links a{font-size:.6rem}.profile-grid,.codex-grid,.weeks-grid,.questions-grid{grid-template-columns:1fr 1fr}.hero{min-height:auto}}
-@media(max-width:560px){.nav-brand{display:none}nav{justify-content:center}.profile-grid,.codex-grid,.weeks-grid,.questions-grid{grid-template-columns:1fr}main section{padding-block:65px}.question-card{grid-template-columns:34px 1fr}}
-.card-pdf-thumb{width:100%;height:110px;background:#0A0705;border:1px solid var(--border);border-radius:0;display:flex;align-items:center;justify-content:center;overflow:hidden;position:relative;margin:14px 0;cursor:pointer}
+.week-card h3::after{content:'';position:absolute;left:0;bottom:0;width:52px;height:2px;background:linear-gradient(90deg,var(--gold),transparent)}
+.progress{height:6px;background:var(--dark);margin:22px 0 8px;border-radius:3px;overflow:hidden;box-shadow:inset 0 0 0 1px rgba(255,255,255,.04)}
+.progress i{display:block;height:100%;background:linear-gradient(90deg,var(--blood),var(--gold),var(--gold2));background-size:200% 100%;transition:width 1.1s cubic-bezier(.2,.8,.2,1);position:relative;animation:progressShine 3.5s linear infinite}
+@keyframes progressShine{to{background-position:-200% 0}}
+.week-card small{font:400 .68rem 'Cinzel',serif;color:var(--muted);text-transform:uppercase;letter-spacing:.04em}
+.questions-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px}
+.question-card{display:grid;grid-template-columns:44px 1fr;gap:14px}
+.question-card:hover{border-color:var(--gold2);transform:translateY(-2px)}
+.q-number{font:700 .74rem 'Cinzel',serif;color:var(--gold2);border-right:1px solid var(--border);padding-top:3px}
+.question-card h3{font-size:1rem;margin-bottom:9px;color:var(--text)}
+footer{padding:35px 20px;text-align:center;border-top:1px solid var(--border);color:var(--muted);font-size:.8rem;font-family:'Cinzel',serif;text-transform:uppercase;letter-spacing:.06em;position:relative;z-index:1}
+.bot-toggle{position:fixed;right:22px;bottom:22px;z-index:30;width:54px;height:54px;border:1px solid var(--gold);background:linear-gradient(180deg,var(--gold2),var(--gold));color:#1a1204;font-size:1.3rem;box-shadow:0 12px 35px rgba(0,0,0,.55);border-radius:2px}
+.bot-panel{display:none;position:fixed;right:22px;bottom:86px;z-index:30;width:min(360px,calc(100vw - 28px));background:var(--panel);border:1px solid var(--border);box-shadow:0 20px 60px rgba(0,0,0,.7)}
+.bot-panel.open{display:block}
+.bot-head{padding:15px 16px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;font-family:'Cinzel',serif;text-transform:uppercase;font-size:.8rem;letter-spacing:.06em}
+.bot-messages{height:230px;overflow:auto;padding:15px;display:grid;gap:10px}
+.msg{padding:11px;background:var(--dark2);font-size:.9rem;line-height:1.6;border-left:2px solid var(--gold)}
+.bot-form{display:flex;border-top:1px solid var(--border)}
+.bot-form input{border:0}
+.bot-form button{width:48px;border:0;background:var(--blood);color:var(--gold2)}
+.card-pdf-thumb{width:100%;height:110px;background:#0A0705;border:1px solid var(--border);display:flex;align-items:center;justify-content:center;overflow:hidden;position:relative;margin:14px 0;cursor:pointer}
 .card-pdf-thumb canvas{max-width:100%;max-height:100%;object-fit:contain}
 .card-pdf-thumb .thumb-placeholder{display:flex;flex-direction:column;align-items:center;gap:8px;color:var(--muted);font:400 .7rem 'Cinzel',serif;text-transform:uppercase;letter-spacing:.06em}
 .card-pdf-thumb .thumb-placeholder svg{width:30px;height:30px;opacity:.5;color:var(--gold)}
 .card-pdf-thumb:hover .thumb-placeholder{color:var(--gold2)}
 .card-actions{display:flex;gap:8px;align-items:center;margin-top:10px}
-.preview-btn{display:inline-flex;align-items:center;gap:7px;padding:10px 14px;background:linear-gradient(180deg,var(--blood),#4a1010);border:1px solid var(--gold);color:var(--gold2);border-radius:0;font:700 .7rem 'Cinzel',serif;letter-spacing:.06em;text-transform:uppercase;cursor:pointer;text-decoration:none;transition:.2s;flex:1;justify-content:center}
+.preview-btn{display:inline-flex;align-items:center;gap:7px;padding:10px 14px;background:linear-gradient(180deg,var(--blood),#4a1010);border:1px solid var(--gold);color:var(--gold2);font:700 .7rem 'Cinzel',serif;letter-spacing:.06em;text-transform:uppercase;cursor:pointer;text-decoration:none;transition:.2s;flex:1;justify-content:center}
 .preview-btn:hover{filter:brightness(1.2)}
-.download-btn{display:inline-flex;align-items:center;justify-content:center;padding:10px 13px;background:transparent;border:1px solid var(--gold);color:var(--gold2);border-radius:0;cursor:pointer;text-decoration:none;transition:.2s}
+.download-btn{display:inline-flex;align-items:center;justify-content:center;padding:10px 13px;background:transparent;border:1px solid var(--gold);color:var(--gold2);cursor:pointer;text-decoration:none;transition:.2s}
 .download-btn:hover{background:var(--gold);color:#1a1204}
 .download-btn svg,.preview-btn svg{width:13px;height:13px;fill:currentColor;flex-shrink:0}
-.questions-btn{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;margin-top:12px;padding:11px 14px;background:transparent;border:1px dashed var(--gold);color:var(--gold2);border-radius:0;font:700 .7rem 'Cinzel',serif;letter-spacing:.06em;text-transform:uppercase;cursor:pointer;transition:.2s}
+.questions-btn{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;margin-top:12px;padding:11px 14px;background:transparent;border:1px dashed var(--gold);color:var(--gold2);font:700 .7rem 'Cinzel',serif;letter-spacing:.06em;text-transform:uppercase;cursor:pointer;transition:.2s}
 .questions-btn:hover{background:rgba(201,162,39,.1)}
 .questions-panel{display:none;grid-column:1/-1;background:var(--panel);border:1px solid var(--border);border-top:3px solid var(--gold);padding:26px;margin-top:14px}
 .questions-panel.open{display:block}
@@ -78,43 +167,43 @@ main section{padding:90px clamp(18px,6vw,90px);max-width:1250px;margin:auto}.sec
 .pdf-modal-header{background:var(--panel2);border-bottom:1px solid var(--border);padding:14px 20px;display:flex;align-items:center;gap:14px;flex-shrink:0}
 .pdf-modal-folder{font:700 .95rem 'Cinzel',serif;color:var(--gold2);text-transform:uppercase;letter-spacing:.03em}
 .pdf-modal-subtitle{font:400 .72rem 'Cinzel',serif;color:var(--muted);margin-top:2px;text-transform:uppercase;letter-spacing:.04em}
-.pdf-modal-close{margin-left:auto;background:rgba(255,255,255,.05);border:1px solid var(--border);color:var(--muted);width:32px;height:32px;border-radius:0;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:1.05rem;flex-shrink:0}
+.pdf-modal-close{margin-left:auto;background:rgba(255,255,255,.05);border:1px solid var(--border);color:var(--muted);width:32px;height:32px;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:1.05rem;flex-shrink:0}
 .pdf-modal-close:hover{background:var(--blood);color:var(--gold2)}
 .pdf-modal-body{display:flex;flex:1;overflow:hidden}
 .pdf-sidebar{width:170px;flex-shrink:0;background:var(--dark2);border-right:1px solid var(--border);overflow-y:auto;padding:12px 8px;display:flex;flex-direction:column;gap:8px}
-.pdf-thumb-item{cursor:pointer;border-radius:0;overflow:hidden;border:2px solid transparent;background:var(--panel2);display:flex;flex-direction:column;align-items:center;padding:6px 6px 5px;gap:5px}
+.pdf-thumb-item{cursor:pointer;overflow:hidden;border:2px solid transparent;background:var(--panel2);display:flex;flex-direction:column;align-items:center;padding:6px 6px 5px;gap:5px}
 .pdf-thumb-item:hover{border-color:rgba(201,162,39,.5)}
 .pdf-thumb-item.active{border-color:var(--gold)}
-.pdf-thumb-item canvas{width:100%;border-radius:0;display:block}
+.pdf-thumb-item canvas{width:100%;display:block}
 .pdf-thumb-num{font:400 .62rem 'Cinzel',serif;color:var(--muted)}
 .pdf-thumb-item.active .pdf-thumb-num{color:var(--gold2)}
 .pdf-viewer-area{flex:1;display:flex;flex-direction:column;overflow:hidden}
 .pdf-toolbar{background:var(--panel2);border-bottom:1px solid var(--border);padding:10px 16px;display:flex;align-items:center;gap:12px;flex-shrink:0;flex-wrap:wrap}
 .pdf-toolbar-group{display:flex;align-items:center;gap:7px}
-.pdf-filename{font:400 .72rem 'Cinzel',serif;color:var(--text);background:rgba(255,255,255,.04);border:1px solid var(--border);border-radius:0;padding:5px 12px;letter-spacing:.03em}
-.pdf-nav-btn{background:rgba(255,255,255,.05);border:1px solid var(--border);color:var(--text);width:28px;height:28px;border-radius:0;cursor:pointer;display:flex;align-items:center;justify-content:center}
+.pdf-filename{font:400 .72rem 'Cinzel',serif;color:var(--text);background:rgba(255,255,255,.04);border:1px solid var(--border);padding:5px 12px;letter-spacing:.03em}
+.pdf-nav-btn{background:rgba(255,255,255,.05);border:1px solid var(--border);color:var(--text);width:28px;height:28px;cursor:pointer;display:flex;align-items:center;justify-content:center}
 .pdf-nav-btn:hover:not(:disabled){background:var(--blood)}
 .pdf-nav-btn:disabled{opacity:.3;cursor:not-allowed}
 .pdf-page-info{font:400 .7rem 'Cinzel',serif;color:var(--muted);display:flex;align-items:center;gap:5px}
-.pdf-page-input{background:rgba(255,255,255,.05);border:1px solid var(--border);color:var(--text);font:400 .7rem 'Cinzel',serif;text-align:center;width:36px;height:26px;border-radius:0}
-.pdf-zoom-btn{background:rgba(255,255,255,.05);border:1px solid var(--border);color:var(--text);height:26px;padding:0 10px;border-radius:0;cursor:pointer;font:400 .68rem 'Cinzel',serif}
+.pdf-page-input{background:rgba(255,255,255,.05);border:1px solid var(--border);color:var(--text);font:400 .7rem 'Cinzel',serif;text-align:center;width:36px;height:26px}
+.pdf-zoom-btn{background:rgba(255,255,255,.05);border:1px solid var(--border);color:var(--text);height:26px;padding:0 10px;cursor:pointer;font:400 .68rem 'Cinzel',serif}
 .pdf-zoom-btn:hover{background:rgba(255,255,255,.1)}
 .pdf-zoom-level{font:400 .68rem 'Cinzel',serif;color:var(--muted);min-width:36px;text-align:center}
 .toolbar-sep{width:1px;height:18px;background:var(--border);margin:0 2px}
 .pdf-canvas-area{flex:1;overflow:auto;display:flex;align-items:flex-start;justify-content:center;padding:22px;background:var(--dark)}
-#pdf-main-canvas{border-radius:0;box-shadow:0 8px 45px rgba(0,0,0,.7);display:block;background:#fff;max-width:100%}
+#pdf-main-canvas{box-shadow:0 8px 45px rgba(0,0,0,.7);display:block;background:#fff;max-width:100%}
 .pdf-loading{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;color:var(--muted);font:400 .78rem 'Cinzel',serif;height:100%;width:100%;text-transform:uppercase;letter-spacing:.04em}
 .pdf-spinner{width:34px;height:34px;border:3px solid rgba(201,162,39,.2);border-top-color:var(--gold);border-radius:50%;animation:spin .8s linear infinite}
 @keyframes spin{to{transform:rotate(360deg)}}
 .pdf-modal-footer{background:var(--panel2);border-top:1px solid var(--border);padding:13px 20px;display:flex;gap:10px;align-items:center;flex-shrink:0}
 .pdf-footer-info{flex:1;font:400 .68rem 'Cinzel',serif;color:var(--muted);text-transform:uppercase;letter-spacing:.03em}
-.btn-fullscreen,.btn-download-modal{display:inline-flex;align-items:center;gap:7px;padding:9px 18px;border:1px solid var(--gold);color:var(--gold2);border-radius:0;font:700 .78rem 'Cinzel',serif;cursor:pointer;text-decoration:none;text-transform:uppercase;letter-spacing:.04em}
+.btn-fullscreen,.btn-download-modal{display:inline-flex;align-items:center;gap:7px;padding:9px 18px;border:1px solid var(--gold);color:var(--gold2);font:700 .78rem 'Cinzel',serif;cursor:pointer;text-decoration:none;text-transform:uppercase;letter-spacing:.04em}
 .btn-fullscreen{background:linear-gradient(180deg,#2a2a2a,var(--iron))}
 .btn-download-modal{background:linear-gradient(180deg,var(--blood),#4a1010)}
 .btn-fullscreen:hover,.btn-download-modal:hover{filter:brightness(1.2)}
 @media(max-width:700px){.pdf-sidebar{display:none}.pdf-modal{height:94vh}}
 .activities-wrap{display:grid;gap:16px;margin:14px 0 4px}
-.activity-block{border:1px solid var(--border);background:rgba(255,255,255,.015);padding:12px}
+.activity-block{border:1px solid var(--border);background:rgba(255,255,255,.015);padding:12px;position:relative}
 .activity-label{display:flex;align-items:center;gap:8px;font:700 .7rem 'Cinzel',serif;color:var(--gold2);text-transform:uppercase;letter-spacing:.06em;margin-bottom:2px}
 .activity-block .card-pdf-thumb{height:90px;margin:10px 0}
 .dragon-eye-btn{display:flex;align-items:center;justify-content:center;gap:10px;width:100%;margin-top:14px;padding:13px 14px;background:radial-gradient(ellipse at 50% 30%,rgba(201,162,39,.14),rgba(10,6,3,.5));border:1px solid var(--gold);color:var(--gold2);font:700 .72rem 'Cinzel',serif;letter-spacing:.08em;text-transform:uppercase;cursor:pointer;transition:.25s;box-shadow:0 0 0 rgba(201,162,39,0)}
@@ -129,11 +218,105 @@ main section{padding:90px clamp(18px,6vw,90px);max-width:1250px;margin:auto}.sec
 .activities-panel-head span{font:400 .74rem 'Cinzel',serif;color:var(--muted);font-style:italic}
 .activities-close{border:1px solid var(--border);background:transparent;color:var(--text);padding:9px 15px;font:700 .7rem 'Cinzel',serif;text-transform:uppercase;letter-spacing:.06em}
 .activities-close:hover{border-color:var(--gold);color:var(--gold2)}
-</style></head><body>
+.entity-toolbar{display:none;gap:6px;position:absolute;top:10px;right:10px;z-index:2}
+.icon-btn{width:28px;height:28px;display:inline-flex;align-items:center;justify-content:center;border:1px solid var(--border);background:rgba(5,4,3,.75);color:var(--muted);cursor:pointer;font-size:.85rem}
+.icon-btn:hover{border-color:var(--gold);color:var(--gold2)}
+.icon-btn.danger:hover{border-color:var(--danger);color:#e08b7b}
+.edit-modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.85);backdrop-filter:blur(6px);z-index:998;display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:opacity .25s;padding:20px}
+.edit-modal-overlay.open{opacity:1;pointer-events:all}
+.edit-modal{width:min(560px,100%);max-height:86vh;overflow:auto;background:linear-gradient(180deg,var(--panel),var(--dark2));border:1px solid var(--gold);padding:26px 28px;box-shadow:0 30px 90px rgba(0,0,0,.8)}
+.edit-modal-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:18px;gap:10px}
+.edit-modal-head h3{color:var(--gold2);font-size:1.1rem;text-transform:uppercase;letter-spacing:.03em}
+.edit-modal-head button{background:transparent;border:1px solid var(--border);color:var(--muted);width:30px;height:30px;flex-shrink:0}
+.edit-field{display:grid;gap:6px;margin-bottom:14px}
+.edit-field label{display:block;font:700 .68rem 'Cinzel',serif;color:var(--gold);text-transform:uppercase;letter-spacing:.06em}
+.edit-field input,.edit-field textarea{width:100%;background:rgba(5,4,3,.7);border:1px solid var(--border);color:var(--text);padding:10px 12px;font-family:'Cormorant Garamond',serif;font-size:1rem}
+.edit-field textarea{min-height:90px;resize:vertical}
+.edit-field small{color:var(--muted);font-size:.75rem;font-style:italic}
+.edit-modal-actions{display:flex;justify-content:flex-end;gap:10px;margin-top:8px}
+.btn-cancel,.btn-save{padding:10px 18px;border:1px solid var(--gold);font:700 .72rem 'Cinzel',serif;text-transform:uppercase;letter-spacing:.06em}
+.btn-cancel{background:transparent;color:var(--text)}
+.btn-save{background:linear-gradient(180deg,var(--blood),#4a1010);color:var(--gold2)}
+.toast-wrap{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);z-index:1000;display:flex;flex-direction:column;gap:8px;align-items:center;pointer-events:none}
+.toast{background:var(--panel);border:1px solid var(--gold);color:var(--gold2);padding:11px 20px;font:700 .74rem 'Cinzel',serif;letter-spacing:.05em;box-shadow:0 10px 30px rgba(0,0,0,.5);animation:toastIn .25s ease}
+@keyframes toastIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+@media(max-width:800px){
+  nav{padding:14px 18px}
+  .nav-toggle{display:flex}
+  .nav-links{display:none;position:absolute;top:100%;left:0;right:0;flex-direction:column;align-items:stretch;background:rgba(5,4,3,.98);padding:14px 18px;border-bottom:1px solid var(--border);gap:12px}
+  .nav-links.open{display:flex}
+  .nav-links a{padding:6px 0}
+  nav{position:sticky}
+  .profile-grid,.codex-grid,.weeks-grid,.questions-grid{grid-template-columns:1fr 1fr}
+  .hero{min-height:auto}
+}
+@media(max-width:560px){
+  .nav-brand{font-size:.68rem}
+  .profile-grid,.codex-grid,.weeks-grid,.questions-grid{grid-template-columns:1fr}
+  main section{padding-block:65px}
+  .question-card{grid-template-columns:34px 1fr}
+  .login-card{padding:32px 24px 28px}
+}
+
+/* ================= MEJORAS: PROGRESO, PARTÍCULAS, REVELADO, TILT, RIPPLE ================= */
+/* Refuerzo: los controles de edición deben permanecer ocultos hasta activar "Modo edición",
+   incluso en botones (.icon-btn/.questions-btn/.dragon-eye-btn) que definen su propio "display". */
+.edit-ctrl{display:none}
+#scrollProgress{position:fixed;top:0;left:0;height:3px;width:0%;background:linear-gradient(90deg,var(--blood),var(--gold) 55%,var(--gold2));z-index:60;box-shadow:0 0 14px rgba(201,162,39,.7);transition:width .1s linear}
+
+.hero-embers .ember{position:absolute;bottom:-14px;width:4px;height:4px;border-radius:50%;background:radial-gradient(circle,#ffe6ad,#e8842a 55%,transparent 100%);opacity:0;animation:emberRise linear infinite;filter:drop-shadow(0 0 5px rgba(255,150,50,.85))}
+@keyframes emberRise{0%{transform:translate(0,0);opacity:0}8%{opacity:.9}92%{opacity:.5}100%{transform:translate(var(--drift,24px),-92vh);opacity:0}}
+
+.reveal{opacity:0;transform:translateY(30px);transition:opacity .7s ease,transform .7s ease}
+.reveal.in{opacity:1;transform:translateY(0)}
+[class$="-grid"]>.reveal:nth-child(1),.stats-bar>.reveal:nth-child(1){transition-delay:.02s}
+[class$="-grid"]>.reveal:nth-child(2),.stats-bar>.reveal:nth-child(2){transition-delay:.09s}
+[class$="-grid"]>.reveal:nth-child(3),.stats-bar>.reveal:nth-child(3){transition-delay:.16s}
+[class$="-grid"]>.reveal:nth-child(4),.stats-bar>.reveal:nth-child(4){transition-delay:.23s}
+[class$="-grid"]>.reveal:nth-child(5){transition-delay:.30s}
+[class$="-grid"]>.reveal:nth-child(6){transition-delay:.37s}
+[class$="-grid"]>.reveal:nth-child(7){transition-delay:.44s}
+[class$="-grid"]>.reveal:nth-child(8){transition-delay:.51s}
+
+.tilt{will-change:transform}
+.tilt:hover{box-shadow:0 22px 50px rgba(0,0,0,.55),0 0 0 1px rgba(201,162,39,.3)}
+.reveal.tilt{transition:opacity .7s ease,transform .15s ease,box-shadow .2s ease}
+.reveal.tilt.in{opacity:1}
+
+.ripple-dot{position:absolute;border-radius:50%;background:rgba(255,255,255,.4);transform:scale(0);animation:rippleAnim .6s ease-out forwards;pointer-events:none}
+@keyframes rippleAnim{to{transform:scale(3);opacity:0}}
+.login-submit,.questions-btn,.dragon-eye-btn,.preview-btn,.register-btn,.btn-save,.unit-tab,.logout,.fill-demo-btn{position:relative;overflow:hidden}
+.bot-toggle,.scrolltop-btn{overflow:hidden}
+
+.scrolltop-btn{position:fixed;left:22px;bottom:22px;z-index:30;width:46px;height:46px;border:1px solid var(--gold);background:rgba(5,4,3,.88);color:var(--gold2);font-size:1.15rem;display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;transform:translateY(12px);transition:.25s;box-shadow:0 12px 30px rgba(0,0,0,.5)}
+.scrolltop-btn.show{opacity:1;pointer-events:all;transform:translateY(0)}
+.scrolltop-btn:hover{background:var(--gold);color:#1a1204;border-color:var(--gold2)}
+
+.stats-bar{display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:var(--border);border:1px solid var(--border);margin-top:34px;text-align:center}
+.stats-bar div{background:linear-gradient(180deg,var(--panel),var(--panel2));padding:22px 12px;transition:.25s}
+.stats-bar div:hover{background:linear-gradient(180deg,rgba(201,162,39,.1),var(--panel2))}
+.stats-bar strong{display:block;font-family:'Cinzel',serif;font-size:clamp(1.4rem,3vw,1.9rem);color:var(--gold2);text-shadow:0 2px 10px rgba(0,0,0,.5)}
+.stats-bar small{display:block;margin-top:7px;font:700 .62rem 'Cinzel',serif;color:var(--muted);text-transform:uppercase;letter-spacing:.08em}
+@media(max-width:700px){.stats-bar{grid-template-columns:repeat(2,1fr)}}
+
+.nav-links a{transition:.2s;padding-bottom:4px;border-bottom:2px solid transparent}
+.nav-links a.active{color:var(--gold2);border-bottom-color:var(--gold)}
+
+.week-card .dragon-eye-btn,.questions-btn{position:relative}
+.week-card:hover h3::after{width:100%}
+.week-card h3::after{transition:width .4s ease}
+
+.footer-sigil{display:block;text-align:center;color:var(--gold);font-size:1.1rem;margin-bottom:10px;letter-spacing:.4em;opacity:.85}
+</style></head><body data-role="" data-editmode="0">
+<div id="scrollProgress"></div>
 <section id="login-screen"><div class="login-card">
 <div class="login-crest"><svg viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M50 6c3 10 9 16 18 20-6 2-10 6-12 12 8-2 14 0 19 6-8 1-13 5-16 11 7 1 12 5 15 11-8-1-14 2-18 8-2-9-6-15-6-15s-4 6-6 15c-4-6-10-9-18-8 3-6 8-10 15-11-3-6-8-10-16-11 5-6 11-8 19-6-2-6-6-10-12-12 9-4 15-10 18-20z" fill="var(--gold2)" stroke="var(--gold)" stroke-width="1"/></svg></div>
 <h1 class="login-title">Winter Is Coming</h1>
 <p class="login-sub">Accede a tu Reino</p>
+<div class="login-tabs">
+  <button type="button" class="login-tab active" data-acc="admin">👑 Administrador</button>
+  <button type="button" class="login-tab" data-acc="user">🛡 Usuario</button>
+</div>
 <div class="login-divider"><span>◇</span></div>
 <form class="login-form" id="login-form">
 <div class="input-group"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M12 12a4 4 0 100-8 4 4 0 000 8zM4 21c0-4 4-7 8-7s8 3 8 7" stroke-linecap="round" stroke-linejoin="round"/></svg><input id="user" placeholder="Usuario" autocomplete="off" required></div>
@@ -145,56 +328,64 @@ main section{padding:90px clamp(18px,6vw,90px);max-width:1250px;margin:auto}.sec
 <div class="login-divider crown"><span>♛</span></div>
 <p class="login-foot">¿No tienes una cuenta?</p>
 <button type="button" class="register-btn" onclick="alert('Portafolio académico de Matias Saforas Gomez · UPLA')">Registrarse</button>
-<p class="hint">Usuario: <b>M@t_SF</b> · Contraseña: <b>77222987</b></p>
+<p class="hint" id="loginHint">Usuario: <b>M@t_SF</b> · Contraseña: <b>77222987</b></p>
+<button type="button" class="fill-demo-btn" id="fillDemoBtn">Usar estas credenciales</button>
 </div></section>
-<div id="app-screen"><nav><div class="nav-brand">Matias Saforas Gomez<br>Base de Datos II</div><ul class="nav-links"><li><a href="#perfil">Perfil</a></li><li><a href="#grimorio">Grimorio</a></li><li><a href="#unidades">Unidades</a></li><li><button id="logout-btn" class="logout">Salir</button></li></ul></nav>
-<header class="hero" id="perfil"><div class="hero-inner"><p class="eyebrow">Universidad Peruana Los Andes · 2026-I</p><h1 class="hero-name">Matias<br><span>Saforas Gomez</span></h1><p class="hero-desc"><strong>Ingeniero de Sistemas en formación.</strong> Me interesa el desarrollo de soluciones tecnológicas, la gestión de bases de datos y la construcción de sistemas útiles, seguros y eficientes. Este portafolio reúne mi aprendizaje y evolución profesional.</p><div class="profile-grid"><div><small>Curso</small><strong>Base de Datos II (332151)</strong></div><div><small>Docente</small><strong>Mg. Raúl Enrique Fernández Bejarano</strong></div><div><small>Sede</small><strong>Huancayo, Perú</strong></div><div><small>Enfoque</small><strong>Gestión de bases de datos</strong></div><div><small>Especialidad</small><strong>Desarrollo de software</strong></div><div><small>Rol</small><strong>Administrador</strong></div></div></div></header>
-<main><section id="grimorio"><p class="section-label">Ruta de aprendizaje</p><h2 class="section-title">Grimorio del Saber</h2><div class="codex-grid"><article class="codex-card"><span>01</span><h3>Dato</h3><p>Un hecho o fenómeno concreto que decidimos registrar, sin interpretar todavía.</p></article>
-<article class="codex-card"><span>02</span><h3>Información</h3><p>El dato al que se le añade un significado dentro de un contexto.</p></article>
-<article class="codex-card"><span>03</span><h3>Conocimiento</h3><p>Información combinada con experiencia, lista para explicar o predecir.</p></article>
-<article class="codex-card"><span>04</span><h3>Sabiduría</h3><p>Conocimiento aplicado con criterio propio a la hora de decidir.</p></article></div></section>
-<section id="unidades"><div class="inner"><p class="section-label">Registro académico</p><h2 class="section-title">Unidades del curso</h2><div class="unit-tabs"><button class="unit-tab active" data-target="unidad-1">Unidad I · Arquitecturas</button><button class="unit-tab locked" data-target="unidad-2">Unidad II · Instancias</button><button class="unit-tab locked" data-target="unidad-3">Unidad III · Seguridad</button><button class="unit-tab locked" data-target="unidad-4">Unidad IV · Monitoreo</button></div><div class="unit-panel active" id="unidad-1"><div class="capacity"><b>Capacidad:</b> reconocer las arquitecturas de bases de datos y su implementación en gestores DBMS vigentes para almacenar, organizar e integrar información.</div><div class="weeks-grid"><article class="week-card"><span class="week-num">Semana 01</span><h3>Formulación del proyecto y selección de la arquitectura</h3><p>Definir el alcance de un proyecto analítico a partir de un caso empresarial real, eligiendo y sustentando el tipo de arquitectura de base de datos (centralizada, distribuida o en la nube) que mejor responde a las necesidades de almacenamiento del negocio.</p><button class="dragon-eye-btn" onclick="toggleActivities(1)" title="Ver actividades" aria-label="Ver actividades de la Semana 01"><svg viewBox="0 0 48 30" width="30" height="19"><defs><radialGradient id="iris1" cx="50%" cy="45%" r="65%"><stop offset="0%" stop-color="#F9D77E"/><stop offset="45%" stop-color="#C9A227"/><stop offset="100%" stop-color="#5C1414"/></radialGradient></defs><path d="M2 15 Q24 -4 46 15 Q24 34 2 15 Z" fill="url(#iris1)" stroke="#1a1004" stroke-width="1.6"/><ellipse class="dragon-pupil" cx="24" cy="15" rx="3.1" ry="10.5" fill="#0a0603"/></svg><span>Ver actividades</span></button><div class="progress"><i style="width:6.25%"></i></div><small>6.25% de avance acumulado</small><button class="questions-btn" onclick="toggleQuestions()">📝 Ver las 32 preguntas</button></article>
-<article class="week-card"><span class="week-num">Semana 02</span><h3>Despliegue y configuración de motores de datos (DBMS)</h3><p>Instalar y configurar el sistema gestor de base de datos elegido para el proyecto, comprobando la conectividad y dejando listos los recursos iniciales del servidor.</p><button class="dragon-eye-btn" onclick="toggleActivities(2)" title="Ver actividades" aria-label="Ver actividades de la Semana 02"><svg viewBox="0 0 48 30" width="30" height="19"><defs><radialGradient id="iris2" cx="50%" cy="45%" r="65%"><stop offset="0%" stop-color="#F9D77E"/><stop offset="45%" stop-color="#C9A227"/><stop offset="100%" stop-color="#5C1414"/></radialGradient></defs><path d="M2 15 Q24 -4 46 15 Q24 34 2 15 Z" fill="url(#iris2)" stroke="#1a1004" stroke-width="1.6"/><ellipse class="dragon-pupil" cx="24" cy="15" rx="3.1" ry="10.5" fill="#0a0603"/></svg><span>Ver actividades</span></button><div class="progress"><i style="width:12.5%"></i></div><small>12.50% de avance acumulado</small></article>
-<article class="week-card"><span class="week-num">Semana 03</span><h3>Modelamiento físico y mecanismos de integración</h3><p>Estructurar e implementar los esquemas y las tablas maestras dentro del DBMS, configurando las restricciones necesarias para que el almacenamiento y la integración de datos masivos sean eficientes.</p><button class="dragon-eye-btn" onclick="toggleActivities(3)" title="Ver actividades" aria-label="Ver actividades de la Semana 03"><svg viewBox="0 0 48 30" width="30" height="19"><defs><radialGradient id="iris3" cx="50%" cy="45%" r="65%"><stop offset="0%" stop-color="#F9D77E"/><stop offset="45%" stop-color="#C9A227"/><stop offset="100%" stop-color="#5C1414"/></radialGradient></defs><path d="M2 15 Q24 -4 46 15 Q24 34 2 15 Z" fill="url(#iris3)" stroke="#1a1004" stroke-width="1.6"/><ellipse class="dragon-pupil" cx="24" cy="15" rx="3.1" ry="10.5" fill="#0a0603"/></svg><span>Ver actividades</span></button><div class="progress"><i style="width:18.75%"></i></div><small>18.75% de avance acumulado</small></article>
-<article class="week-card"><span class="week-num">Semana 04</span><h3>Sustentación y validación de la infraestructura de datos</h3><p>Sustentar el primer avance del proyecto mediante un informe técnico y una demostración en vivo, comprobando que el diseño de la arquitectura y la carga inicial de datos cumplen con los criterios de rendimiento e integración planteados. Cierra con el ingreso de notas al sistema.</p><button class="dragon-eye-btn" onclick="toggleActivities(4)" title="Ver actividades" aria-label="Ver actividades de la Semana 04"><svg viewBox="0 0 48 30" width="30" height="19"><defs><radialGradient id="iris4" cx="50%" cy="45%" r="65%"><stop offset="0%" stop-color="#F9D77E"/><stop offset="45%" stop-color="#C9A227"/><stop offset="100%" stop-color="#5C1414"/></radialGradient></defs><path d="M2 15 Q24 -4 46 15 Q24 34 2 15 Z" fill="url(#iris4)" stroke="#1a1004" stroke-width="1.6"/><ellipse class="dragon-pupil" cx="24" cy="15" rx="3.1" ry="10.5" fill="#0a0603"/></svg><span>Ver actividades</span></button><div class="progress"><i style="width:25.0%"></i></div><small>25.00% de avance acumulado</small></article></div><div class="activities-panel" id="activitiesPanel1"><div class="activities-panel-head"><div><h3>Actividades — Semana 01</h3><span>Formulación del proyecto y selección de la arquitectura</span></div><button class="activities-close" onclick="toggleActivities(1)">Cerrar ✕</button></div><div class="activities-wrap"><div class="activity-block"><div class="activity-label">📄 Actividad 1</div><div class="card-pdf-thumb" onclick="openPDF('pdf/semana1_actividad1.pdf','SEMANA1_ACTIVIDAD1.pdf','Formulación del proyecto · Actividad 1','Semana 01')"><div class="thumb-placeholder"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14,2 14,8 20,8"/><line x1="9" y1="13" x2="15" y2="13"/><line x1="9" y1="17" x2="15" y2="17"/></svg>Clic para ver</div></div><div class="card-actions"><button class="preview-btn" onclick="event.stopPropagation();openPDF('pdf/semana1_actividad1.pdf','SEMANA1_ACTIVIDAD1.pdf','Formulación del proyecto · Actividad 1','Semana 01')"><svg viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>Ver PDF</button><a class="download-btn" href="pdf/semana1_actividad1.pdf" download onclick="event.stopPropagation()"><svg viewBox="0 0 24 24"><path d="M12 16l-5-5h3V4h4v7h3l-5 5zm-7 2h14v2H5v-2z"/></svg></a></div></div><div class="activity-block"><div class="activity-label">📄 Actividad 2</div><div class="card-pdf-thumb" onclick="openPDF('pdf/semana1_actividad2.pdf','SEMANA1_ACTIVIDAD2.pdf','Formulación del proyecto · Actividad 2','Semana 01')"><div class="thumb-placeholder"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14,2 14,8 20,8"/><line x1="9" y1="13" x2="15" y2="13"/><line x1="9" y1="17" x2="15" y2="17"/></svg>Clic para ver</div></div><div class="card-actions"><button class="preview-btn" onclick="event.stopPropagation();openPDF('pdf/semana1_actividad2.pdf','SEMANA1_ACTIVIDAD2.pdf','Formulación del proyecto · Actividad 2','Semana 01')"><svg viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>Ver PDF</button><a class="download-btn" href="pdf/semana1_actividad2.pdf" download onclick="event.stopPropagation()"><svg viewBox="0 0 24 24"><path d="M12 16l-5-5h3V4h4v7h3l-5 5zm-7 2h14v2H5v-2z"/></svg></a></div></div></div></div><div class="activities-panel" id="activitiesPanel2"><div class="activities-panel-head"><div><h3>Actividades — Semana 02</h3><span>Despliegue y configuración de motores de datos (DBMS)</span></div><button class="activities-close" onclick="toggleActivities(2)">Cerrar ✕</button></div><div class="activities-wrap"><div class="activity-block"><div class="activity-label">📄 Actividad 1</div><div class="card-pdf-thumb" onclick="openPDF('pdf/semana2_actividad1.pdf','SEMANA2_ACTIVIDAD1.pdf','Despliegue de motores de datos · Actividad 1','Semana 02')"><div class="thumb-placeholder"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14,2 14,8 20,8"/><line x1="9" y1="13" x2="15" y2="13"/><line x1="9" y1="17" x2="15" y2="17"/></svg>Clic para ver</div></div><div class="card-actions"><button class="preview-btn" onclick="event.stopPropagation();openPDF('pdf/semana2_actividad1.pdf','SEMANA2_ACTIVIDAD1.pdf','Despliegue de motores de datos · Actividad 1','Semana 02')"><svg viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>Ver PDF</button><a class="download-btn" href="pdf/semana2_actividad1.pdf" download onclick="event.stopPropagation()"><svg viewBox="0 0 24 24"><path d="M12 16l-5-5h3V4h4v7h3l-5 5zm-7 2h14v2H5v-2z"/></svg></a></div></div><div class="activity-block"><div class="activity-label">📄 Actividad 2</div><div class="card-pdf-thumb" onclick="openPDF('pdf/semana2_actividad2.pdf','SEMANA2_ACTIVIDAD2.pdf','Despliegue de motores de datos · Actividad 2','Semana 02')"><div class="thumb-placeholder"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14,2 14,8 20,8"/><line x1="9" y1="13" x2="15" y2="13"/><line x1="9" y1="17" x2="15" y2="17"/></svg>Clic para ver</div></div><div class="card-actions"><button class="preview-btn" onclick="event.stopPropagation();openPDF('pdf/semana2_actividad2.pdf','SEMANA2_ACTIVIDAD2.pdf','Despliegue de motores de datos · Actividad 2','Semana 02')"><svg viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>Ver PDF</button><a class="download-btn" href="pdf/semana2_actividad2.pdf" download onclick="event.stopPropagation()"><svg viewBox="0 0 24 24"><path d="M12 16l-5-5h3V4h4v7h3l-5 5zm-7 2h14v2H5v-2z"/></svg></a></div></div><div class="activity-block"><div class="activity-label">📄 Actividad 3</div><div class="card-pdf-thumb" onclick="openPDF('pdf/semana2_actividad3.pdf','SEMANA2_ACTIVIDAD3.pdf','Despliegue de motores de datos · Actividad 3','Semana 02')"><div class="thumb-placeholder"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14,2 14,8 20,8"/><line x1="9" y1="13" x2="15" y2="13"/><line x1="9" y1="17" x2="15" y2="17"/></svg>Clic para ver</div></div><div class="card-actions"><button class="preview-btn" onclick="event.stopPropagation();openPDF('pdf/semana2_actividad3.pdf','SEMANA2_ACTIVIDAD3.pdf','Despliegue de motores de datos · Actividad 3','Semana 02')"><svg viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>Ver PDF</button><a class="download-btn" href="pdf/semana2_actividad3.pdf" download onclick="event.stopPropagation()"><svg viewBox="0 0 24 24"><path d="M12 16l-5-5h3V4h4v7h3l-5 5zm-7 2h14v2H5v-2z"/></svg></a></div></div></div></div><div class="activities-panel" id="activitiesPanel3"><div class="activities-panel-head"><div><h3>Actividades — Semana 03</h3><span>Modelamiento físico y mecanismos de integración</span></div><button class="activities-close" onclick="toggleActivities(3)">Cerrar ✕</button></div><div class="activities-wrap"><div class="activity-block"><div class="activity-label">📜 Actividad única</div><div class="card-pdf-thumb" onclick="openPDF('pdf/semana3.pdf','SEMANA3.pdf','Modelamiento físico e integración','Semana 03')"><div class="thumb-placeholder"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14,2 14,8 20,8"/><line x1="9" y1="13" x2="15" y2="13"/><line x1="9" y1="17" x2="15" y2="17"/></svg>Clic para ver</div></div><div class="card-actions"><button class="preview-btn" onclick="event.stopPropagation();openPDF('pdf/semana3.pdf','SEMANA3.pdf','Modelamiento físico e integración','Semana 03')"><svg viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>Ver PDF</button><a class="download-btn" href="pdf/semana3.pdf" download onclick="event.stopPropagation()"><svg viewBox="0 0 24 24"><path d="M12 16l-5-5h3V4h4v7h3l-5 5zm-7 2h14v2H5v-2z"/></svg></a></div></div></div></div><div class="activities-panel" id="activitiesPanel4"><div class="activities-panel-head"><div><h3>Actividades — Semana 04</h3><span>Sustentación y validación de la infraestructura de datos</span></div><button class="activities-close" onclick="toggleActivities(4)">Cerrar ✕</button></div><div class="activities-wrap"><div class="activity-block"><div class="activity-label">📜 Actividad única</div><div class="card-pdf-thumb" onclick="openPDF('pdf/semana4.pdf','SEMANA4.pdf','Sustentación y validación','Semana 04')"><div class="thumb-placeholder"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14,2 14,8 20,8"/><line x1="9" y1="13" x2="15" y2="13"/><line x1="9" y1="17" x2="15" y2="17"/></svg>Clic para ver</div></div><div class="card-actions"><button class="preview-btn" onclick="event.stopPropagation();openPDF('pdf/semana4.pdf','SEMANA4.pdf','Sustentación y validación','Semana 04')"><svg viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>Ver PDF</button><a class="download-btn" href="pdf/semana4.pdf" download onclick="event.stopPropagation()"><svg viewBox="0 0 24 24"><path d="M12 16l-5-5h3V4h4v7h3l-5 5zm-7 2h14v2H5v-2z"/></svg></a></div></div></div></div><div class="questions-panel" id="questionsPanel"><div class="questions-panel-head"><div><h3>32 preguntas de Base de Datos</h3><span>Evaluación asociada a la Semana 01</span></div><button class="questions-close" onclick="toggleQuestions()">Cerrar ✕</button></div><div class="questions-grid"><article class="question-card" id="pregunta-01"><span class="q-number">01</span><div><h3>Base de datos utilizada</h3><p>Una base de datos que he utilizado como consumidor es la de un sistema académico universitario. Puede contener entidades como Estudiante, Curso, Docente, Matrícula, Sección y Calificación. Por ejemplo, un estudiante se matricula en varios cursos y cada matrícula se relaciona con sus calificaciones.</p></div></article>
-<article class="question-card" id="pregunta-02"><span class="q-number">02</span><div><h3>Grupos de usuarios</h3><p>Los principales grupos de usuarios pueden ser estudiantes, docentes, personal administrativo, coordinadores académicos y administradores de la base de datos. Cada grupo utiliza la información según sus funciones y permisos.</p></div></article>
-<article class="question-card" id="pregunta-03"><span class="q-number">03</span><div><h3>Aplicación de un grupo de usuarios</h3><p>Para los estudiantes, una aplicación puede ser el portal académico. Permite consultar cursos matriculados, horarios y calificaciones mediante formularios y reportes.</p></div></article>
-<article class="question-card" id="pregunta-04"><span class="q-number">04</span><div><h3>Persistencia</h3><p>La persistencia significa que los datos permanecen almacenados después de terminar una sesión o apagar el sistema. La información queda disponible para futuras consultas y operaciones.</p></div></article>
-<article class="question-card" id="pregunta-05"><span class="q-number">05</span><div><h3>Interrelación</h3><p>La interrelación significa que los datos están relacionados entre sí. Por ejemplo, un estudiante se relaciona con sus matrículas, cursos y calificaciones, permitiendo consultar información conectada.</p></div></article>
-<article class="question-card" id="pregunta-06"><span class="q-number">06</span><div><h3>Compartir</h3><p>Compartir significa que diferentes usuarios o áreas pueden utilizar los mismos datos de una base de datos de acuerdo con sus permisos. Esto evita duplicaciones y facilita trabajar con información común y actualizada.</p></div></article>
-<article class="question-card" id="pregunta-07"><span class="q-number">07</span><div><h3>¿Qué es un DBMS?</h3><p>Un DBMS o sistema de administración de bases de datos es el software que permite definir, almacenar, consultar, actualizar y administrar una base de datos. También ayuda a controlar el acceso y el procesamiento de transacciones.</p></div></article>
-<article class="question-card" id="pregunta-08"><span class="q-number">08</span><div><h3>Acceso procedural y no procedural</h3><p>El acceso procedural indica cómo realizar paso a paso las operaciones para obtener los datos. El acceso no procedural indica qué datos se necesitan sin detallar cada paso de acceso. La principal diferencia es que el segundo deja al DBMS decidir cómo ejecutar la consulta.</p></div></article>
-<article class="question-card" id="pregunta-09"><span class="q-number">09</span><div><h3>Importancia del acceso no procedural</h3><p>El acceso no procedural es importante porque permite obtener información sin escribir código detallado para recorrer los datos. Esto mejora la productividad del software y facilita el desarrollo y mantenimiento de aplicaciones.</p></div></article>
-<article class="question-card" id="pregunta-10"><span class="q-number">10</span><div><h3>Acceso no procedural y productividad</h3><p>La conexión es directa: formularios y reportes pueden especificar los requerimientos de datos mediante consultas, mientras el DBMS se encarga de encontrar y recuperar la información. Por ello, el acceso no procedural puede reducir código y facilitar el desarrollo de aplicaciones.</p></div></article>
-<article class="question-card" id="pregunta-11"><span class="q-number">11</span><div><h3>Formulario y reporte</h3><p>Un formulario está orientado principalmente a ingresar, modificar o consultar información de manera interactiva. Un reporte presenta información organizada para lectura, análisis, impresión o toma de decisiones.</p></div></article>
-<article class="question-card" id="pregunta-12"><span class="q-number">12</span><div><h3>Interfaz de lenguaje procedural</h3><p>Es el mecanismo que permite combinar el acceso no procedural a una base de datos con un lenguaje de programación procedural, como COBOL o Visual Basic. Así, una aplicación puede ejecutar consultas y operaciones de la base de datos dentro de un programa.</p></div></article>
-<article class="question-card" id="pregunta-13"><span class="q-number">13</span><div><h3>Transacción</h3><p>Una transacción es una unidad de trabajo que debe procesarse de forma completa y confiable. Por ejemplo, registrar una matrícula puede implicar varias operaciones que deben quedar correctamente realizadas para conservar la consistencia.</p></div></article>
-<article class="question-card" id="pregunta-14"><span class="q-number">14</span><div><h3>Funciones del DBMS para transacciones</h3><p>El DBMS proporciona funciones para controlar transacciones, mantener la consistencia, manejar el acceso concurrente y recuperar la información cuando ocurre una falla. De esta manera, las operaciones se procesan de forma confiable.</p></div></article>
-<article class="question-card" id="pregunta-15"><span class="q-number">15</span><div><h3>Transacción de la base de datos elegida</h3><p>Una transacción puede ser la matrícula de un estudiante en un curso. Se utiliza especialmente al inicio de cada periodo académico y puede ser enviada por muchos estudiantes al mismo tiempo. La cantidad exacta depende de la institución y de la carga del sistema.</p></div></article>
-<article class="question-card" id="pregunta-16"><span class="q-number">16</span><div><h3>DBMS corporativo</h3><p>Es un DBMS diseñado para organizaciones y grandes bases de datos, con muchos usuarios simultáneos. Suele ejecutarse en servidores potentes y soporta procesamiento de transacciones, disponibilidad, seguridad y rendimiento.</p></div></article>
-<article class="question-card" id="pregunta-17"><span class="q-number">17</span><div><h3>DBMS de escritorio</h3><p>Es un DBMS que se ejecuta normalmente en computadoras personales o servidores pequeños. Soporta un procesamiento más limitado y resulta apropiado para equipos de trabajo y negocios pequeños.</p></div></article>
-<article class="question-card" id="pregunta-18"><span class="q-number">18</span><div><h3>DBMS embebido</h3><p>Es un DBMS que reside dentro de un sistema más grande, como una aplicación o dispositivo. Ofrece procesamiento transaccional limitado y requiere pocos recursos de memoria, procesamiento y almacenamiento.</p></div></article>
-<article class="question-card" id="pregunta-19"><span class="q-number">19</span><div><h3>Funciones de la primera generación</h3><p>La primera generación se basaba principalmente en estructuras de archivos y acceso mediante programas. Permitía búsquedas secuenciales y aleatorias, pero el usuario necesitaba escribir programas para obtener la información y existía poco soporte para relacionar datos.</p></div></article>
-<article class="question-card" id="pregunta-20"><span class="q-number">20</span><div><h3>Funciones de la segunda generación</h3><p>La segunda generación incorporó DBMS reales capaces de administrar muchas entidades y relaciones. Se caracterizó por el acceso navegacional, donde el programador debía escribir código para navegar entre registros relacionados; algunos productos utilizaron estándares como CODASYL.</p></div></article>
-<article class="question-card" id="pregunta-21"><span class="q-number">21</span><div><h3>Funciones de la tercera generación</h3><p>La tercera generación se caracterizó por los DBMS relacionales y los lenguajes no procedurales. El acceso mediante relaciones y operadores, junto con la optimización de tecnología, permitió consultar datos de manera más flexible y eficiente.</p></div></article>
-<article class="question-card" id="pregunta-22"><span class="q-number">22</span><div><h3>Funciones de la cuarta generación</h3><p>La cuarta generación incorporó capacidades orientadas a objetos y soportó funciones como multimedia, procesamiento distribuido, operadores más poderosos y procesamiento de datos para data warehouse, además de nuevas posibilidades de integración.</p></div></article>
-<article class="question-card" id="pregunta-23"><span class="q-number">23</span><div><h3>Tres niveles del esquema</h3><p>Nivel externo: presenta las vistas de información que necesita cada tipo de usuario. Nivel conceptual: representa la estructura lógica global de entidades, atributos y relaciones. Nivel interno: describe cómo se almacenan físicamente los datos, incluyendo estructuras e índices.</p></div></article>
-<article class="question-card" id="pregunta-24"><span class="q-number">24</span><div><h3>Propósito del mapeo</h3><p>El mapeo relaciona los niveles externo, conceptual e interno y permite transformar una vista de usuario en la representación lógica y luego en la forma de almacenamiento. El DBMS es responsable de realizar y administrar estos mapeos.</p></div></article>
-<article class="question-card" id="pregunta-25"><span class="q-number">25</span><div><h3>Arquitectura de tres esquemas e independencia</h3><p>La separación entre los niveles permite cambiar detalles de un nivel sin modificar necesariamente los otros. Por ejemplo, cambiar la forma física de almacenamiento puede hacerse sin cambiar las vistas de los usuarios. Esto reduce los costos de mantenimiento del software.</p></div></article>
-<article class="question-card" id="pregunta-26"><span class="q-number">26</span><div><h3>Interacción de usuarios con la base de datos</h3><p>Los usuarios funcionales activos interactúan directamente con formularios, consultas y reportes. Los usuarios pueden trabajar con vistas externas de la información según sus necesidades, mientras el DBMS gestiona el acceso a los datos.</p></div></article>
-<article class="question-card" id="pregunta-27"><span class="q-number">27</span><div><h3>Cliente-servidor y división del procesamiento</h3><p>El procesamiento se divide para aprovechar las capacidades del cliente y del servidor. El cliente puede manejar la interfaz y parte de la lógica, mientras el servidor administra los datos y las operaciones del DBMS. El servidor no hace todo porque distribuir la carga puede mejorar el uso de recursos y la respuesta.</p></div></article>
-<article class="question-card" id="pregunta-28"><span class="q-number">28</span><div><h3>Datos en varias computadoras</h3><p>En una arquitectura cliente-servidor o distribuida, los datos pueden almacenarse en varias computadoras para repartir la carga, acercar la información a diferentes ubicaciones, mejorar el rendimiento y aumentar la disponibilidad del sistema.</p></div></article>
-<article class="question-card" id="pregunta-29"><span class="q-number">29</span><div><h3>Usuarios indirectos, paramétricos y poderosos</h3><p>Los usuarios indirectos reciben información mediante reportes preparados. Los usuarios paramétricos utilizan formularios o consultas con parámetros definidos, por ejemplo, seleccionando un curso o periodo. Los usuarios poderosos o experimentados realizan consultas más flexibles y pueden crear o adaptar formularios y reportes.</p></div></article>
-<article class="question-card" id="pregunta-30"><span class="q-number">30</span><div><h3>Usuario funcional activo y analista</h3><p>El usuario funcional activo trabaja directamente con la información mediante las aplicaciones de la organización. El analista estudia requerimientos, diseña soluciones y participa en el desarrollo de sistemas. Ambos utilizan principalmente el nivel externo para entender las necesidades, mientras el analista también debe considerar la estructura conceptual.</p></div></article>
-<article class="question-card" id="pregunta-31"><span class="q-number">31</span><div><h3>Objetivo profesional</h3><p>Como objetivo a largo plazo elegiría ser administrador de bases de datos, porque me interesa la tecnología, la gestión de información y el funcionamiento de los sistemas. Este puesto me permitiría trabajar en seguridad, rendimiento, disponibilidad y administración de bases de datos.</p></div></article>
-<article class="question-card" id="pregunta-32"><span class="q-number">32</span><div><h3>Nicho de los DBMS de código libre</h3><p>Los DBMS de código libre ocupan un espacio importante en proyectos educativos, emprendimientos, organizaciones y empresas que buscan reducir costos de licenciamiento y contar con soluciones flexibles. También son útiles para desarrolladores y equipos que necesitan adaptar la tecnología a sus necesidades.</p></div></article></div></div></div><div class="unit-panel" id="unidad-2"><div class="capacity">Unidad reservada para instancias, almacenamiento y datos masivos.</div></div><div class="unit-panel" id="unidad-3"><div class="capacity">Unidad reservada para seguridad, red y alta disponibilidad.</div></div><div class="unit-panel" id="unidad-4"><div class="capacity">Unidad reservada para monitoreo, desempeño y flashback.</div></div></div></section>
+
+<div id="app-screen">
+<nav>
+<div class="nav-brand" id="navBrand"></div>
+<button type="button" class="nav-toggle" id="navToggle" aria-label="Abrir menú">☰</button>
+<ul class="nav-links" id="navLinks">
+<li class="role-badge" id="roleBadge"><span id="roleBadgeText"></span></li>
+<li><a href="#perfil">Perfil</a></li>
+<li><a href="#grimorio">Grimorio</a></li>
+<li><a href="#unidades">Unidades</a></li>
+<li class="admin-flag"><button type="button" class="logout" id="editModeBtn">✎ Modo edición</button></li>
+<li class="admin-flag"><button type="button" class="logout" onclick="resetContent()">⟲ Restablecer</button></li>
+<li><button id="logout-btn" class="logout">Salir</button></li>
+</ul>
+</nav>
+
+<header class="hero" id="perfil"><div class="hero-embers" id="heroEmbers"></div><div class="hero-inner">
+<p class="eyebrow" id="heroEyebrow"></p>
+<h1 class="hero-name" id="heroName"></h1>
+<p class="hero-desc" id="heroDesc"></p>
+<div class="profile-grid" id="profileGrid"></div>
+<div class="stats-bar" id="statsBar"></div>
+<div id="profileEditBtnWrap"></div>
+</div></header>
+
+<main>
+<section id="grimorio"><p class="section-label">Ruta de aprendizaje</p><h2 class="section-title">Grimorio del Saber</h2><div class="codex-grid" id="grimorioGrid"></div></section>
+<section id="unidades"><div class="inner"><p class="section-label">Registro académico</p><h2 class="section-title">Unidades del curso</h2>
+<div class="unit-tabs" id="unitTabs"></div>
+<div class="unit-panel active" id="unitPanelContainer"></div>
+</div></section>
 </main>
-<footer>Matias Saforas Gomez · Facultad de Ingeniería de Sistemas y Computación · Universidad Peruana Los Andes</footer></div>
-<button class="bot-toggle" id="bot-toggle" aria-label="Abrir asistente">⚜</button><aside class="bot-panel" id="bot-panel"><div class="bot-head"><strong>Asistente del portafolio</strong><button id="bot-close" class="logout">×</button></div><div class="bot-messages" id="bot-messages"><div class="msg">Hola. Pregúntame por Matias, el curso, las unidades o las preguntas finales.</div></div><form class="bot-form" id="bot-form"><input id="bot-input" placeholder="Escribe una pregunta…"><button>↑</button></form></aside>
+<footer><span class="footer-sigil">⚜ ❖ ⚜</span>Matias Saforas Gomez · Facultad de Ingeniería de Sistemas y Computación · Universidad Peruana Los Andes</footer>
+
+<button class="scrolltop-btn" id="scrollTopBtn" aria-label="Volver arriba" title="Volver arriba">⇧</button>
+<button class="bot-toggle" id="bot-toggle" aria-label="Abrir asistente">⚜</button>
+<aside class="bot-panel" id="bot-panel"><div class="bot-head"><strong>Asistente del portafolio</strong><button id="bot-close" class="logout">×</button></div><div class="bot-messages" id="bot-messages"><div class="msg">Hola. Pregúntame por Matias, el curso, las unidades, las preguntas finales o tu rol de acceso.</div></div><form class="bot-form" id="bot-form"><input id="bot-input" placeholder="Escribe una pregunta…"><button>↑</button></form></aside>
+
 <div class="pdf-modal-overlay" id="pdfModalOverlay" onclick="closePDFonOverlay(event)"><div class="pdf-modal"><div class="pdf-modal-header"><span style="font-size:1.2rem;">📁</span><div><div class="pdf-modal-folder" id="modalTitle">Documento</div><div class="pdf-modal-subtitle">Lea el pdf directamente aquí abajo:</div></div><button class="pdf-modal-close" onclick="closePDF()">✕</button></div><div class="pdf-modal-body"><div class="pdf-sidebar" id="pdfSidebar"></div><div class="pdf-viewer-area"><div class="pdf-toolbar"><div class="pdf-filename" id="pdfFilename">SEMANA.pdf</div><div class="toolbar-sep"></div><div class="pdf-toolbar-group"><button class="pdf-nav-btn" id="btnPrev" onclick="changePage(-1)" title="Anterior">‹</button><div class="pdf-page-info"><input class="pdf-page-input" id="pageInput" type="number" min="1" value="1" onchange="jumpToPage(this.value)"><span>/ <span id="totalPages">?</span></span></div><button class="pdf-nav-btn" id="btnNext" onclick="changePage(1)" title="Siguiente">›</button></div><div class="toolbar-sep"></div><div class="pdf-toolbar-group"><button class="pdf-zoom-btn" onclick="changeZoom(-0.15)">− Zoom</button><span class="pdf-zoom-level" id="zoomLevel">93%</span><button class="pdf-zoom-btn" onclick="changeZoom(0.15)">+ Zoom</button></div></div><div class="pdf-canvas-area" id="pdfCanvasArea"><div class="pdf-loading" id="pdfLoading"><div class="pdf-spinner"></div><span>Cargando PDF...</span></div><canvas id="pdf-main-canvas" style="display:none;"></canvas></div></div></div><div class="pdf-modal-footer"><div class="pdf-footer-info" id="footerInfo">Listo para visualizar</div><button class="btn-fullscreen" onclick="openFullscreen()">🖥 Pantalla completa</button><a class="btn-download-modal" id="btnDownload" href="#" download>💾 Descargar</a></div></div></div>
+
+<div class="edit-modal-overlay" id="editModalOverlay"><div class="edit-modal">
+<div class="edit-modal-head"><h3 id="editModalTitle">Editar</h3><button type="button" onclick="closeEditModal()">✕</button></div>
+<form id="editModalForm"></form>
+<div class="edit-modal-actions"><button type="button" class="btn-cancel" onclick="closeEditModal()">Cancelar</button><button type="submit" form="editModalForm" class="btn-save">Guardar</button></div>
+</div></div>
+
+<div class="toast-wrap" id="toastWrap"></div>
+</div>
+
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 <script>
-pdfjsLib.GlobalWorkerOptions.workerSrc='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+/* ================= VISOR DE PDF (con protección ante fallos del CDN) ================= */
+if(typeof pdfjsLib!=='undefined'){
+  pdfjsLib.GlobalWorkerOptions.workerSrc='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+}
 let pdfDoc=null,currentPage=1,totalPages=0,scale=0.93,currentPdfUrl='';
 function openPDF(url,filename,title,subtitle){
   currentPdfUrl=url;
@@ -214,13 +405,17 @@ function openPDF(url,filename,title,subtitle){
   document.getElementById('totalPages').textContent='?';
   document.getElementById('pageInput').value=1;
   document.getElementById('zoomLevel').textContent=Math.round(scale*100)+'%';
+  if(typeof pdfjsLib==='undefined'){
+    document.getElementById('pdfLoading').innerHTML='<span style="color:var(--danger);font-family:monospace;font-size:.78rem;text-align:center;">⚠ No se pudo cargar el visor de PDF (pdf.js).<br>Revisa tu conexión a internet e inténtalo de nuevo.</span>';
+    return;
+  }
   pdfjsLib.getDocument(url).promise.then(function(pdf){
     pdfDoc=pdf;totalPages=pdf.numPages;
     document.getElementById('totalPages').textContent=totalPages;
     document.getElementById('pageInput').max=totalPages;
     renderPage(1);renderAllThumbs();
   }).catch(function(err){
-    document.getElementById('pdfLoading').innerHTML='<span style="color:var(--danger);font-family:Space Mono,monospace;font-size:.78rem;">⚠ No se pudo cargar el PDF.<br>Asegúrate de que el archivo existe en la carpeta <code>pdf/</code>.</span>';
+    document.getElementById('pdfLoading').innerHTML='<span style="color:var(--danger);font-family:monospace;font-size:.78rem;">⚠ No se pudo cargar el PDF.<br>Asegúrate de que el archivo existe en la carpeta <code>pdf/</code>.</span>';
   });
 }
 function closePDF(){document.getElementById('pdfModalOverlay').classList.remove('open');document.body.style.overflow='';}
@@ -275,21 +470,664 @@ document.addEventListener('keydown',function(e){
   if(e.key==='ArrowRight'||e.key==='ArrowDown')changePage(1);
   if(e.key==='ArrowLeft'||e.key==='ArrowUp')changePage(-1);
 });
+function openActivityPdf(unitKey,weekId,actId){
+  const w=appState.units[unitKey].weeks.find(x=>x.id===weekId);
+  const a=w.activities.find(x=>x.id===actId);
+  openPDF('pdf/'+a.filename, a.dispFilename||a.filename, a.title||a.label, w.num);
+}
+
+/* ================= UTILIDADES ================= */
+function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
+function uid(){return 'id'+Date.now().toString(36)+Math.random().toString(36).slice(2,7);}
+function showToast(msg){
+  const wrap=document.getElementById('toastWrap');
+  const t=document.createElement('div');
+  t.className='toast';t.textContent=msg;
+  wrap.appendChild(t);
+  setTimeout(()=>t.remove(),3000);
+}
+
+/* ================= REVELADO AL HACER SCROLL ================= */
+let revealObserver=null;
+function initReveal(){
+  if(!revealObserver){
+    revealObserver=new IntersectionObserver(entries=>{
+      entries.forEach(en=>{
+        if(en.isIntersecting){en.target.classList.add('in');revealObserver.unobserve(en.target);}
+      });
+    },{threshold:.1,rootMargin:'0px 0px -40px 0px'});
+  }
+  document.querySelectorAll('.reveal').forEach(el=>{
+    if(!el.dataset.observed){el.dataset.observed='1';revealObserver.observe(el);}
+  });
+}
+
+/* ================= INCLINACIÓN 3D DE TARJETAS (TILT) ================= */
+document.addEventListener('mousemove',function(e){
+  const card=e.target.closest && e.target.closest('.tilt');
+  if(!card)return;
+  const r=card.getBoundingClientRect();
+  const x=(e.clientX-r.left)/r.width-.5;
+  const y=(e.clientY-r.top)/r.height-.5;
+  card.style.transform='perspective(800px) rotateY('+(x*7).toFixed(2)+'deg) rotateX('+(-y*7).toFixed(2)+'deg) translateY(-4px)';
+});
+document.addEventListener('mouseout',function(e){
+  const card=e.target.closest && e.target.closest('.tilt');
+  if(card && (!e.relatedTarget || !card.contains(e.relatedTarget)))card.style.transform='';
+});
+
+/* ================= EFECTO RIPPLE EN BOTONES ================= */
+document.addEventListener('click',function(e){
+  const el=e.target.closest && e.target.closest('.login-submit,.questions-btn,.dragon-eye-btn,.preview-btn,.register-btn,.btn-save,.unit-tab,.logout,.bot-toggle,.scrolltop-btn,.fill-demo-btn');
+  if(!el)return;
+  const rect=el.getBoundingClientRect();
+  const size=Math.max(rect.width,rect.height);
+  const dot=document.createElement('span');
+  dot.className='ripple-dot';
+  dot.style.width=dot.style.height=size+'px';
+  dot.style.left=(e.clientX-rect.left-size/2)+'px';
+  dot.style.top=(e.clientY-rect.top-size/2)+'px';
+  el.appendChild(dot);
+  setTimeout(()=>dot.remove(),650);
+});
+
+/* ================= BRASAS FLOTANTES (HERO) ================= */
+function spawnEmbers(){
+  const box=document.getElementById('heroEmbers');
+  if(!box || box.dataset.filled)return;
+  box.dataset.filled='1';
+  const N=22;
+  for(let i=0;i<N;i++){
+    const e=document.createElement('span');
+    e.className='ember';
+    const left=Math.random()*100;
+    const dur=9+Math.random()*10;
+    const delay=Math.random()*12;
+    const drift=(Math.random()*80-40).toFixed(0)+'px';
+    const size=2+Math.random()*3;
+    e.style.left=left+'%';
+    e.style.width=e.style.height=size+'px';
+    e.style.animationDuration=dur+'s';
+    e.style.animationDelay=delay+'s';
+    e.style.setProperty('--drift',drift);
+    box.appendChild(e);
+  }
+}
+
+/* ================= BARRA DE PROGRESO DE LECTURA Y BOTÓN SUBIR ================= */
+function onScrollFX(){
+  const doc=document.documentElement;
+  const max=doc.scrollHeight-doc.clientHeight;
+  const pct=max>0?(doc.scrollTop/max)*100:0;
+  const bar=document.getElementById('scrollProgress');
+  if(bar)bar.style.width=pct+'%';
+  const stb=document.getElementById('scrollTopBtn');
+  if(stb)stb.classList.toggle('show',doc.scrollTop>420);
+}
+window.addEventListener('scroll',onScrollFX,{passive:true});
+const scrollTopBtnEl=document.getElementById('scrollTopBtn');
+if(scrollTopBtnEl)scrollTopBtnEl.addEventListener('click',()=>window.scrollTo({top:0,behavior:'smooth'}));
+
+/* ================= RESALTADO DEL MENÚ SEGÚN LA SECCIÓN VISIBLE ================= */
+let navSpyReady=false;
+function setupNavSpy(){
+  if(navSpyReady)return;navSpyReady=true;
+  const ids=['perfil','grimorio','unidades'];
+  const sections=ids.map(id=>document.getElementById(id)).filter(Boolean);
+  const links=document.querySelectorAll('.nav-links a[href^="#"]');
+  if(!sections.length||!links.length)return;
+  const spy=new IntersectionObserver(entries=>{
+    entries.forEach(en=>{
+      if(en.isIntersecting){
+        links.forEach(l=>l.classList.toggle('active',l.getAttribute('href')==='#'+en.target.id));
+      }
+    });
+  },{rootMargin:'-35% 0px -50% 0px',threshold:0});
+  sections.forEach(s=>spy.observe(s));
+}
+
+/* ================= BARRA DE ESTADÍSTICAS DINÁMICA ================= */
+function updateStats(){
+  const box=document.getElementById('statsBar');
+  if(!box||!appState)return;
+  const unitsArr=Object.values(appState.units);
+  const unlocked=unitsArr.filter(u=>!u.locked).length;
+  let totalWeeks=0,progSum=0,progCount=0;
+  unitsArr.forEach(u=>{
+    totalWeeks+=u.weeks.length;
+    u.weeks.forEach(w=>{progSum+=Number(w.progress)||0;progCount++;});
+  });
+  const avg=progCount?(progSum/progCount).toFixed(1):'0.0';
+  box.innerHTML=[
+    ['🏰 '+unlocked+'/'+unitsArr.length,'Unidades habilitadas'],
+    ['📜 '+totalWeeks,'Semanas registradas'],
+    ['❓ '+appState.questions.length,'Preguntas en el banco'],
+    ['⚔ '+avg+'%','Avance promedio']
+  ].map(([n,l])=>`<div class="reveal"><strong>${n}</strong><small>${l}</small></div>`).join('');
+  initReveal();
+}
+
+/* ================= ESTADO DE LA APLICACIÓN ================= */
+const STORAGE_KEY='gotPortfolioStateV2';
+function defaultState(){
+  return {
+    profile:{
+      eyebrow:'Universidad Peruana Los Andes · 2026-I',
+      nombre:'Matias', apellido:'Saforas Gomez',
+      descFuerte:'Ingeniero de Sistemas en formación.',
+      descResto:'Me interesa el desarrollo de soluciones tecnológicas, la gestión de bases de datos y la construcción de sistemas útiles, seguros y eficientes. Este portafolio reúne mi aprendizaje y evolución profesional.',
+      curso:'Base de Datos II (332151)',
+      docente:'Mg. Raúl Enrique Fernández Bejarano',
+      sede:'Huancayo, Perú',
+      enfoque:'Gestión de bases de datos',
+      especialidad:'Desarrollo de software',
+      rolAcademico:'Administrador'
+    },
+    grimorio:[
+      {n:'01',t:'Dato',d:'Un hecho o fenómeno concreto que decidimos registrar, sin interpretar todavía.'},
+      {n:'02',t:'Información',d:'El dato al que se le añade un significado dentro de un contexto.'},
+      {n:'03',t:'Conocimiento',d:'Información combinada con experiencia, lista para explicar o predecir.'},
+      {n:'04',t:'Sabiduría',d:'Conocimiento aplicado con criterio propio a la hora de decidir.'}
+    ],
+    units:{
+      '1':{
+        nombre:'Unidad I · Arquitecturas', locked:false,
+        capacityLabel:'Capacidad:',
+        capacityText:'reconocer las arquitecturas de bases de datos y su implementación en gestores DBMS vigentes para almacenar, organizar e integrar información.',
+        weeks:[
+          {id:'w1',num:'Semana 01',title:'Formulación del proyecto y selección de la arquitectura',desc:'Definir el alcance de un proyecto analítico a partir de un caso empresarial real, eligiendo y sustentando el tipo de arquitectura de base de datos (centralizada, distribuida o en la nube) que mejor responde a las necesidades de almacenamiento del negocio.',progress:6.25,questionsBtn:true,activities:[
+            {id:'a1',label:'📄 Actividad 1',filename:'semana1_actividad1.pdf',dispFilename:'SEMANA1_ACTIVIDAD1.pdf',title:'Formulación del proyecto · Actividad 1'},
+            {id:'a2',label:'📄 Actividad 2',filename:'semana1_actividad2.pdf',dispFilename:'SEMANA1_ACTIVIDAD2.pdf',title:'Formulación del proyecto · Actividad 2'}
+          ]},
+          {id:'w2',num:'Semana 02',title:'Despliegue y configuración de motores de datos (DBMS)',desc:'Instalar y configurar el sistema gestor de base de datos elegido para el proyecto, comprobando la conectividad y dejando listos los recursos iniciales del servidor.',progress:12.5,questionsBtn:false,activities:[
+            {id:'a3',label:'📄 Actividad 1',filename:'semana2_actividad1.pdf',dispFilename:'SEMANA2_ACTIVIDAD1.pdf',title:'Despliegue de motores de datos · Actividad 1'},
+            {id:'a4',label:'📄 Actividad 2',filename:'semana2_actividad2.pdf',dispFilename:'SEMANA2_ACTIVIDAD2.pdf',title:'Despliegue de motores de datos · Actividad 2'},
+            {id:'a5',label:'📄 Actividad 3',filename:'semana2_actividad3.pdf',dispFilename:'SEMANA2_ACTIVIDAD3.pdf',title:'Despliegue de motores de datos · Actividad 3'}
+          ]},
+          {id:'w3',num:'Semana 03',title:'Modelamiento físico y mecanismos de integración',desc:'Estructurar e implementar los esquemas y las tablas maestras dentro del DBMS, configurando las restricciones necesarias para que el almacenamiento y la integración de datos masivos sean eficientes.',progress:18.75,questionsBtn:false,activities:[
+            {id:'a6',label:'📜 Actividad única',filename:'semana3.pdf',dispFilename:'SEMANA3.pdf',title:'Modelamiento físico e integración'}
+          ]},
+          {id:'w4',num:'Semana 04',title:'Sustentación y validación de la infraestructura de datos',desc:'Sustentar el primer avance del proyecto mediante un informe técnico y una demostración en vivo, comprobando que el diseño de la arquitectura y la carga inicial de datos cumplen con los criterios de rendimiento e integración planteados. Cierra con el ingreso de notas al sistema.',progress:25.0,questionsBtn:false,activities:[
+            {id:'a7',label:'📜 Actividad única',filename:'semana4.pdf',dispFilename:'SEMANA4.pdf',title:'Sustentación y validación'}
+          ]}
+        ]
+      },
+      '2':{nombre:'Unidad II · Instancias',locked:true,capacityLabel:'',capacityText:'Unidad reservada para instancias, almacenamiento y datos masivos.',weeks:[]},
+      '3':{nombre:'Unidad III · Seguridad',locked:true,capacityLabel:'',capacityText:'Unidad reservada para seguridad, red y alta disponibilidad.',weeks:[]},
+      '4':{nombre:'Unidad IV · Monitoreo',locked:true,capacityLabel:'',capacityText:'Unidad reservada para monitoreo, desempeño y flashback.',weeks:[]}
+    },
+    questions:[
+      {id:'q01',num:'01',title:'Base de datos utilizada',text:'Una base de datos que he utilizado como consumidor es la de un sistema académico universitario. Puede contener entidades como Estudiante, Curso, Docente, Matrícula, Sección y Calificación. Por ejemplo, un estudiante se matricula en varios cursos y cada matrícula se relaciona con sus calificaciones.'},
+      {id:'q02',num:'02',title:'Grupos de usuarios',text:'Los principales grupos de usuarios pueden ser estudiantes, docentes, personal administrativo, coordinadores académicos y administradores de la base de datos. Cada grupo utiliza la información según sus funciones y permisos.'},
+      {id:'q03',num:'03',title:'Aplicación de un grupo de usuarios',text:'Para los estudiantes, una aplicación puede ser el portal académico. Permite consultar cursos matriculados, horarios y calificaciones mediante formularios y reportes.'},
+      {id:'q04',num:'04',title:'Persistencia',text:'La persistencia significa que los datos permanecen almacenados después de terminar una sesión o apagar el sistema. La información queda disponible para futuras consultas y operaciones.'},
+      {id:'q05',num:'05',title:'Interrelación',text:'La interrelación significa que los datos están relacionados entre sí. Por ejemplo, un estudiante se relaciona con sus matrículas, cursos y calificaciones, permitiendo consultar información conectada.'},
+      {id:'q06',num:'06',title:'Compartir',text:'Compartir significa que diferentes usuarios o áreas pueden utilizar los mismos datos de una base de datos de acuerdo con sus permisos. Esto evita duplicaciones y facilita trabajar con información común y actualizada.'},
+      {id:'q07',num:'07',title:'¿Qué es un DBMS?',text:'Un DBMS o sistema de administración de bases de datos es el software que permite definir, almacenar, consultar, actualizar y administrar una base de datos. También ayuda a controlar el acceso y el procesamiento de transacciones.'},
+      {id:'q08',num:'08',title:'Acceso procedural y no procedural',text:'El acceso procedural indica cómo realizar paso a paso las operaciones para obtener los datos. El acceso no procedural indica qué datos se necesitan sin detallar cada paso de acceso. La principal diferencia es que el segundo deja al DBMS decidir cómo ejecutar la consulta.'},
+      {id:'q09',num:'09',title:'Importancia del acceso no procedural',text:'El acceso no procedural es importante porque permite obtener información sin escribir código detallado para recorrer los datos. Esto mejora la productividad del software y facilita el desarrollo y mantenimiento de aplicaciones.'},
+      {id:'q10',num:'10',title:'Acceso no procedural y productividad',text:'La conexión es directa: formularios y reportes pueden especificar los requerimientos de datos mediante consultas, mientras el DBMS se encarga de encontrar y recuperar la información. Por ello, el acceso no procedural puede reducir código y facilitar el desarrollo de aplicaciones.'},
+      {id:'q11',num:'11',title:'Formulario y reporte',text:'Un formulario está orientado principalmente a ingresar, modificar o consultar información de manera interactiva. Un reporte presenta información organizada para lectura, análisis, impresión o toma de decisiones.'},
+      {id:'q12',num:'12',title:'Interfaz de lenguaje procedural',text:'Es el mecanismo que permite combinar el acceso no procedural a una base de datos con un lenguaje de programación procedural, como COBOL o Visual Basic. Así, una aplicación puede ejecutar consultas y operaciones de la base de datos dentro de un programa.'},
+      {id:'q13',num:'13',title:'Transacción',text:'Una transacción es una unidad de trabajo que debe procesarse de forma completa y confiable. Por ejemplo, registrar una matrícula puede implicar varias operaciones que deben quedar correctamente realizadas para conservar la consistencia.'},
+      {id:'q14',num:'14',title:'Funciones del DBMS para transacciones',text:'El DBMS proporciona funciones para controlar transacciones, mantener la consistencia, manejar el acceso concurrente y recuperar la información cuando ocurre una falla. De esta manera, las operaciones se procesan de forma confiable.'},
+      {id:'q15',num:'15',title:'Transacción de la base de datos elegida',text:'Una transacción puede ser la matrícula de un estudiante en un curso. Se utiliza especialmente al inicio de cada periodo académico y puede ser enviada por muchos estudiantes al mismo tiempo. La cantidad exacta depende de la institución y de la carga del sistema.'},
+      {id:'q16',num:'16',title:'DBMS corporativo',text:'Es un DBMS diseñado para organizaciones y grandes bases de datos, con muchos usuarios simultáneos. Suele ejecutarse en servidores potentes y soporta procesamiento de transacciones, disponibilidad, seguridad y rendimiento.'},
+      {id:'q17',num:'17',title:'DBMS de escritorio',text:'Es un DBMS que se ejecuta normalmente en computadoras personales o servidores pequeños. Soporta un procesamiento más limitado y resulta apropiado para equipos de trabajo y negocios pequeños.'},
+      {id:'q18',num:'18',title:'DBMS embebido',text:'Es un DBMS que reside dentro de un sistema más grande, como una aplicación o dispositivo. Ofrece procesamiento transaccional limitado y requiere pocos recursos de memoria, procesamiento y almacenamiento.'},
+      {id:'q19',num:'19',title:'Funciones de la primera generación',text:'La primera generación se basaba principalmente en estructuras de archivos y acceso mediante programas. Permitía búsquedas secuenciales y aleatorias, pero el usuario necesitaba escribir programas para obtener la información y existía poco soporte para relacionar datos.'},
+      {id:'q20',num:'20',title:'Funciones de la segunda generación',text:'La segunda generación incorporó DBMS reales capaces de administrar muchas entidades y relaciones. Se caracterizó por el acceso navegacional, donde el programador debía escribir código para navegar entre registros relacionados; algunos productos utilizaron estándares como CODASYL.'},
+      {id:'q21',num:'21',title:'Funciones de la tercera generación',text:'La tercera generación se caracterizó por los DBMS relacionales y los lenguajes no procedurales. El acceso mediante relaciones y operadores, junto con la optimización de tecnología, permitió consultar datos de manera más flexible y eficiente.'},
+      {id:'q22',num:'22',title:'Funciones de la cuarta generación',text:'La cuarta generación incorporó capacidades orientadas a objetos y soportó funciones como multimedia, procesamiento distribuido, operadores más poderosos y procesamiento de datos para data warehouse, además de nuevas posibilidades de integración.'},
+      {id:'q23',num:'23',title:'Tres niveles del esquema',text:'Nivel externo: presenta las vistas de información que necesita cada tipo de usuario. Nivel conceptual: representa la estructura lógica global de entidades, atributos y relaciones. Nivel interno: describe cómo se almacenan físicamente los datos, incluyendo estructuras e índices.'},
+      {id:'q24',num:'24',title:'Propósito del mapeo',text:'El mapeo relaciona los niveles externo, conceptual e interno y permite transformar una vista de usuario en la representación lógica y luego en la forma de almacenamiento. El DBMS es responsable de realizar y administrar estos mapeos.'},
+      {id:'q25',num:'25',title:'Arquitectura de tres esquemas e independencia',text:'La separación entre los niveles permite cambiar detalles de un nivel sin modificar necesariamente los otros. Por ejemplo, cambiar la forma física de almacenamiento puede hacerse sin cambiar las vistas de los usuarios. Esto reduce los costos de mantenimiento del software.'},
+      {id:'q26',num:'26',title:'Interacción de usuarios con la base de datos',text:'Los usuarios funcionales activos interactúan directamente con formularios, consultas y reportes. Los usuarios pueden trabajar con vistas externas de la información según sus necesidades, mientras el DBMS gestiona el acceso a los datos.'},
+      {id:'q27',num:'27',title:'Cliente-servidor y división del procesamiento',text:'El procesamiento se divide para aprovechar las capacidades del cliente y del servidor. El cliente puede manejar la interfaz y parte de la lógica, mientras el servidor administra los datos y las operaciones del DBMS. El servidor no hace todo porque distribuir la carga puede mejorar el uso de recursos y la respuesta.'},
+      {id:'q28',num:'28',title:'Datos en varias computadoras',text:'En una arquitectura cliente-servidor o distribuida, los datos pueden almacenarse en varias computadoras para repartir la carga, acercar la información a diferentes ubicaciones, mejorar el rendimiento y aumentar la disponibilidad del sistema.'},
+      {id:'q29',num:'29',title:'Usuarios indirectos, paramétricos y poderosos',text:'Los usuarios indirectos reciben información mediante reportes preparados. Los usuarios paramétricos utilizan formularios o consultas con parámetros definidos, por ejemplo, seleccionando un curso o periodo. Los usuarios poderosos o experimentados realizan consultas más flexibles y pueden crear o adaptar formularios y reportes.'},
+      {id:'q30',num:'30',title:'Usuario funcional activo y analista',text:'El usuario funcional activo trabaja directamente con la información mediante las aplicaciones de la organización. El analista estudia requerimientos, diseña soluciones y participa en el desarrollo de sistemas. Ambos utilizan principalmente el nivel externo para entender las necesidades, mientras el analista también debe considerar la estructura conceptual.'},
+      {id:'q31',num:'31',title:'Objetivo profesional',text:'Como objetivo a largo plazo elegiría ser administrador de bases de datos, porque me interesa la tecnología, la gestión de información y el funcionamiento de los sistemas. Este puesto me permitiría trabajar en seguridad, rendimiento, disponibilidad y administración de bases de datos.'},
+      {id:'q32',num:'32',title:'Nicho de los DBMS de código libre',text:'Los DBMS de código libre ocupan un espacio importante en proyectos educativos, emprendimientos, organizaciones y empresas que buscan reducir costos de licenciamiento y contar con soluciones flexibles. También son útiles para desarrolladores y equipos que necesitan adaptar la tecnología a sus necesidades.'}
+    ]
+  };
+}
+function loadState(){
+  try{const raw=localStorage.getItem(STORAGE_KEY);if(raw)return JSON.parse(raw);}catch(e){}
+  return defaultState();
+}
+function saveState(){
+  try{localStorage.setItem(STORAGE_KEY,JSON.stringify(appState));}catch(e){}
+}
+let appState=null;
+let role=null;
+let editMode=false;
+let currentUnit='1';
+
+/* ================= LOGIN ================= */
+const ACCOUNTS={admin:{user:'M@t_SF',pass:'77222987'},user:{user:'Invitado',pass:'upla2026'}};
+document.querySelectorAll('.login-tab').forEach(tab=>tab.addEventListener('click',()=>{
+  document.querySelectorAll('.login-tab').forEach(t=>t.classList.remove('active'));
+  tab.classList.add('active');
+  const which=tab.dataset.acc;
+  document.getElementById('loginHint').innerHTML= which==='admin'
+    ? 'Usuario: <b>M@t_SF</b> · Contraseña: <b>77222987</b>'
+    : 'Usuario: <b>Invitado</b> · Contraseña: <b>upla2026</b>';
+}));
+document.getElementById('fillDemoBtn').addEventListener('click',()=>{
+  const active=document.querySelector('.login-tab.active').dataset.acc;
+  const acc=ACCOUNTS[active];
+  document.getElementById('user').value=acc.user;
+  document.getElementById('pass').value=acc.pass;
+});
+document.getElementById('login-form').addEventListener('submit',function(e){
+  e.preventDefault();
+  const u=document.getElementById('user').value.trim();
+  const p=document.getElementById('pass').value;
+  let matched=null;
+  if(u===ACCOUNTS.admin.user && p===ACCOUNTS.admin.pass) matched='admin';
+  else if(u.toLowerCase()===ACCOUNTS.user.user.toLowerCase() && p===ACCOUNTS.user.pass) matched='user';
+  const errorEl=document.getElementById('login-error');
+  if(matched){
+    role=matched;
+    document.body.setAttribute('data-role',role);
+    setEditMode(false);
+    document.getElementById('roleBadgeText').textContent= role==='admin' ? '👑 Administrador' : '🛡 Usuario';
+    document.getElementById('login-screen').style.display='none';
+    document.getElementById('app-screen').style.display='block';
+    errorEl.style.display='none';
+    appState=loadState();
+    currentUnit='1';
+    renderAll();
+    window.scrollTo(0,0);
+    spawnEmbers();
+    setupNavSpy();
+    onScrollFX();
+  } else {
+    errorEl.style.display='block';
+  }
+});
+document.getElementById('logout-btn').onclick=()=>{
+  document.getElementById('app-screen').style.display='none';
+  document.getElementById('login-screen').style.display='grid';
+  document.getElementById('pass').value='';
+  document.getElementById('navLinks').classList.remove('open');
+  role=null;
+  window.scrollTo(0,0);
+};
+document.getElementById('togglePass').onclick=function(){
+  const p=document.getElementById('pass');
+  p.type=p.type==='password'?'text':'password';
+  this.style.color=p.type==='text'?'var(--gold2)':'';
+};
+document.getElementById('navToggle').onclick=()=>document.getElementById('navLinks').classList.toggle('open');
+
+/* ================= MODO EDICIÓN (solo administrador) ================= */
+function setEditMode(on){
+  editMode=on;
+  document.body.setAttribute('data-editmode',on?'1':'0');
+  const btn=document.getElementById('editModeBtn');
+  btn.textContent= on ? '✓ Modo edición activo' : '✎ Modo edición';
+  btn.classList.toggle('active',on);
+}
+document.getElementById('editModeBtn').onclick=()=>setEditMode(!editMode);
+function resetContent(){
+  if(!confirm('¿Restablecer todo el contenido a los valores originales? Esta acción no se puede deshacer.'))return;
+  localStorage.removeItem(STORAGE_KEY);
+  appState=defaultState();
+  saveState();
+  renderAll();
+  showToast('Contenido restablecido a los valores originales.');
+}
+
+/* ================= RENDER ================= */
+function renderAll(){
+  renderProfile();
+  renderGrimorio();
+  renderUnitTabs();
+  renderUnitPanel(currentUnit);
+}
+function renderProfile(){
+  const p=appState.profile;
+  document.getElementById('heroEyebrow').textContent=p.eyebrow;
+  document.getElementById('heroName').innerHTML=esc(p.nombre)+'<br><span>'+esc(p.apellido)+'</span>';
+  document.getElementById('heroDesc').innerHTML='<strong>'+esc(p.descFuerte)+'</strong> '+esc(p.descResto);
+  document.getElementById('navBrand').innerHTML=esc(p.nombre)+' '+esc(p.apellido)+'<br>'+esc(p.curso.split(' (')[0]);
+  const labels={curso:'Curso',docente:'Docente',sede:'Sede',enfoque:'Enfoque',especialidad:'Especialidad',rolAcademico:'Rol'};
+  document.getElementById('profileGrid').innerHTML=Object.keys(labels).map(k=>
+    `<div class="reveal"><small>${labels[k]}</small><strong>${esc(p[k])}</strong></div>`
+  ).join('');
+  document.getElementById('profileEditBtnWrap').innerHTML = role==='admin'
+    ? `<button type="button" class="questions-btn edit-ctrl" style="max-width:240px;margin:20px auto 0" onclick="editProfile()">✎ Editar perfil</button>`
+    : '';
+  updateStats();
+  initReveal();
+}
+function editProfile(){
+  const p=appState.profile;
+  openEditModal('Editar perfil',[
+    {key:'eyebrow',label:'Encabezado superior',value:p.eyebrow},
+    {key:'nombre',label:'Nombre',value:p.nombre},
+    {key:'apellido',label:'Apellido',value:p.apellido},
+    {key:'descFuerte',label:'Frase destacada',value:p.descFuerte},
+    {key:'descResto',label:'Descripción',type:'textarea',value:p.descResto},
+    {key:'curso',label:'Curso',value:p.curso},
+    {key:'docente',label:'Docente',value:p.docente},
+    {key:'sede',label:'Sede',value:p.sede},
+    {key:'enfoque',label:'Enfoque',value:p.enfoque},
+    {key:'especialidad',label:'Especialidad',value:p.especialidad},
+    {key:'rolAcademico',label:'Rol (etiqueta del perfil)',value:p.rolAcademico}
+  ],vals=>{
+    Object.assign(appState.profile,vals);
+    saveState();renderProfile();
+    showToast('Perfil actualizado.');
+  });
+}
+
+const GRIMORIO_ICONS=['◈','❖','⚜','♛','⚔','🜃','☆','◆'];
+function renderGrimorio(){
+  document.getElementById('grimorioGrid').innerHTML=appState.grimorio.map((c,i)=>{
+    const toolbar= role==='admin' ? `<div class="entity-toolbar edit-ctrl"><button type="button" class="icon-btn" title="Editar" onclick="editGrimorio(${i})">✎</button></div>`:'';
+    const icon=GRIMORIO_ICONS[i%GRIMORIO_ICONS.length];
+    return `<article class="codex-card reveal tilt">${toolbar}<div class="codex-emblem">${icon}</div><span>${esc(c.n)}</span><h3>${esc(c.t)}</h3><p>${esc(c.d)}</p></article>`;
+  }).join('');
+  initReveal();
+}
+function editGrimorio(i){
+  const c=appState.grimorio[i];
+  openEditModal('Editar concepto',[
+    {key:'n',label:'Número',value:c.n},
+    {key:'t',label:'Título',value:c.t},
+    {key:'d',label:'Descripción',type:'textarea',value:c.d}
+  ],vals=>{Object.assign(c,vals);saveState();renderGrimorio();showToast('Tarjeta actualizada.');});
+}
+
+const UNIT_ICONS={'1':'🏰','2':'📚','3':'🛡','4':'🐉'};
+function renderUnitTabs(){
+  const wrap=document.getElementById('unitTabs');
+  wrap.innerHTML=Object.keys(appState.units).map(k=>{
+    const u=appState.units[k];
+    const lockToggle= role==='admin' ? `<span class="lock-toggle edit-ctrl" onclick="event.stopPropagation();toggleUnitLock('${k}')" title="${u.locked?'Desbloquear unidad':'Bloquear unidad'}">${u.locked?'🔓':'🔒'}</span>`:'';
+    const icon=UNIT_ICONS[k]||'❖';
+    return `<button type="button" class="unit-tab ${k===currentUnit?'active':''} ${u.locked?'locked':''}" onclick="selectUnit('${k}')"><span class="unit-icon">${u.locked?'🔒':icon}</span>${esc(u.nombre)}${lockToggle}</button>`;
+  }).join('');
+}
+function selectUnit(k){
+  const u=appState.units[k];
+  if(u.locked && role!=='admin'){
+    showToast('Esta unidad todavía no está habilitada por el administrador.');
+    return;
+  }
+  currentUnit=k;
+  renderUnitTabs();
+  renderUnitPanel(k);
+}
+function toggleUnitLock(k){
+  const u=appState.units[k];
+  u.locked=!u.locked;
+  saveState();renderUnitTabs();
+  if(currentUnit===k)renderUnitPanel(k);
+  updateStats();
+  showToast(u.locked?'Unidad bloqueada para usuarios.':'Unidad habilitada para todos.');
+}
+
+function renderUnitPanel(k){
+  const u=appState.units[k];
+  const container=document.getElementById('unitPanelContainer');
+  const capToolbar= role==='admin' ? `<button type="button" class="icon-btn edit-ctrl" title="Editar descripción" onclick="editCapacity('${k}')" style="flex-shrink:0">✎</button>`:'';
+  let html=`<div class="capacity reveal"><span>${UNIT_ICONS[k]||'❖'}</span><div class="capacity-text">${u.capacityLabel?`<b>${esc(u.capacityLabel)}</b> `:''}${esc(u.capacityText)}</div>${capToolbar}</div>`;
+  html+=`<div class="weeks-grid">`;
+  u.weeks.forEach(w=>{html+=renderWeekCard(k,w);});
+  html+=`</div>`;
+  if(u.weeks.length===0 && role!=='admin'){
+    html+=`<p class="helper-note">Aún no hay semanas registradas en esta unidad.</p>`;
+  }
+  if(role==='admin'){
+    html+=`<button type="button" class="questions-btn edit-ctrl" style="margin-top:14px" onclick="addWeek('${k}')">➕ Añadir semana</button>`;
+  }
+  u.weeks.forEach(w=>{html+=renderActivitiesPanel(k,w);});
+  if(u.weeks.some(w=>w.questionsBtn)){
+    html+=renderQuestionsPanel();
+  }
+  container.innerHTML=html;
+  initReveal();
+  updateStats();
+  animateProgressBars();
+}
+function editCapacity(k){
+  const u=appState.units[k];
+  openEditModal('Editar descripción de la unidad',[
+    {key:'capacityLabel',label:'Etiqueta (opcional)',value:u.capacityLabel||'',hint:'Ejemplo: Capacidad:'},
+    {key:'capacityText',label:'Texto',type:'textarea',value:u.capacityText}
+  ],vals=>{Object.assign(u,vals);saveState();renderUnitPanel(k);showToast('Descripción actualizada.');});
+}
+
+function renderWeekCard(k,w){
+  const toolbar= role==='admin' ? `<div class="entity-toolbar edit-ctrl">
+    <button type="button" class="icon-btn" title="Editar" onclick="editWeek('${k}','${w.id}')">✎</button>
+    <button type="button" class="icon-btn danger" title="Eliminar" onclick="deleteWeek('${k}','${w.id}')">🗑</button>
+  </div>`:'';
+  return `<article class="week-card reveal tilt">${toolbar}
+    <span class="week-num">${esc(w.num)}</span>
+    <h3>${esc(w.title)}</h3>
+    <p>${esc(w.desc)}</p>
+    <button type="button" class="dragon-eye-btn" onclick="toggleActivities('${w.id}')" title="Ver actividades">
+      <svg viewBox="0 0 48 30" width="30" height="19"><defs><radialGradient id="iris-${w.id}" cx="50%" cy="45%" r="65%"><stop offset="0%" stop-color="#F9D77E"/><stop offset="45%" stop-color="#C9A227"/><stop offset="100%" stop-color="#5C1414"/></radialGradient></defs><path d="M2 15 Q24 -4 46 15 Q24 34 2 15 Z" fill="url(#iris-${w.id})" stroke="#1a1004" stroke-width="1.6"/><ellipse class="dragon-pupil" cx="24" cy="15" rx="3.1" ry="10.5" fill="#0a0603"/></svg>
+      <span>Ver actividades</span>
+    </button>
+    <div class="progress"><i style="width:0%" data-progress="${w.progress}"></i></div>
+    <small>${Number(w.progress).toFixed(2)}% de avance acumulado</small>
+    ${w.questionsBtn?`<button type="button" class="questions-btn" onclick="toggleQuestions()">📝 Ver las 32 preguntas</button>`:''}
+  </article>`;
+}
+function animateProgressBars(){
+  requestAnimationFrame(()=>{
+    document.querySelectorAll('.progress i[data-progress]').forEach(i=>{
+      i.style.width=i.dataset.progress+'%';
+    });
+  });
+}
+function addWeek(k){
+  const n=appState.units[k].weeks.length+1;
+  openEditModal('Añadir semana',[
+    {key:'num',label:'Rótulo',value:'Semana '+String(n).padStart(2,'0')},
+    {key:'title',label:'Título',value:''},
+    {key:'desc',label:'Descripción',type:'textarea',value:''},
+    {key:'progress',label:'Avance acumulado (%)',type:'number',value:0,step:'0.01',min:0,max:100},
+    {key:'questionsBtn',label:'¿Mostrar botón del banco de preguntas?',value:'no',hint:'Escribe "si" o "no".'}
+  ],vals=>{
+    appState.units[k].weeks.push({id:uid(),num:vals.num,title:vals.title,desc:vals.desc,progress:parseFloat(vals.progress)||0,questionsBtn:/^s/i.test(vals.questionsBtn),activities:[]});
+    saveState();renderUnitPanel(k);renderUnitTabs();
+    showToast('Semana añadida.');
+  });
+}
+function editWeek(k,weekId){
+  const w=appState.units[k].weeks.find(x=>x.id===weekId);
+  openEditModal('Editar semana',[
+    {key:'num',label:'Rótulo',value:w.num},
+    {key:'title',label:'Título',value:w.title},
+    {key:'desc',label:'Descripción',type:'textarea',value:w.desc},
+    {key:'progress',label:'Avance acumulado (%)',type:'number',value:w.progress,step:'0.01',min:0,max:100},
+    {key:'questionsBtn',label:'¿Mostrar botón del banco de preguntas?',value:w.questionsBtn?'si':'no'}
+  ],vals=>{
+    w.num=vals.num;w.title=vals.title;w.desc=vals.desc;
+    w.progress=parseFloat(vals.progress)||0;
+    w.questionsBtn=/^s/i.test(vals.questionsBtn);
+    saveState();renderUnitPanel(k);
+    showToast('Semana actualizada.');
+  });
+}
+function deleteWeek(k,weekId){
+  if(!confirm('¿Eliminar esta semana y todas sus actividades?'))return;
+  const u=appState.units[k];
+  u.weeks=u.weeks.filter(w=>w.id!==weekId);
+  saveState();renderUnitPanel(k);
+  showToast('Semana eliminada.');
+}
+
+function renderActivitiesPanel(k,w){
+  let inner=w.activities.map(a=>renderActivityBlock(k,w,a)).join('');
+  const empty= w.activities.length===0 ? `<p class="helper-note">Aún no hay actividades cargadas para esta semana.</p>`:'';
+  const addBtn= role==='admin' ? `<button type="button" class="dragon-eye-btn edit-ctrl" onclick="addActivity('${k}','${w.id}')">➕ Añadir actividad</button>`:'';
+  return `<div class="activities-panel" id="activitiesPanel-${w.id}">
+    <div class="activities-panel-head"><div><h3>Actividades — ${esc(w.num)}</h3><span>${esc(w.title)}</span></div><button type="button" class="activities-close" onclick="toggleActivities('${w.id}')">Cerrar ✕</button></div>
+    <div class="activities-wrap">${inner}</div>
+    ${empty}${addBtn}
+  </div>`;
+}
+function renderActivityBlock(k,w,a){
+  const toolbar= role==='admin' ? `<div class="entity-toolbar edit-ctrl">
+    <button type="button" class="icon-btn" title="Editar" onclick="editActivity('${k}','${w.id}','${a.id}')">✎</button>
+    <button type="button" class="icon-btn danger" title="Eliminar" onclick="deleteActivity('${k}','${w.id}','${a.id}')">🗑</button>
+  </div>`:'';
+  const url='pdf/'+a.filename;
+  return `<div class="activity-block">${toolbar}
+    <div class="activity-label">${esc(a.label)}</div>
+    <div class="card-pdf-thumb" onclick="openActivityPdf('${k}','${w.id}','${a.id}')"><div class="thumb-placeholder"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14,2 14,8 20,8"/><line x1="9" y1="13" x2="15" y2="13"/><line x1="9" y1="17" x2="15" y2="17"/></svg>Clic para ver</div></div>
+    <div class="card-actions">
+      <button type="button" class="preview-btn" onclick="event.stopPropagation();openActivityPdf('${k}','${w.id}','${a.id}')"><svg viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>Ver PDF</button>
+      <a class="download-btn" href="${esc(url)}" download onclick="event.stopPropagation()"><svg viewBox="0 0 24 24"><path d="M12 16l-5-5h3V4h4v7h3l-5 5zm-7 2h14v2H5v-2z"/></svg></a>
+    </div>
+  </div>`;
+}
+function addActivity(k,weekId){
+  openEditModal('Añadir actividad',[
+    {key:'label',label:'Etiqueta',value:'📄 Actividad'},
+    {key:'filename',label:'Archivo (ruta dentro de /pdf)',value:'',hint:'Ej: semana5_actividad1.pdf — sube el archivo real a la carpeta pdf/ de tu sitio.'},
+    {key:'dispFilename',label:'Nombre a mostrar',value:''},
+    {key:'title',label:'Título del documento',value:''}
+  ],vals=>{
+    const w=appState.units[k].weeks.find(x=>x.id===weekId);
+    w.activities.push({id:uid(),label:vals.label,filename:vals.filename,dispFilename:vals.dispFilename||vals.filename,title:vals.title});
+    saveState();renderUnitPanel(k);
+    showToast('Actividad añadida.');
+  });
+}
+function editActivity(k,weekId,actId){
+  const w=appState.units[k].weeks.find(x=>x.id===weekId);
+  const a=w.activities.find(x=>x.id===actId);
+  openEditModal('Editar actividad',[
+    {key:'label',label:'Etiqueta',value:a.label},
+    {key:'filename',label:'Archivo (ruta dentro de /pdf)',value:a.filename},
+    {key:'dispFilename',label:'Nombre a mostrar',value:a.dispFilename},
+    {key:'title',label:'Título del documento',value:a.title}
+  ],vals=>{Object.assign(a,vals);saveState();renderUnitPanel(k);showToast('Actividad actualizada.');});
+}
+function deleteActivity(k,weekId,actId){
+  if(!confirm('¿Eliminar esta actividad?'))return;
+  const w=appState.units[k].weeks.find(x=>x.id===weekId);
+  w.activities=w.activities.filter(a=>a.id!==actId);
+  saveState();renderUnitPanel(k);
+  showToast('Actividad eliminada.');
+}
+
+function renderQuestionsPanel(){
+  const cards=appState.questions.map(q=>renderQuestionCard(q)).join('');
+  const addBtn= role==='admin' ? `<button type="button" class="questions-btn edit-ctrl" style="grid-column:1/-1" onclick="addQuestion()">➕ Añadir pregunta</button>`:'';
+  return `<div class="questions-panel" id="questionsPanel">
+    <div class="questions-panel-head"><div><h3>${appState.questions.length} preguntas de Base de Datos</h3><span>Evaluación asociada a la Semana 01</span></div><button type="button" class="questions-close" onclick="toggleQuestions()">Cerrar ✕</button></div>
+    <div class="questions-grid">${cards}${addBtn}</div>
+  </div>`;
+}
+function renderQuestionCard(q){
+  const toolbar= role==='admin' ? `<div class="entity-toolbar edit-ctrl">
+    <button type="button" class="icon-btn" title="Editar" onclick="editQuestion('${q.id}')">✎</button>
+    <button type="button" class="icon-btn danger" title="Eliminar" onclick="deleteQuestion('${q.id}')">🗑</button>
+  </div>`:'';
+  return `<article class="question-card reveal">${toolbar}<span class="q-number">${esc(q.num)}</span><div><h3>${esc(q.title)}</h3><p>${esc(q.text)}</p></div></article>`;
+}
+function addQuestion(){
+  openEditModal('Añadir pregunta',[
+    {key:'num',label:'Número',value:String(appState.questions.length+1).padStart(2,'0')},
+    {key:'title',label:'Título',value:''},
+    {key:'text',label:'Respuesta',type:'textarea',value:''}
+  ],vals=>{
+    appState.questions.push({id:uid(),num:vals.num,title:vals.title,text:vals.text});
+    saveState();renderUnitPanel(currentUnit);
+    showToast('Pregunta añadida.');
+  });
+}
+function editQuestion(qid){
+  const q=appState.questions.find(x=>x.id===qid);
+  openEditModal('Editar pregunta',[
+    {key:'num',label:'Número',value:q.num},
+    {key:'title',label:'Título',value:q.title},
+    {key:'text',label:'Respuesta',type:'textarea',value:q.text}
+  ],vals=>{Object.assign(q,vals);saveState();renderUnitPanel(currentUnit);showToast('Pregunta actualizada.');});
+}
+function deleteQuestion(qid){
+  if(!confirm('¿Eliminar esta pregunta?'))return;
+  appState.questions=appState.questions.filter(q=>q.id!==qid);
+  saveState();renderUnitPanel(currentUnit);
+  showToast('Pregunta eliminada.');
+}
+
+/* ================= PANELES DESPLEGABLES ================= */
 function toggleQuestions(){
   const panel=document.getElementById('questionsPanel');
+  if(!panel)return;
   panel.classList.toggle('open');
   if(panel.classList.contains('open'))panel.scrollIntoView({behavior:'smooth',block:'start'});
 }
-function toggleActivities(n){
-  const panel=document.getElementById('activitiesPanel'+n);
+function toggleActivities(weekId){
+  const panel=document.getElementById('activitiesPanel-'+weekId);
+  if(!panel)return;
   const wasOpen=panel.classList.contains('open');
   document.querySelectorAll('.activities-panel').forEach(p=>p.classList.remove('open'));
   if(!wasOpen){panel.classList.add('open');panel.scrollIntoView({behavior:'smooth',block:'start'});}
 }
+
+/* ================= MODAL GENÉRICO DE EDICIÓN ================= */
+let modalSaveHandler=null;
+function openEditModal(title,fields,onSave){
+  document.getElementById('editModalTitle').textContent=title;
+  const form=document.getElementById('editModalForm');
+  form.innerHTML=fields.map(f=>{
+    if(f.type==='textarea'){
+      return `<div class="edit-field"><label>${esc(f.label)}</label><textarea name="${esc(f.key)}">${esc(f.value)}</textarea>${f.hint?`<small>${esc(f.hint)}</small>`:''}</div>`;
+    }
+    return `<div class="edit-field"><label>${esc(f.label)}</label><input name="${esc(f.key)}" type="${f.type||'text'}" value="${esc(f.value)}"${f.step?` step="${f.step}"`:''}${f.min!=null?` min="${f.min}"`:''}${f.max!=null?` max="${f.max}"`:''}>${f.hint?`<small>${esc(f.hint)}</small>`:''}</div>`;
+  }).join('');
+  modalSaveHandler=onSave;
+  document.getElementById('editModalOverlay').classList.add('open');
+  document.body.style.overflow='hidden';
+  const first=form.querySelector('input,textarea');if(first)setTimeout(()=>first.focus(),60);
+}
+function closeEditModal(){
+  document.getElementById('editModalOverlay').classList.remove('open');
+  document.body.style.overflow='';
+  modalSaveHandler=null;
+}
+document.getElementById('editModalForm').addEventListener('submit',function(e){
+  e.preventDefault();
+  const data=new FormData(this);
+  const values={};
+  for(const [k,v] of data.entries())values[k]=v;
+  if(modalSaveHandler)modalSaveHandler(values);
+  closeEditModal();
+});
+
+/* ================= ASISTENTE (CHATBOT) ================= */
+const bp=document.getElementById('bot-panel');
+document.getElementById('bot-toggle').onclick=()=>bp.classList.toggle('open');
+document.getElementById('bot-close').onclick=()=>bp.classList.remove('open');
+document.getElementById('bot-form').addEventListener('submit',function(e){
+  e.preventDefault();
+  const input=document.getElementById('bot-input'),text=input.value.trim();
+  if(!text)return;
+  const box=document.getElementById('bot-messages');
+  box.insertAdjacentHTML('beforeend','<div class="msg">'+esc(text)+'</div>');
+  let r='Puedes revisar el perfil, el Grimorio o las unidades del curso.';
+  const q=text.toLowerCase();
+  if(q.includes('matias')||q.includes('michael'))r='Matias Saforas Gomez es estudiante de Ingeniería de Sistemas en la UPLA.';
+  else if(q.includes('curso'))r='El curso es Base de Datos II (332151), semestre 2026-I.';
+  else if(q.includes('docente'))r='El docente es el Mg. Raúl Enrique Fernández Bejarano.';
+  else if(q.includes('pregunta'))r='Las 32 preguntas están dentro de la tarjeta de la Semana 01, en la sección Unidades.';
+  else if(q.includes('rol')||q.includes('quien soy')||q.includes('quién soy'))r='Has iniciado sesión como '+(role==='admin'?'Administrador. Puedes activar el "Modo edición" en el menú superior para gestionar el contenido.':'Usuario, en modo de solo consulta.');
+  else if(q.includes('editar')||q.includes('administrar'))r= role==='admin' ? 'Activa "Modo edición" en el menú superior para editar el perfil, las semanas, las actividades y las preguntas.' : 'La edición del contenido está reservada para la cuenta de Administrador.';
+  box.insertAdjacentHTML('beforeend','<div class="msg">'+esc(r)+'</div>');
+  input.value='';
+  box.scrollTop=box.scrollHeight;
+});
 </script>
-<script>
-const login=document.getElementById('login-screen'),app=document.getElementById('app-screen'),error=document.getElementById('login-error');document.getElementById('login-form').addEventListener('submit',e=>{e.preventDefault();if(user.value.trim()==='M@t_SF'&&pass.value==='77222987'){login.style.display='none';app.style.display='block';error.style.display='none';window.scrollTo(0,0)}else error.style.display='block'});document.getElementById('logout-btn').onclick=()=>{app.style.display='none';login.style.display='grid';pass.value='';window.scrollTo(0,0)};
-document.getElementById('togglePass').onclick=function(){const p=document.getElementById('pass');p.type=p.type==='password'?'text':'password';this.style.color=p.type==='text'?'var(--gold2)':'';};
-document.querySelectorAll('.unit-tab').forEach(btn=>btn.onclick=()=>{document.querySelectorAll('.unit-tab').forEach(x=>x.classList.remove('active'));document.querySelectorAll('.unit-panel').forEach(x=>x.classList.remove('active'));btn.classList.add('active');document.getElementById(btn.dataset.target).classList.add('active')});
-const bp=document.getElementById('bot-panel');document.getElementById('bot-toggle').onclick=()=>bp.classList.toggle('open');document.getElementById('bot-close').onclick=()=>bp.classList.remove('open');document.getElementById('bot-form').addEventListener('submit',e=>{e.preventDefault();const input=document.getElementById('bot-input'),text=input.value.trim();if(!text)return;const box=document.getElementById('bot-messages');box.insertAdjacentHTML('beforeend','<div class="msg">'+text.replace(/[<>]/g,'')+'</div>');let r='Puedes revisar el perfil, el Grimorio o las unidades del curso.';const q=text.toLowerCase();if(q.includes('matias')||q.includes('michael'))r='Matias Saforas Gomez es estudiante de Ingeniería de Sistemas en la UPLA.';else if(q.includes('curso'))r='El curso es Base de Datos II (332151), semestre 2026-I.';else if(q.includes('docente'))r='El docente es el Mg. Raúl Enrique Fernández Bejarano.';else if(q.includes('pregunta'))r='Las 32 preguntas están dentro de la tarjeta de la Semana 01, en la sección Unidades.';box.insertAdjacentHTML('beforeend','<div class="msg">'+r+'</div>');input.value='';box.scrollTop=box.scrollHeight});
-</script></body></html>
+</body></html>
