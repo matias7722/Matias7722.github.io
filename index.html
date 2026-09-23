@@ -111,7 +111,7 @@ main section{padding:90px clamp(18px,6vw,90px);max-width:1250px;margin:auto}
 .lock-toggle{border:1px solid var(--border);background:rgba(0,0,0,.3);border-radius:0;width:22px;height:22px;align-items:center;justify-content:center;font-size:.75rem}
 .lock-toggle:hover{border-color:var(--gold2)}
 .capacity{border-left:3px solid var(--gold);background:linear-gradient(90deg,var(--panel),var(--panel2));padding:19px;color:var(--muted);line-height:1.7;margin-bottom:18px;font-style:italic;display:flex;align-items:flex-start;gap:14px;flex-wrap:wrap;box-shadow:0 10px 30px rgba(0,0,0,.25)}
-.capacity>span:first-child{flex-shrink:0;font-size:1.3rem;filter:drop-shadow(0 0 4px rgba(201,162,39,.5))}
+.capacity>span:first-child{flex-shrink:0;font-size:1.3rem;filter:drop-shadow(0 0 4px color-mix(in srgb,var(--gold) 50%,transparent))}
 .capacity-text{flex:1;min-width:220px}
 .weeks-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:14px}
 .week-card{position:relative}
@@ -150,7 +150,7 @@ footer{padding:35px 20px;text-align:center;border-top:1px solid var(--border);co
 .download-btn:hover{background:var(--gold);color:#1a1204}
 .download-btn svg,.preview-btn svg{width:13px;height:13px;fill:currentColor;flex-shrink:0}
 .questions-btn{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;margin-top:12px;padding:11px 14px;background:transparent;border:1px dashed var(--gold);color:var(--gold2);font:700 .7rem 'Cinzel',serif;letter-spacing:.06em;text-transform:uppercase;cursor:pointer;transition:.2s}
-.questions-btn:hover{background:rgba(201,162,39,.1)}
+.questions-btn:hover{background:color-mix(in srgb,var(--gold) 10%,transparent)}
 .questions-panel{display:none;grid-column:1/-1;background:var(--panel);border:1px solid var(--border);border-top:3px solid var(--gold);padding:26px;margin-top:14px}
 .questions-panel.open{display:block}
 .questions-panel-head{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-bottom:20px}
@@ -170,7 +170,7 @@ footer{padding:35px 20px;text-align:center;border-top:1px solid var(--border);co
 .pdf-modal-body{display:flex;flex:1;overflow:hidden}
 .pdf-sidebar{width:170px;flex-shrink:0;background:var(--dark2);border-right:1px solid var(--border);overflow-y:auto;padding:12px 8px;display:flex;flex-direction:column;gap:8px}
 .pdf-thumb-item{cursor:pointer;overflow:hidden;border:2px solid transparent;background:var(--panel2);display:flex;flex-direction:column;align-items:center;padding:6px 6px 5px;gap:5px}
-.pdf-thumb-item:hover{border-color:rgba(201,162,39,.5)}
+.pdf-thumb-item:hover{border-color:color-mix(in srgb,var(--gold) 50%,transparent)}
 .pdf-thumb-item.active{border-color:var(--gold)}
 .pdf-thumb-item canvas{width:100%;display:block}
 .pdf-thumb-num{font:400 .62rem 'Cinzel',serif;color:var(--muted)}
@@ -191,23 +191,23 @@ footer{padding:35px 20px;text-align:center;border-top:1px solid var(--border);co
 .pdf-canvas-area{flex:1;overflow:auto;display:flex;align-items:flex-start;justify-content:center;padding:22px;background:var(--dark)}
 #pdf-main-canvas{box-shadow:0 8px 45px rgba(0,0,0,.7);display:block;background:#fff;max-width:100%}
 .pdf-loading{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;color:var(--muted);font:400 .78rem 'Cinzel',serif;height:100%;width:100%;text-transform:uppercase;letter-spacing:.04em}
-.pdf-spinner{width:34px;height:34px;border:3px solid rgba(201,162,39,.2);border-top-color:var(--gold);border-radius:50%;animation:spin .8s linear infinite}
+.pdf-spinner{width:34px;height:34px;border:3px solid color-mix(in srgb,var(--gold) 20%,transparent);border-top-color:var(--gold);border-radius:50%;animation:spin .8s linear infinite}
 @keyframes spin{to{transform:rotate(360deg)}}
 .pdf-modal-footer{background:var(--panel2);border-top:1px solid var(--border);padding:13px 20px;display:flex;gap:10px;align-items:center;flex-shrink:0}
 .pdf-footer-info{flex:1;font:400 .68rem 'Cinzel',serif;color:var(--muted);text-transform:uppercase;letter-spacing:.03em}
 .btn-fullscreen,.btn-download-modal{display:inline-flex;align-items:center;gap:7px;padding:9px 18px;border:1px solid var(--gold);color:var(--gold2);font:700 .78rem 'Cinzel',serif;cursor:pointer;text-decoration:none;text-transform:uppercase;letter-spacing:.04em}
 .btn-fullscreen{background:linear-gradient(180deg,#2a2a2a,var(--iron))}
-.btn-download-modal{background:linear-gradient(180deg,var(--blood),#4a1010)}
+.btn-download-modal{background:linear-gradient(180deg,var(--blood),var(--dark2))}
 .btn-fullscreen:hover,.btn-download-modal:hover{filter:brightness(1.2)}
 @media(max-width:700px){.pdf-sidebar{display:none}.pdf-modal{height:94vh}}
 .activities-wrap{display:grid;gap:16px;margin:14px 0 4px}
 .activity-block{border:1px solid var(--border);background:rgba(255,255,255,.015);padding:12px;position:relative}
 .activity-label{display:flex;align-items:center;gap:8px;font:700 .7rem 'Cinzel',serif;color:var(--gold2);text-transform:uppercase;letter-spacing:.06em;margin-bottom:2px}
 .activity-block .card-pdf-thumb{height:90px;margin:10px 0}
-.dragon-eye-btn{display:flex;align-items:center;justify-content:center;gap:10px;width:100%;margin-top:14px;padding:13px 14px;background:radial-gradient(ellipse at 50% 30%,rgba(201,162,39,.14),rgba(10,6,3,.5));border:1px solid var(--gold);color:var(--gold2);font:700 .72rem 'Cinzel',serif;letter-spacing:.08em;text-transform:uppercase;cursor:pointer;transition:.25s;box-shadow:0 0 0 rgba(201,162,39,0)}
+.dragon-eye-btn{display:flex;align-items:center;justify-content:center;gap:10px;width:100%;margin-top:14px;padding:13px 14px;background:radial-gradient(ellipse at 50% 30%,color-mix(in srgb,var(--gold) 14%,transparent),rgba(10,6,3,.5));border:1px solid var(--gold);color:var(--gold2);font:700 .72rem 'Cinzel',serif;letter-spacing:.08em;text-transform:uppercase;cursor:pointer;transition:.25s;box-shadow:0 0 0 color-mix(in srgb,var(--gold) 0%,transparent)}
 .dragon-eye-btn svg{flex-shrink:0;filter:drop-shadow(0 0 2px rgba(0,0,0,.6))}
 .dragon-eye-btn .dragon-pupil{transition:.25s}
-.dragon-eye-btn:hover{box-shadow:0 0 22px rgba(201,162,39,.35);border-color:var(--gold2);background:radial-gradient(ellipse at 50% 30%,rgba(201,162,39,.24),rgba(10,6,3,.6))}
+.dragon-eye-btn:hover{box-shadow:0 0 22px color-mix(in srgb,var(--gold) 35%,transparent);border-color:var(--gold2);background:radial-gradient(ellipse at 50% 30%,color-mix(in srgb,var(--gold) 24%,transparent),rgba(10,6,3,.6))}
 .dragon-eye-btn:hover .dragon-pupil{transform:scaleX(.55)}
 .activities-panel{display:none;grid-column:1/-1;background:var(--panel);border:1px solid var(--border);border-top:3px solid var(--gold);padding:26px;margin-top:14px}
 .activities-panel.open{display:block}
@@ -260,7 +260,7 @@ footer{padding:35px 20px;text-align:center;border-top:1px solid var(--border);co
 /* Refuerzo: los controles de edición deben permanecer ocultos hasta activar "Modo edición",
    incluso en botones (.icon-btn/.questions-btn/.dragon-eye-btn) que definen su propio "display". */
 .edit-ctrl{display:none}
-#scrollProgress{position:fixed;top:0;left:0;height:3px;width:0%;background:linear-gradient(90deg,var(--blood),var(--gold) 55%,var(--gold2));z-index:60;box-shadow:0 0 14px rgba(201,162,39,.7);transition:width .1s linear}
+#scrollProgress{position:fixed;top:0;left:0;height:3px;width:0%;background:linear-gradient(90deg,var(--blood),var(--gold) 55%,var(--gold2));z-index:60;box-shadow:0 0 14px color-mix(in srgb,var(--gold) 70%,transparent);transition:width .1s linear}
 
 .hero-embers .ember{position:absolute;bottom:-14px;width:4px;height:4px;border-radius:50%;background:radial-gradient(circle,#ffe6ad,#e8842a 55%,transparent 100%);opacity:0;animation:emberRise linear infinite;filter:drop-shadow(0 0 5px rgba(255,150,50,.85))}
 @keyframes emberRise{0%{transform:translate(0,0);opacity:0}8%{opacity:.9}92%{opacity:.5}100%{transform:translate(var(--drift,24px),-92vh);opacity:0}}
@@ -277,7 +277,7 @@ footer{padding:35px 20px;text-align:center;border-top:1px solid var(--border);co
 [class$="-grid"]>.reveal:nth-child(8){transition-delay:.51s}
 
 .tilt{will-change:transform}
-.tilt:hover{box-shadow:0 22px 50px rgba(0,0,0,.55),0 0 0 1px rgba(201,162,39,.3)}
+.tilt:hover{box-shadow:0 22px 50px rgba(0,0,0,.55),0 0 0 1px color-mix(in srgb,var(--gold) 30%,transparent)}
 .reveal.tilt{transition:opacity .7s ease,transform .15s ease,box-shadow .2s ease}
 .reveal.tilt.in{opacity:1}
 
@@ -292,7 +292,7 @@ footer{padding:35px 20px;text-align:center;border-top:1px solid var(--border);co
 
 .stats-bar{display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:var(--border);border:1px solid var(--border);margin-top:34px;text-align:center}
 .stats-bar div{background:linear-gradient(180deg,var(--panel),var(--panel2));padding:22px 12px;transition:.25s}
-.stats-bar div:hover{background:linear-gradient(180deg,rgba(201,162,39,.1),var(--panel2))}
+.stats-bar div:hover{background:linear-gradient(180deg,color-mix(in srgb,var(--gold) 10%,transparent),var(--panel2))}
 .stats-bar strong{display:block;font-family:'Cinzel',serif;font-size:clamp(1.4rem,3vw,1.9rem);color:var(--gold2);text-shadow:0 2px 10px rgba(0,0,0,.5)}
 .stats-bar small{display:block;margin-top:7px;font:700 .62rem 'Cinzel',serif;color:var(--muted);text-transform:uppercase;letter-spacing:.08em}
 @media(max-width:700px){.stats-bar{grid-template-columns:repeat(2,1fr)}}
@@ -361,6 +361,38 @@ footer{padding:35px 20px;text-align:center;border-top:1px solid var(--border);co
 .bot-chips{display:flex;flex-wrap:wrap;gap:6px}
 .bot-chips button{border:1px solid var(--border);background:var(--dark2);color:var(--gold2);font:600 .68rem 'Cinzel',serif;padding:7px 10px;letter-spacing:.03em;transition:.2s}
 .bot-chips button:hover{border-color:var(--gold2);background:var(--panel2)}
+/* ===== SEMANAS TEMÁTICAS ===== */
+.week-card{background:radial-gradient(circle at 100% 0%,color-mix(in srgb,var(--blood) 50%,transparent),transparent 58%),linear-gradient(180deg,var(--panel),var(--panel2));transition:.3s}
+.week-card:hover{border-color:var(--gold2);box-shadow:0 16px 40px color-mix(in srgb,var(--gold) 22%,transparent)}
+.wk-sigil{position:absolute;right:14px;bottom:10px;font-size:3.4rem;opacity:.09;pointer-events:none;filter:grayscale(.3)}
+/* ===== PÁGINA DE ACTIVIDADES ===== */
+#activity-screen{display:none;position:relative;min-height:100vh;z-index:1;overflow:hidden;background:radial-gradient(ellipse at 50% -10%,color-mix(in srgb,var(--blood) 80%,transparent),transparent 62%),radial-gradient(ellipse at 50% 115%,color-mix(in srgb,var(--gold) 14%,transparent),transparent 60%),var(--dark2);color:var(--text)}
+body.act-open #activity-screen{display:block;animation:fadeUp .5s ease}
+body.act-open #app-screen>nav,body.act-open #app-screen>header,body.act-open #app-screen>main,body.act-open #app-screen>footer{display:none}
+#activity-screen:before{content:attr(data-sigil);position:fixed;left:50%;top:52%;transform:translate(-50%,-50%);font-size:52vmin;opacity:.045;pointer-events:none;line-height:1}
+.act-top{position:sticky;top:0;z-index:20;display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px clamp(16px,5vw,60px);background:color-mix(in srgb,var(--dark2) 90%,transparent);backdrop-filter:blur(10px);border-bottom:1px solid var(--border)}
+.act-top-r{font:700 .74rem 'Cinzel',serif;letter-spacing:.1em;text-transform:uppercase;color:var(--gold2)}
+.act-back{display:inline-flex;align-items:center;gap:12px;padding:9px 24px 9px 14px;background:linear-gradient(90deg,var(--blood),var(--dark2));border:1px solid var(--gold);color:var(--gold2);font:700 .8rem 'Cinzel',serif;letter-spacing:.1em;text-transform:uppercase;text-align:left;clip-path:polygon(14px 0,100% 0,100% calc(100% - 14px),calc(100% - 14px) 100%,0 100%,0 14px);transition:.25s}
+.act-back:hover{background:linear-gradient(90deg,var(--gold),var(--blood));color:#fff;filter:drop-shadow(0 0 10px color-mix(in srgb,var(--gold) 60%,transparent))}
+.act-arrow{font-size:1.25rem;transition:transform .25s}.act-back:hover .act-arrow{transform:translateX(-6px)}
+.act-sig{width:38px;height:38px;border-radius:50%;border:1px solid var(--gold);display:grid;place-items:center;font-size:1.2rem;background:radial-gradient(circle,color-mix(in srgb,var(--gold) 25%,transparent),var(--dark2))}
+.act-txt small{display:block;font-size:.58rem;color:var(--gold);letter-spacing:.14em;margin-bottom:2px}
+.act-body{position:relative;z-index:1;max-width:1120px;margin:auto;padding:50px clamp(18px,5vw,60px) 60px}
+.act-hero{text-align:center;margin-bottom:44px}
+.act-sigil{font-size:4.2rem;filter:drop-shadow(0 0 22px color-mix(in srgb,var(--gold) 65%,transparent))}
+.act-hero h1{font-size:clamp(2.2rem,6vw,4.2rem);text-transform:uppercase;line-height:1.05;margin:10px 0 8px;color:var(--text)}
+.act-hero h1 span{display:block;color:var(--gold2)}
+.act-hero h2{font-size:clamp(1.05rem,2.2vw,1.4rem);color:var(--gold2);text-transform:uppercase;letter-spacing:.03em;font-weight:600;max-width:820px;margin:0 auto 14px}
+.act-desc{max-width:720px;margin:0 auto 18px;color:var(--muted);line-height:1.8}
+.act-hero .progress{max-width:520px;margin:18px auto 8px}
+.act-prog{font:400 .7rem 'Cinzel',serif;color:var(--muted);text-transform:uppercase;letter-spacing:.05em}
+.act-motto{margin-top:18px;font-style:italic;color:var(--gold);letter-spacing:.06em}
+.act-grid{grid-template-columns:repeat(auto-fill,minmax(290px,1fr));gap:20px}
+.act-grid .activity-block{background:linear-gradient(180deg,var(--panel),var(--panel2));border-top:2px solid var(--gold);padding:18px}
+.act-grid .card-pdf-thumb{height:170px}
+.act-grid .activity-block:hover{border-color:var(--gold2);box-shadow:0 14px 34px color-mix(in srgb,var(--gold) 20%,transparent)}
+.act-foot{display:flex;justify-content:center;margin-top:46px}
+.act-body .dragon-eye-btn{max-width:340px;margin:22px auto 0}
 </style></head><body data-role="" data-editmode="0">
 <div id="scrollProgress"></div>
 <section id="login-screen"><div class="login-card">
@@ -415,6 +447,8 @@ footer{padding:35px 20px;text-align:center;border-top:1px solid var(--border);co
 </div></section>
 </main>
 <footer><span class="footer-sigil">⚜ ❖ ⚜</span>Matias Eduardo Saforas Gomez · Facultad de Ingeniería de Sistemas y Computación · Universidad Peruana Los Andes</footer>
+
+<div id="activity-screen"></div>
 
 <button class="scrolltop-btn" id="scrollTopBtn" aria-label="Volver arriba" title="Volver arriba">⇧</button>
 <button class="bot-toggle" id="bot-toggle" aria-label="Abrir asistente">⚜</button>
@@ -522,6 +556,7 @@ document.addEventListener('keydown',function(e){
   if(e.key==='ArrowLeft'||e.key==='ArrowUp')changePage(-1);
 });
 function openActivityPdf(unitKey,weekId,actId){
+  document.getElementById('pdfModalOverlay').dataset.house=unitKey;
   const w=appState.units[unitKey].weeks.find(x=>x.id===weekId);
   const a=w.activities.find(x=>x.id===actId);
   openPDF('pdf/'+a.filename, a.dispFilename||a.filename, a.title||a.label, w.num);
@@ -783,6 +818,7 @@ document.getElementById('login-form').addEventListener('submit',function(e){
     currentUnit='1';
     renderAll();
     botWelcome();
+    syncView();
     window.scrollTo(0,0);
     spawnEmbers();
     setupNavSpy();
@@ -792,6 +828,7 @@ document.getElementById('login-form').addEventListener('submit',function(e){
   }
 });
 document.getElementById('logout-btn').onclick=()=>{
+  hideAct();try{history.replaceState(null,'',location.pathname+location.search);}catch(e){}
   document.getElementById('app-screen').style.display='none';
   document.getElementById('login-screen').style.display='grid';
   document.getElementById('pass').value='';
@@ -936,13 +973,13 @@ function renderUnitPanel(k){
   if(role==='admin'){
     html+=`<button type="button" class="questions-btn edit-ctrl" style="margin-top:14px" onclick="addWeek('${k}')">➕ Añadir semana</button>`;
   }
-  u.weeks.forEach(w=>{html+=renderActivitiesPanel(k,w);});
   if(u.weeks.some(w=>w.questionsBtn)){
     html+=renderQuestionsPanel();
   }
   container.innerHTML=html;
   initReveal();
   updateStats();
+  if(actView)renderActivityPage();
   animateProgressBars();
 }
 function editCapacity(k){
@@ -958,12 +995,12 @@ function renderWeekCard(k,w){
     <button type="button" class="icon-btn" title="Editar" onclick="editWeek('${k}','${w.id}')">✎</button>
     <button type="button" class="icon-btn danger" title="Eliminar" onclick="deleteWeek('${k}','${w.id}')">🗑</button>
   </div>`:'';
-  return `<article class="week-card reveal tilt">${toolbar}
+  return `<article class="week-card reveal tilt" data-house="${k}">${toolbar}<span class="wk-sigil">${(HOUSES[k]||{}).s||''}</span>
     <span class="week-num">${esc(w.num)}</span>
     <h3>${esc(w.title)}</h3>
     <p>${esc(w.desc)}</p>
-    <button type="button" class="dragon-eye-btn" onclick="toggleActivities('${w.id}')" title="Ver actividades">
-      <svg viewBox="0 0 48 30" width="30" height="19"><defs><radialGradient id="iris-${w.id}" cx="50%" cy="45%" r="65%"><stop offset="0%" stop-color="#F9D77E"/><stop offset="45%" stop-color="#C9A227"/><stop offset="100%" stop-color="#5C1414"/></radialGradient></defs><path d="M2 15 Q24 -4 46 15 Q24 34 2 15 Z" fill="url(#iris-${w.id})" stroke="#1a1004" stroke-width="1.6"/><ellipse class="dragon-pupil" cx="24" cy="15" rx="3.1" ry="10.5" fill="#0a0603"/></svg>
+    <button type="button" class="dragon-eye-btn" onclick="openActivities('${k}','${w.id}')" title="Ver actividades">
+      <svg viewBox="0 0 48 30" width="30" height="19"><defs><radialGradient id="iris-${w.id}" cx="50%" cy="45%" r="65%"><stop offset="0%" style="stop-color:var(--gold2)"/><stop offset="45%" style="stop-color:var(--gold)"/><stop offset="100%" style="stop-color:var(--blood)"/></radialGradient></defs><path d="M2 15 Q24 -4 46 15 Q24 34 2 15 Z" fill="url(#iris-${w.id})" stroke="#1a1004" stroke-width="1.6"/><ellipse class="dragon-pupil" cx="24" cy="15" rx="3.1" ry="10.5" fill="#0a0603"/></svg>
       <span>Ver actividades</span>
     </button>
     <div class="progress"><i style="width:0%" data-progress="${w.progress}"></i></div>
@@ -1158,6 +1195,37 @@ document.getElementById('editModalForm').addEventListener('submit',function(e){
   closeEditModal();
 });
 
+
+
+/* ================= PÁGINA APARTE DE ACTIVIDADES ================= */
+let actView=null;
+function renderActivityPage(){
+  const u=actView&&appState.units[actView.k],w=u&&u.weeks.find(x=>x.id===actView.id);
+  if(!w){hideAct();return;}
+  const k=actView.k,H=HOUSES[k]||{n:'',s:'❖',m:'',d:''},scr=document.getElementById('activity-screen');
+  scr.dataset.house=k;scr.dataset.sigil=H.s;
+  const back=`<button type="button" class="act-back" onclick="leaveActivities()" title="Volver al inicio"><span class="act-arrow">←</span><span class="act-sig">${H.s}</span><span class="act-txt"><small>${esc(H.n)}</small>Volver al inicio</span></button>`;
+  const empty=w.activities.length?'':'<p class="helper-note" style="text-align:center">Aún no hay actividades cargadas para esta semana.</p>';
+  const add=role==='admin'?`<button type="button" class="dragon-eye-btn edit-ctrl" onclick="addActivity('${k}','${w.id}')">➕ Añadir actividad</button>`:'';
+  scr.innerHTML=`<div class="act-top">${back}<div class="act-top-r">${H.s} ${esc(H.n)}</div></div>
+  <div class="act-body"><header class="act-hero"><div class="act-sigil">${H.s}</div>
+    <p class="section-label">${esc(u.nombre)}</p><h1>Actividades<span>${esc(w.num)}</span></h1><h2>${esc(w.title)}</h2>
+    <p class="act-desc">${esc(w.desc)}</p><div class="progress"><i style="width:0%" data-progress="${w.progress}"></i></div>
+    <small class="act-prog">${Number(w.progress).toFixed(2)}% de avance acumulado</small><p class="act-motto">«${esc(H.m)}»</p></header>
+    <div class="activities-wrap act-grid">${w.activities.map(a=>renderActivityBlock(k,w,a)).join('')}</div>${empty}${add}
+    <div class="act-foot">${back}</div></div>`;
+  animateProgressBars();
+}
+function showAct(){document.body.classList.add('act-open');renderActivityPage();window.scrollTo(0,0);}
+function hideAct(){actView=null;document.body.classList.remove('act-open');}
+function openActivities(k,id){actView={k,id};try{history.pushState({act:1},'','#act/'+k+'/'+id);}catch(e){}showAct();}
+function leaveActivities(){hideAct();try{history.pushState(null,'',location.pathname+location.search);}catch(e){}window.scrollTo(0,0);}
+function syncView(){
+  const m=/^#act\/([^/]+)\/([^/]+)$/.exec(location.hash),u=m&&role&&appState&&appState.units[m[1]];
+  if(u&&(!u.locked||role==='admin')&&u.weeks.some(x=>x.id===m[2])){actView={k:m[1],id:m[2]};showAct();return;}
+  if(actView){hideAct();window.scrollTo(0,0);}
+}
+window.addEventListener('popstate',syncView);
 
 /* ================= SOBRE MÍ ================= */
 function renderAbout(){
