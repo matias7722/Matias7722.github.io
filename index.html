@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <html lang="es"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
-<title>Matias Saforas Gomez · Portafolio Base de Datos II</title>
+<title>Matias Eduardo Saforas Gomez · Portafolio Base de Datos II</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700;900&family=Cormorant+Garamond:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
 :root{--gold:#C9A227;--gold2:#E8CE7A;--blood:#6E1B1B;--iron:#3B3B3B;--dark:#050403;--dark2:#0C0906;--panel:#14100B;--panel2:#1C160E;--border:rgba(201,162,39,.35);--text:#E9DFC5;--muted:#9C8F6E;--danger:#8B1E1E}
@@ -44,8 +44,6 @@ input::placeholder{color:var(--muted);opacity:.8}
 .forgot-link:hover{color:var(--gold2)}
 .login-submit{margin-top:6px;padding:15px;border:1px solid var(--gold);background:linear-gradient(180deg,#8a2323,var(--blood) 55%,#4a1010);color:var(--gold2);font-weight:700;text-transform:uppercase;letter-spacing:.14em;font-size:.88rem;box-shadow:0 10px 25px rgba(110,27,27,.45),inset 0 1px 0 rgba(255,255,255,.08);transition:.2s}
 .login-submit:hover{filter:brightness(1.12)}
-.register-btn{width:100%;padding:13px;border:1px solid var(--border);background:transparent;color:var(--text);font-weight:700;text-transform:uppercase;letter-spacing:.12em;font-size:.82rem;transition:.2s}
-.register-btn:hover{border-color:var(--gold);color:var(--gold2)}
 .login-error{display:none;color:#e08b7b;font-size:.8rem;text-align:center;font-style:italic}
 .hint{font-size:.74rem;color:var(--muted);text-align:center;margin-top:18px;letter-spacing:.02em;opacity:.85}
 .fill-demo-btn{display:block;width:100%;margin-top:10px;padding:9px;border:1px dashed var(--border);background:transparent;color:var(--muted);font:700 .66rem 'Cinzel',serif;text-transform:uppercase;letter-spacing:.05em;transition:.2s}
@@ -285,7 +283,7 @@ footer{padding:35px 20px;text-align:center;border-top:1px solid var(--border);co
 
 .ripple-dot{position:absolute;border-radius:50%;background:rgba(255,255,255,.4);transform:scale(0);animation:rippleAnim .6s ease-out forwards;pointer-events:none}
 @keyframes rippleAnim{to{transform:scale(3);opacity:0}}
-.login-submit,.questions-btn,.dragon-eye-btn,.preview-btn,.register-btn,.btn-save,.unit-tab,.logout,.fill-demo-btn{position:relative;overflow:hidden}
+.login-submit,.questions-btn,.dragon-eye-btn,.preview-btn,.btn-save,.unit-tab,.logout{position:relative;overflow:hidden}
 .bot-toggle,.scrolltop-btn{overflow:hidden}
 
 .scrolltop-btn{position:fixed;left:22px;bottom:22px;z-index:30;width:46px;height:46px;border:1px solid var(--gold);background:rgba(5,4,3,.88);color:var(--gold2);font-size:1.15rem;display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;transform:translateY(12px);transition:.25s;box-shadow:0 12px 30px rgba(0,0,0,.5)}
@@ -307,6 +305,54 @@ footer{padding:35px 20px;text-align:center;border-top:1px solid var(--border);co
 .week-card h3::after{transition:width .4s ease}
 
 .footer-sigil{display:block;text-align:center;color:var(--gold);font-size:1.1rem;margin-bottom:10px;letter-spacing:.4em;opacity:.85}
+
+/* ===== SOBRE MÍ ===== */
+.about-grid{display:grid;grid-template-columns:1.35fr 1fr;gap:22px;align-items:start}
+.ab-card{background:linear-gradient(180deg,var(--panel),var(--panel2));border:1px solid var(--border);padding:30px;box-shadow:0 20px 50px rgba(0,0,0,.35)}
+.ab-main{display:grid;grid-template-columns:230px 1fr;gap:30px}
+.ab-photo{position:relative;width:100%;aspect-ratio:4/5;border:2px solid var(--gold);outline:1px solid var(--border);outline-offset:5px;overflow:hidden;background:radial-gradient(circle at 50% 30%,var(--blood),var(--dark2))}
+.ab-photo img{width:100%;height:100%;object-fit:cover;display:block}
+.ab-ph{height:100%;display:grid;place-content:center;text-align:center;gap:8px}
+.ab-ph b{font:900 4rem 'Cinzel',serif;color:var(--gold2)}.ab-ph small{color:var(--muted);font-size:.8rem}
+.ab-photo-btn{margin-top:12px;font:700 .68rem 'Cinzel',serif;color:var(--gold2);border:1px dashed var(--border);padding:8px 12px;cursor:pointer;text-transform:uppercase;letter-spacing:.06em}
+.ab-name{font:900 1.9rem/1.15 'Cinzel',serif;margin:26px 0 10px;color:var(--text);text-transform:uppercase}
+.ab-name span{display:block;color:var(--gold2)}
+.ab-role{color:var(--muted);line-height:1.6;font-size:1rem}
+.ab-bio{color:var(--muted);line-height:1.85;font-size:1.12rem;margin-bottom:18px}.ab-bio strong{color:var(--text)}
+.ab-tags{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:22px}
+.ab-tags span{border:1px solid var(--border);color:var(--gold2);padding:6px 12px;font:700 .68rem 'Cinzel',serif;text-transform:uppercase;letter-spacing:.06em;background:rgba(255,255,255,.03)}
+.ab-goal{border-left:3px solid var(--gold);padding:14px 16px;background:var(--dark2);color:var(--muted);line-height:1.7;font-style:italic}
+.ab-goal b{display:block;font:700 .68rem 'Cinzel',serif;color:var(--gold);letter-spacing:.1em;text-transform:uppercase;font-style:normal;margin-bottom:4px}
+.ab-data h3{font-size:1.25rem;color:var(--gold2);margin-bottom:16px;text-transform:uppercase}
+.ab-data-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.ab-data-grid div{background:var(--dark2);border:1px solid var(--border);padding:14px 16px}
+.ab-data-grid small{display:block;font:700 .64rem 'Cinzel',serif;color:var(--gold);letter-spacing:.12em;text-transform:uppercase;margin-bottom:6px}
+.ab-data-grid strong{font-weight:600;font-size:1rem;line-height:1.4}
+@media(max-width:900px){.about-grid{grid-template-columns:1fr}.ab-main{grid-template-columns:1fr}.ab-photo{max-width:260px}}
+@media(max-width:520px){.ab-data-grid{grid-template-columns:1fr}}
+
+/* ===== CASAS POR UNIDAD ===== */
+[data-house="1"]{--gold:#808080;--gold2:#F4F6F8;--blood:#4A3323;--panel:#1A1C1E;--panel2:#232629;--dark2:#111315;--border:rgba(128,128,128,.5);--text:#EEF0F3;--muted:#A3A9AF}
+[data-house="2"]{--gold:#FFD700;--gold2:#FFE55C;--blood:#B22222;--panel:#1B0D0D;--panel2:#261111;--dark2:#120707;--border:rgba(255,215,0,.42);--text:#F8EBD2;--muted:#CDAE8E}
+[data-house="3"]{--gold:#E8391D;--gold2:#FF7A4D;--blood:#8E1A0E;--panel:#121212;--panel2:#1C1514;--dark2:#0A0A0A;--border:rgba(255,80,30,.42);--text:#F4E8E3;--muted:#AE968E}
+[data-house="4"]{--gold:#E4D00A;--gold2:#F3E651;--blood:#3D3700;--panel:#0B0B08;--panel2:#141410;--dark2:#000;--border:rgba(228,208,10,.4);--text:#F2EED2;--muted:#A6A27A}
+#unidades{transition:background .5s,border-color .5s}
+.unit-tab{flex-direction:column;align-items:flex-start;gap:2px;position:relative}
+.unit-tab .ut-main{display:inline-flex;align-items:center;gap:8px}
+.unit-tab .ut-house{font:600 .6rem 'Cinzel',serif;color:var(--gold);letter-spacing:.12em}
+.unit-tab[data-house]{border-color:var(--border);color:var(--muted)}
+.unit-tab.active[data-house]{background:linear-gradient(180deg,var(--blood),var(--dark2));color:var(--gold2);border-color:var(--gold);box-shadow:0 8px 22px rgba(0,0,0,.5),0 0 0 1px var(--border)}
+.house-banner{display:flex;align-items:center;gap:16px;padding:16px 20px;margin-bottom:16px;border:1px solid var(--gold);background:linear-gradient(90deg,var(--blood),var(--dark2))}
+.house-banner .hb-s{font-size:2rem}.house-banner b{display:block;font:900 1.15rem 'Cinzel',serif;color:var(--gold2);text-transform:uppercase;letter-spacing:.06em}
+.house-banner i{color:var(--muted)}
+/* ===== ASISTENTE ===== */
+.bot-panel{width:min(390px,calc(100vw - 28px))}
+.bot-messages{height:320px;align-content:start}
+.msg{white-space:pre-line}.msg b{color:var(--gold2)}
+.msg.user{background:var(--blood);border-left:0;border-right:2px solid var(--gold2);justify-self:end;max-width:85%;color:var(--text)}
+.bot-chips{display:flex;flex-wrap:wrap;gap:6px}
+.bot-chips button{border:1px solid var(--border);background:var(--dark2);color:var(--gold2);font:600 .68rem 'Cinzel',serif;padding:7px 10px;letter-spacing:.03em;transition:.2s}
+.bot-chips button:hover{border-color:var(--gold2);background:var(--panel2)}
 </style></head><body data-role="" data-editmode="0">
 <div id="scrollProgress"></div>
 <section id="login-screen"><div class="login-card">
@@ -325,11 +371,6 @@ footer{padding:35px 20px;text-align:center;border-top:1px solid var(--border);co
 <button class="login-submit">Iniciar Sesión</button>
 <div class="login-error" id="login-error">Usuario o contraseña incorrectos.</div>
 </form>
-<div class="login-divider crown"><span>♛</span></div>
-<p class="login-foot">¿No tienes una cuenta?</p>
-<button type="button" class="register-btn" onclick="alert('Portafolio académico de Matias Saforas Gomez · UPLA')">Registrarse</button>
-<p class="hint" id="loginHint">Usuario: <b>M@t_SF</b> · Contraseña: <b>77222987</b></p>
-<button type="button" class="fill-demo-btn" id="fillDemoBtn">Usar estas credenciales</button>
 </div></section>
 
 <div id="app-screen">
@@ -339,6 +380,7 @@ footer{padding:35px 20px;text-align:center;border-top:1px solid var(--border);co
 <ul class="nav-links" id="navLinks">
 <li class="role-badge" id="roleBadge"><span id="roleBadgeText"></span></li>
 <li><a href="#perfil">Perfil</a></li>
+<li><a href="#sobre-mi">Sobre mí</a></li>
 <li><a href="#grimorio">Grimorio</a></li>
 <li><a href="#unidades">Unidades</a></li>
 <li class="admin-flag"><button type="button" class="logout" id="editModeBtn">✎ Modo edición</button></li>
@@ -357,17 +399,18 @@ footer{padding:35px 20px;text-align:center;border-top:1px solid var(--border);co
 </div></header>
 
 <main>
+<section id="sobre-mi"><p class="section-label">Quién soy</p><h2 class="section-title">Sobre mí</h2><div class="about-grid" id="aboutGrid"></div></section>
 <section id="grimorio"><p class="section-label">Ruta de aprendizaje</p><h2 class="section-title">Grimorio del Saber</h2><div class="codex-grid" id="grimorioGrid"></div></section>
 <section id="unidades"><div class="inner"><p class="section-label">Registro académico</p><h2 class="section-title">Unidades del curso</h2>
 <div class="unit-tabs" id="unitTabs"></div>
 <div class="unit-panel active" id="unitPanelContainer"></div>
 </div></section>
 </main>
-<footer><span class="footer-sigil">⚜ ❖ ⚜</span>Matias Saforas Gomez · Facultad de Ingeniería de Sistemas y Computación · Universidad Peruana Los Andes</footer>
+<footer><span class="footer-sigil">⚜ ❖ ⚜</span>Matias Eduardo Saforas Gomez · Facultad de Ingeniería de Sistemas y Computación · Universidad Peruana Los Andes</footer>
 
 <button class="scrolltop-btn" id="scrollTopBtn" aria-label="Volver arriba" title="Volver arriba">⇧</button>
 <button class="bot-toggle" id="bot-toggle" aria-label="Abrir asistente">⚜</button>
-<aside class="bot-panel" id="bot-panel"><div class="bot-head"><strong>Asistente del portafolio</strong><button id="bot-close" class="logout">×</button></div><div class="bot-messages" id="bot-messages"><div class="msg">Hola. Pregúntame por Matias, el curso, las unidades, las preguntas finales o tu rol de acceso.</div></div><form class="bot-form" id="bot-form"><input id="bot-input" placeholder="Escribe una pregunta…"><button>↑</button></form></aside>
+<aside class="bot-panel" id="bot-panel"><div class="bot-head"><strong>Asistente del portafolio</strong><button id="bot-close" class="logout">×</button></div><div class="bot-messages" id="bot-messages"></div><form class="bot-form" id="bot-form"><input id="bot-input" placeholder="Escribe una pregunta…" autocomplete="off"><button>↑</button></form></aside>
 
 <div class="pdf-modal-overlay" id="pdfModalOverlay" onclick="closePDFonOverlay(event)"><div class="pdf-modal"><div class="pdf-modal-header"><span style="font-size:1.2rem;">📁</span><div><div class="pdf-modal-folder" id="modalTitle">Documento</div><div class="pdf-modal-subtitle">Lea el pdf directamente aquí abajo:</div></div><button class="pdf-modal-close" onclick="closePDF()">✕</button></div><div class="pdf-modal-body"><div class="pdf-sidebar" id="pdfSidebar"></div><div class="pdf-viewer-area"><div class="pdf-toolbar"><div class="pdf-filename" id="pdfFilename">SEMANA.pdf</div><div class="toolbar-sep"></div><div class="pdf-toolbar-group"><button class="pdf-nav-btn" id="btnPrev" onclick="changePage(-1)" title="Anterior">‹</button><div class="pdf-page-info"><input class="pdf-page-input" id="pageInput" type="number" min="1" value="1" onchange="jumpToPage(this.value)"><span>/ <span id="totalPages">?</span></span></div><button class="pdf-nav-btn" id="btnNext" onclick="changePage(1)" title="Siguiente">›</button></div><div class="toolbar-sep"></div><div class="pdf-toolbar-group"><button class="pdf-zoom-btn" onclick="changeZoom(-0.15)">− Zoom</button><span class="pdf-zoom-level" id="zoomLevel">93%</span><button class="pdf-zoom-btn" onclick="changeZoom(0.15)">+ Zoom</button></div></div><div class="pdf-canvas-area" id="pdfCanvasArea"><div class="pdf-loading" id="pdfLoading"><div class="pdf-spinner"></div><span>Cargando PDF...</span></div><canvas id="pdf-main-canvas" style="display:none;"></canvas></div></div></div><div class="pdf-modal-footer"><div class="pdf-footer-info" id="footerInfo">Listo para visualizar</div><button class="btn-fullscreen" onclick="openFullscreen()">🖥 Pantalla completa</button><a class="btn-download-modal" id="btnDownload" href="#" download>💾 Descargar</a></div></div></div>
 
@@ -518,7 +561,7 @@ document.addEventListener('mouseout',function(e){
 
 /* ================= EFECTO RIPPLE EN BOTONES ================= */
 document.addEventListener('click',function(e){
-  const el=e.target.closest && e.target.closest('.login-submit,.questions-btn,.dragon-eye-btn,.preview-btn,.register-btn,.btn-save,.unit-tab,.logout,.bot-toggle,.scrolltop-btn,.fill-demo-btn');
+  const el=e.target.closest && e.target.closest('.login-submit,.questions-btn,.dragon-eye-btn,.preview-btn,.btn-save,.unit-tab,.logout,.bot-toggle,.scrolltop-btn');
   if(!el)return;
   const rect=el.getBoundingClientRect();
   const size=Math.max(rect.width,rect.height);
@@ -572,7 +615,7 @@ if(scrollTopBtnEl)scrollTopBtnEl.addEventListener('click',()=>window.scrollTo({t
 let navSpyReady=false;
 function setupNavSpy(){
   if(navSpyReady)return;navSpyReady=true;
-  const ids=['perfil','grimorio','unidades'];
+  const ids=['perfil','sobre-mi','grimorio','unidades'];
   const sections=ids.map(id=>document.getElementById(id)).filter(Boolean);
   const links=document.querySelectorAll('.nav-links a[href^="#"]');
   if(!sections.length||!links.length)return;
@@ -608,12 +651,14 @@ function updateStats(){
 }
 
 /* ================= ESTADO DE LA APLICACIÓN ================= */
-const STORAGE_KEY='gotPortfolioStateV2';
+const STORAGE_KEY='gotPortfolioStateV3';
 function defaultState(){
   return {
     profile:{
       eyebrow:'Universidad Peruana Los Andes · 2026-I',
-      nombre:'Matias', apellido:'Saforas Gomez',
+      nombre:'Matias Eduardo', apellido:'Saforas Gomez',
+      universidad:'Universidad Peruana Los Andes', semestre:'2026-I', foto:'',
+      tags:['Bases de datos','Desarrollo de software','Análisis de sistemas','Tecnología'],
       descFuerte:'Ingeniero de Sistemas en formación.',
       descResto:'Me interesa el desarrollo de soluciones tecnológicas, la gestión de bases de datos y la construcción de sistemas útiles, seguros y eficientes. Este portafolio reúne mi aprendizaje y evolución profesional.',
       curso:'Base de Datos II (332151)',
@@ -709,17 +754,7 @@ const ACCOUNTS={admin:{user:'M@t_SF',pass:'77222987'},user:{user:'Invitado',pass
 document.querySelectorAll('.login-tab').forEach(tab=>tab.addEventListener('click',()=>{
   document.querySelectorAll('.login-tab').forEach(t=>t.classList.remove('active'));
   tab.classList.add('active');
-  const which=tab.dataset.acc;
-  document.getElementById('loginHint').innerHTML= which==='admin'
-    ? 'Usuario: <b>M@t_SF</b> · Contraseña: <b>77222987</b>'
-    : 'Usuario: <b>Invitado</b> · Contraseña: <b>upla2026</b>';
-}));
-document.getElementById('fillDemoBtn').addEventListener('click',()=>{
-  const active=document.querySelector('.login-tab.active').dataset.acc;
-  const acc=ACCOUNTS[active];
-  document.getElementById('user').value=acc.user;
-  document.getElementById('pass').value=acc.pass;
-});
+  }));
 document.getElementById('login-form').addEventListener('submit',function(e){
   e.preventDefault();
   const u=document.getElementById('user').value.trim();
@@ -739,6 +774,7 @@ document.getElementById('login-form').addEventListener('submit',function(e){
     appState=loadState();
     currentUnit='1';
     renderAll();
+    botWelcome();
     window.scrollTo(0,0);
     spawnEmbers();
     setupNavSpy();
@@ -782,7 +818,7 @@ function resetContent(){
 
 /* ================= RENDER ================= */
 function renderAll(){
-  renderProfile();
+  renderProfile();renderAbout();
   renderGrimorio();
   renderUnitTabs();
   renderUnitPanel(currentUnit);
@@ -842,14 +878,19 @@ function editGrimorio(i){
   ],vals=>{Object.assign(c,vals);saveState();renderGrimorio();showToast('Tarjeta actualizada.');});
 }
 
-const UNIT_ICONS={'1':'🏰','2':'📚','3':'🛡','4':'🐉'};
+const HOUSES={'1':{n:'Casa Stark',s:'🐺',m:'Se acerca el invierno',d:'Gris lobo, blanco nieve y marrón oscuro: dureza, sobriedad y el Norte.'},
+'2':{n:'Casa Lannister',s:'🦁',m:'¡Oye mi rugido!',d:'Rojo carmesí y dorado león: riqueza, poder y opulencia.'},
+'3':{n:'Casa Targaryen',s:'🐉',m:'Fuego y sangre',d:'Negro carbón y rojo fuego: la furia de los dragones y la realeza conquistadora.'},
+'4':{n:'Casa Baratheon',s:'🦌',m:'Nuestra es la furia',d:'Negro profundo y amarillo cetrino: la noche, la tormenta y Bastión de Tormentas.'}};
+const UNIT_ICONS={'1':'🐺','2':'🦁','3':'🐉','4':'🦌'};
 function renderUnitTabs(){
   const wrap=document.getElementById('unitTabs');
   wrap.innerHTML=Object.keys(appState.units).map(k=>{
     const u=appState.units[k];
     const lockToggle= role==='admin' ? `<span class="lock-toggle edit-ctrl" onclick="event.stopPropagation();toggleUnitLock('${k}')" title="${u.locked?'Desbloquear unidad':'Bloquear unidad'}">${u.locked?'🔓':'🔒'}</span>`:'';
     const icon=UNIT_ICONS[k]||'❖';
-    return `<button type="button" class="unit-tab ${k===currentUnit?'active':''} ${u.locked?'locked':''}" onclick="selectUnit('${k}')"><span class="unit-icon">${u.locked?'🔒':icon}</span>${esc(u.nombre)}${lockToggle}</button>`;
+    const h=HOUSES[k]||{n:''};
+    return `<button type="button" data-house="${k}" class="unit-tab ${k===currentUnit?'active':''} ${u.locked?'locked':''}" onclick="selectUnit('${k}')"><span class="ut-main"><span class="unit-icon">${u.locked?'🔒':icon}</span>${esc(u.nombre)}${lockToggle}</span><span class="ut-house">${esc(h.n)}</span></button>`;
   }).join('');
 }
 function selectUnit(k){
@@ -875,7 +916,9 @@ function renderUnitPanel(k){
   const u=appState.units[k];
   const container=document.getElementById('unitPanelContainer');
   const capToolbar= role==='admin' ? `<button type="button" class="icon-btn edit-ctrl" title="Editar descripción" onclick="editCapacity('${k}')" style="flex-shrink:0">✎</button>`:'';
-  let html=`<div class="capacity reveal"><span>${UNIT_ICONS[k]||'❖'}</span><div class="capacity-text">${u.capacityLabel?`<b>${esc(u.capacityLabel)}</b> `:''}${esc(u.capacityText)}</div>${capToolbar}</div>`;
+  const H=HOUSES[k];document.getElementById('unidades').dataset.house=k;
+  let html=H?`<div class="house-banner"><span class="hb-s">${H.s}</span><div><b>${H.n} · «${H.m}»</b><i>${H.d}</i></div></div>`:'';
+  html+=`<div class="capacity reveal"><span>${UNIT_ICONS[k]||'❖'}</span><div class="capacity-text">${u.capacityLabel?`<b>${esc(u.capacityLabel)}</b> `:''}${esc(u.capacityText)}</div>${capToolbar}</div>`;
   html+=`<div class="weeks-grid">`;
   u.weeks.forEach(w=>{html+=renderWeekCard(k,w);});
   html+=`</div>`;
@@ -1107,27 +1150,68 @@ document.getElementById('editModalForm').addEventListener('submit',function(e){
   closeEditModal();
 });
 
+
+/* ================= SOBRE MÍ ================= */
+function renderAbout(){
+  const p=appState.profile,ini=((p.nombre||'')[0]||'')+((p.apellido||'')[0]||'');
+  const photo=p.foto?`<img src="${p.foto}" alt="Foto de ${esc(p.nombre)}">`:`<div class="ab-ph"><b>${esc(ini)}</b><small>Foto pendiente</small></div>`;
+  const photoBtn=role==='admin'?`<span class="ab-photo-btn edit-ctrl" onclick="document.getElementById('photoInput').click()">📷 Cambiar foto</span><input type="file" id="photoInput" accept="image/*" hidden onchange="setPhoto(this)">`:'';
+  const goal=(appState.questions.find(q=>q.id==='q31')||{}).text||'';
+  const data=[['Universidad',p.universidad],['Curso',p.curso],['Semestre',p.semestre],['Docente',p.docente],['Rol',p.rolAcademico],['Sede',p.sede]];
+  document.getElementById('aboutGrid').innerHTML=`
+  <div class="ab-card ab-main reveal"><div><div class="ab-photo">${photo}</div>${photoBtn}
+    <h3 class="ab-name">${esc(p.apellido)}<span>${esc(p.nombre)}</span></h3>
+    <p class="ab-role">Estudiante · Facultad de Ingeniería de Sistemas y Computación</p></div>
+    <div><p class="ab-bio"><strong>${esc(p.descFuerte)}</strong> ${esc(p.descResto)}</p>
+    <div class="ab-tags">${(p.tags||[]).map(t=>`<span>${esc(t)}</span>`).join('')}</div>
+    ${goal?`<div class="ab-goal"><b>Objetivo profesional</b>${esc(goal.length>230?goal.slice(0,230)+'…':goal)}</div>`:''}</div></div>
+  <div class="ab-card ab-data reveal"><h3>Datos del curso</h3><div class="ab-data-grid">${data.map(([l,v])=>`<div><small>${l}</small><strong>${esc(v||'—')}</strong></div>`).join('')}</div></div>`;
+  initReveal();
+}
+function setPhoto(inp){const f=inp.files[0];if(!f)return;const r=new FileReader();r.onload=()=>{const im=new Image();im.onload=()=>{const k=Math.min(1,480/Math.max(im.width,im.height)),c=document.createElement('canvas');c.width=im.width*k;c.height=im.height*k;c.getContext('2d').drawImage(im,0,0,c.width,c.height);appState.profile.foto=c.toDataURL('image/jpeg',.85);saveState();renderAbout();showToast('Foto actualizada.');};im.src=r.result;};r.readAsDataURL(f);}
+const _rp=renderProfile;renderProfile=function(){_rp();renderAbout();};
 /* ================= ASISTENTE (CHATBOT) ================= */
-const bp=document.getElementById('bot-panel');
+const bp=document.getElementById('bot-panel'),botBox=document.getElementById('bot-messages');
 document.getElementById('bot-toggle').onclick=()=>bp.classList.toggle('open');
 document.getElementById('bot-close').onclick=()=>bp.classList.remove('open');
+const nrm=t=>t.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-z0-9 ]/g,' ').replace(/\s+/g,' ');
+function botChips(list){return '<div class="bot-chips">'+list.map(c=>`<button type="button" onclick="botAsk(this.textContent)">${esc(c)}</button>`).join('')+'</div>';}
+function baseChips(){const c=['¿Quién es Matías?','¿De qué trata el curso?','¿Quién es el docente?','¿Cómo están las unidades?','¿Qué casa es cada unidad?','¿Qué hay en la Semana 01?','¿Dónde están las 32 preguntas?','¿Cuál es mi rol?'];if(role==='admin')c.push('¿Cómo edito el contenido?');return c;}
+function botWelcome(){const p=appState.profile;botBox.innerHTML=`<div class="msg">⚜ Hola, soy el asistente del portafolio de <b>${esc(p.nombre)} ${esc(p.apellido)}</b>. Toca una pregunta o escribe la tuya:${botChips(baseChips())}</div>`;}
+function botKB(){
+  const p=appState.profile,U=appState.units,n=x=>esc(x);
+  return [
+  {k:['quien es','matias','saforas','eduardo','estudiante','sobre mi','acerca','presentate'],a:()=>`<b>${n(p.nombre)} ${n(p.apellido)}</b> es estudiante de Ingeniería de Sistemas en la ${n(p.universidad)}. Le interesan ${n(p.enfoque.toLowerCase())} y el ${n(p.especialidad.toLowerCase())}.\nRevisa la sección «Sobre mí» para ver su perfil completo.`},
+  {k:['curso','base de datos','332151','semestre','de que trata','materia'],a:()=>`El curso es <b>${n(p.curso)}</b>, semestre ${n(p.semestre)}, en la ${n(p.universidad)}. Se organiza en 4 unidades: arquitecturas, instancias, seguridad y monitoreo.`},
+  {k:['docente','profesor','maestro','fernandez','bejarano','quien ensena'],a:()=>`El docente del curso es el <b>${n(p.docente)}</b>.`},
+  {k:['que casa','casa es','cada unidad','casa','stark','lannister','targaryen','baratheon','tema','colores','paleta'],a:()=>Object.keys(HOUSES).map(k=>`${HOUSES[k].s} <b>${HOUSES[k].n}</b> → ${n(U[k].nombre)}`).join('\n')+'\nCada unidad cambia los colores del portafolio según su casa.'},
+  {k:['unidad','unidades','organiz','estructura','habilitad','bloquead'],a:()=>Object.keys(U).map(k=>`${HOUSES[k].s} <b>${n(U[k].nombre)}</b> — ${U[k].locked?'🔒 bloqueada':'✔ habilitada'}${U[k].weeks.length?` (${U[k].weeks.length} semanas)`:''}`).join('\n')},
+  {k:['semana','sesion','semanas','contenido','actividad','actividades','entregable'],a:()=>{const w=U['1'].weeks;return w.length?`<b>${n(U['1'].nombre)}</b> tiene ${w.length} semanas:\n`+w.map(x=>`• ${n(x.num)}: ${n(x.title)}`).join('\n'):'Aún no hay semanas registradas.';}},
+  {k:['pregunta','preguntas','banco','cuestionario','32','respuestas'],a:()=>`El banco tiene <b>${appState.questions.length} preguntas</b>. Están dentro de la tarjeta de la Semana 01, en «Unidades» (botón de preguntas). También puedes preguntarme por un tema, por ejemplo «transacción» o «DBMS».`},
+  {k:['objetivo','meta','futuro','profesional','dba','administrador de bases'],a:()=>{const q=appState.questions.find(x=>x.id==='q31');return q?`<b>Objetivo profesional:</b> ${n(q.text.slice(0,300))}…`:'Aún no hay un objetivo registrado.';}},
+  {k:['mi rol','quien soy','permiso','acceso','rol'],a:()=>'Has iniciado sesión como '+(role==='admin'?'<b>Administrador</b>: puedes editar el contenido.':'<b>Usuario</b>: acceso de solo consulta.')},
+  {k:['editar','modificar','administrar','agregar','anadir','cambiar','foto','como edito'],a:()=>role==='admin'?'Activa «✎ Modo edición» en el menú. Podrás editar el perfil, semanas, actividades y preguntas, bloquear unidades y cambiar tu foto en «Sobre mí».':'La edición está reservada a la cuenta de Administrador.'},
+  {k:['sede','ubicacion','huancayo','lugar','universidad','upla'],a:()=>`Sede: <b>${n(p.sede)}</b> · ${n(p.universidad)}, Facultad de Ingeniería de Sistemas y Computación.`},
+  {k:['gracias','genial','excelente'],a:()=>'¡Con gusto! Si necesitas algo más, pregúntame. ⚜'},
+  {k:['hola','buenas','hey','ayuda','que puedes','opciones'],a:()=>'Puedo ayudarte con estas consultas:'+botChips(baseChips())}
+  ];
+}
+function botReply(text){
+  const q=nrm(text);let best=null,top=0;
+  botKB().forEach(e=>{const sc=e.k.reduce((a,w)=>a+(q.includes(w)?w.length:0),0);if(sc>top){top=sc;best=e;}});
+  if(best)return best.a();
+  const words=q.split(' ').filter(w=>w.length>3);
+  const hit=appState.questions.map(x=>({x,s:words.filter(w=>nrm(x.title+' '+x.text).includes(w)).length+words.filter(w=>nrm(x.title).includes(w)).length})).filter(o=>o.s>0).sort((a,b)=>b.s-a.s)[0];
+  if(hit)return `Encontré esto en el banco de preguntas:\n<b>${esc(hit.x.num)}. ${esc(hit.x.title)}</b>\n${esc(hit.x.text.slice(0,300))}${hit.x.text.length>300?'…':''}`;
+  return 'No encontré una respuesta exacta. Prueba con una de estas:'+botChips(baseChips());
+}
+function botAsk(text){
+  botBox.insertAdjacentHTML('beforeend','<div class="msg user">'+esc(text)+'</div>');botBox.scrollTop=botBox.scrollHeight;
+  setTimeout(()=>{botBox.insertAdjacentHTML('beforeend','<div class="msg">'+botReply(text)+'</div>');botBox.scrollTop=botBox.scrollHeight;},250);
+}
 document.getElementById('bot-form').addEventListener('submit',function(e){
-  e.preventDefault();
-  const input=document.getElementById('bot-input'),text=input.value.trim();
-  if(!text)return;
-  const box=document.getElementById('bot-messages');
-  box.insertAdjacentHTML('beforeend','<div class="msg">'+esc(text)+'</div>');
-  let r='Puedes revisar el perfil, el Grimorio o las unidades del curso.';
-  const q=text.toLowerCase();
-  if(q.includes('matias')||q.includes('michael'))r='Matias Saforas Gomez es estudiante de Ingeniería de Sistemas en la UPLA.';
-  else if(q.includes('curso'))r='El curso es Base de Datos II (332151), semestre 2026-I.';
-  else if(q.includes('docente'))r='El docente es el Mg. Raúl Enrique Fernández Bejarano.';
-  else if(q.includes('pregunta'))r='Las 32 preguntas están dentro de la tarjeta de la Semana 01, en la sección Unidades.';
-  else if(q.includes('rol')||q.includes('quien soy')||q.includes('quién soy'))r='Has iniciado sesión como '+(role==='admin'?'Administrador. Puedes activar el "Modo edición" en el menú superior para gestionar el contenido.':'Usuario, en modo de solo consulta.');
-  else if(q.includes('editar')||q.includes('administrar'))r= role==='admin' ? 'Activa "Modo edición" en el menú superior para editar el perfil, las semanas, las actividades y las preguntas.' : 'La edición del contenido está reservada para la cuenta de Administrador.';
-  box.insertAdjacentHTML('beforeend','<div class="msg">'+esc(r)+'</div>');
-  input.value='';
-  box.scrollTop=box.scrollHeight;
+  e.preventDefault();const i=document.getElementById('bot-input'),t=i.value.trim();
+  if(!t)return;botAsk(t);i.value='';
 });
 </script>
 </body></html>
