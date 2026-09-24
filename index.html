@@ -257,8 +257,6 @@ footer{padding:35px 20px;text-align:center;border-top:1px solid var(--border);co
 }
 
 /* ================= MEJORAS: PROGRESO, PARTÍCULAS, REVELADO, TILT, RIPPLE ================= */
-/* Refuerzo: los controles de edición deben permanecer ocultos hasta activar "Modo edición",
-   incluso en botones (.icon-btn/.questions-btn/.dragon-eye-btn) que definen su propio "display". */
 .edit-ctrl{display:none}
 #scrollProgress{position:fixed;top:0;left:0;height:3px;width:0%;background:linear-gradient(90deg,var(--blood),var(--gold) 55%,var(--gold2));z-index:60;box-shadow:0 0 14px color-mix(in srgb,var(--gold) 70%,transparent);transition:width .1s linear}
 
@@ -561,6 +559,7 @@ async function openActivityPdf(unitKey,weekId,actId){
   document.getElementById('pdfModalOverlay').dataset.house=unitKey;
   const w=appState.units[unitKey].weeks.find(x=>x.id===weekId);
   const a=w.activities.find(x=>x.id===actId);
+  if(!isPdf(a)){await dlAct(unitKey,weekId,actId);return;}
   openPDF(await actUrl(a), a.dispFilename||a.filename, a.title||a.label, w.num);
 }
 
@@ -1065,18 +1064,24 @@ function renderActivitiesPanel(k,w){
     ${empty}${addBtn}
   </div>`;
 }
+/* ===== Tipo de archivo ===== */
+function fext(a){const m=/\.([a-z0-9]+)$/i.exec(a.dispFilename||a.filename||'');return m?m[1].toLowerCase():'';}
+function isPdf(a){return fext(a)==='pdf';}
 function renderActivityBlock(k,w,a){
   const toolbar= role==='admin' ? `<div class="entity-toolbar edit-ctrl">
     <button type="button" class="icon-btn" title="Editar" onclick="editActivity('${k}','${w.id}','${a.id}')">✎</button>
     <button type="button" class="icon-btn danger" title="Eliminar" onclick="deleteActivity('${k}','${w.id}','${a.id}')">🗑</button>
   </div>`:'';
-  const url='pdf/'+a.filename;
+  const pdf=isPdf(a),ext=(fext(a)||'archivo').toUpperCase();
+  const open=pdf?`openActivityPdf('${k}','${w.id}','${a.id}')`:`dlAct('${k}','${w.id}','${a.id}')`;
+  const eye='<svg viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>Ver PDF';
+  const dl='<svg viewBox="0 0 24 24"><path d="M12 16l-5-5h3V4h4v7h3l-5 5zm-7 2h14v2H5v-2z"/></svg>Descargar '+esc(ext);
   return `<div class="activity-block">${toolbar}
     <div class="activity-label">${esc(a.label)}${a.fid&&!a.pub?' <small title="Guardado solo en este navegador">💾</small>':''}</div>
-    <div class="card-pdf-thumb" onclick="openActivityPdf('${k}','${w.id}','${a.id}')"><div class="thumb-placeholder"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14,2 14,8 20,8"/><line x1="9" y1="13" x2="15" y2="13"/><line x1="9" y1="17" x2="15" y2="17"/></svg>Clic para ver</div></div>
+    <div class="card-pdf-thumb" onclick="${open}"><div class="thumb-placeholder"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14,2 14,8 20,8"/><line x1="9" y1="13" x2="15" y2="13"/><line x1="9" y1="17" x2="15" y2="17"/></svg>${pdf?'Clic para ver':esc(ext)+' · Clic para descargar'}</div></div>
     <div class="card-actions">
-      <button type="button" class="preview-btn" onclick="event.stopPropagation();openActivityPdf('${k}','${w.id}','${a.id}')"><svg viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>Ver PDF</button>
-      <a class="download-btn" href="#" onclick="event.stopPropagation();dlAct('${k}','${w.id}','${a.id}');return false"><svg viewBox="0 0 24 24"><path d="M12 16l-5-5h3V4h4v7h3l-5 5zm-7 2h14v2H5v-2z"/></svg></a>
+      <button type="button" class="preview-btn" onclick="event.stopPropagation();${open}">${pdf?eye:dl}</button>
+      <a class="download-btn" href="#" title="Descargar" onclick="event.stopPropagation();dlAct('${k}','${w.id}','${a.id}');return false"><svg viewBox="0 0 24 24"><path d="M12 16l-5-5h3V4h4v7h3l-5 5zm-7 2h14v2H5v-2z"/></svg></a>
     </div>
   </div>`;
 }
@@ -1094,17 +1099,17 @@ async function dlAct(k,wid,aid){
   const l=document.createElement('a');l.href=await actUrl(a);l.download=a.dispFilename||a.filename;
   document.body.appendChild(l);l.click();l.remove();
 }
-function slug(n){return n.replace(/\.pdf$/i,'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-zA-Z0-9_-]+/g,'-').replace(/^-+|-+$/g,'').toLowerCase()||'archivo';}
+function slug(n){return n.replace(/\.[^.]+$/,'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-zA-Z0-9_-]+/g,'-').replace(/^-+|-+$/g,'').toLowerCase()||'archivo';}
 function okFile(f){
   if(!(f&&f.size))return true;
-  if(!(f.type==='application/pdf'||/\.pdf$/i.test(f.name))){showToast('Solo se aceptan archivos PDF.');return false;}
-  if(f.size>25*1024*1024){showToast('El PDF supera los 25 MB.');return false;}
+  if(f.size>50*1024*1024){showToast('El archivo supera los 50 MB.');return false;}
   return true;
 }
 async function attachFile(a,f){
   if(!(f&&f.size))return;
   if(a.fid)await idbDel(a.fid);
-  a.fid=uid();a.pub=false;a.filename=slug(f.name)+'-'+Date.now().toString(36)+'.pdf';
+  const ext=((/\.([a-z0-9]+)$/i.exec(f.name)||[])[1]||'bin').toLowerCase();
+  a.fid=uid();a.pub=false;a.filename=slug(f.name)+'-'+Date.now().toString(36)+'.'+ext;
   await idbSet(a.fid,f);
 }
 function afterActSave(k,msg){
@@ -1115,12 +1120,12 @@ function addActivity(k,weekId){
   openEditModal('Añadir actividad',[
     {key:'label',label:'Etiqueta',value:'📄 Actividad'},
     {key:'title',label:'Título del documento',value:''},
-    {key:'file',label:'Archivo PDF',type:'file',hint:'Elígelo desde tu computadora.'},
-    {key:'filename',label:'…o nombre de un PDF ya subido a la carpeta pdf/ (opcional)',value:''}
+    {key:'file',label:'Archivo (cualquier tipo)',type:'file',hint:'Elígelo desde tu computadora.'},
+    {key:'filename',label:'…o nombre de un archivo ya subido a la carpeta pdf/ (opcional)',value:''}
   ],async vals=>{
     const f=vals.file,fn=vals.filename.trim();
     if(!okFile(f))return false;
-    if(!(f&&f.size)&&!fn){showToast('Elige un PDF o escribe el nombre de uno existente.');return false;}
+    if(!(f&&f.size)&&!fn){showToast('Elige un archivo o escribe el nombre de uno existente.');return false;}
     const w=appState.units[k].weeks.find(x=>x.id===weekId);
     const a={id:uid(),label:vals.label,title:vals.title,filename:fn,dispFilename:fn};
     if(f&&f.size){await attachFile(a,f);a.dispFilename=f.name;}
@@ -1135,14 +1140,16 @@ function editActivity(k,weekId,actId){
     {key:'label',label:'Etiqueta',value:a.label},
     {key:'title',label:'Título del documento',value:a.title},
     {key:'dispFilename',label:'Nombre a mostrar',value:a.dispFilename},
-    {key:'file',label:'Reemplazar PDF (opcional)',type:'file'}
+    {key:'file',label:'Reemplazar archivo (opcional)',type:'file'}
   ];
   if(!a.fid)fields.push({key:'filename',label:'Archivo (ruta dentro de /pdf)',value:a.filename});
   openEditModal('Editar actividad',fields,async vals=>{
     const f=vals.file;delete vals.file;
     if(!okFile(f))return false;
+    const oldName=a.dispFilename;
     Object.assign(a,vals);
     await attachFile(a,f);
+    if(f&&f.size&&vals.dispFilename===oldName)a.dispFilename=f.name;
     afterActSave(k,'Actividad actualizada.');
   });
 }
@@ -1273,7 +1280,7 @@ function openEditModal(title,fields,onSave){
     if(f.type==='textarea'){
       return `<div class="edit-field"><label>${esc(f.label)}</label><textarea name="${esc(f.key)}">${esc(f.value)}</textarea>${f.hint?`<small>${esc(f.hint)}</small>`:''}</div>`;
     }
-    return `<div class="edit-field"><label>${esc(f.label)}</label><input name="${esc(f.key)}" type="${f.type||'text'}" value="${esc(f.value)}"${f.type==='file'?' accept=".pdf,application/pdf"':''}${f.step?` step="${f.step}"`:''}${f.min!=null?` min="${f.min}"`:''}${f.max!=null?` max="${f.max}"`:''}>${f.hint?`<small>${esc(f.hint)}</small>`:''}</div>`;
+    return `<div class="edit-field"><label>${esc(f.label)}</label><input name="${esc(f.key)}" type="${f.type||'text'}" value="${esc(f.value)}"${f.step?` step="${f.step}"`:''}${f.min!=null?` min="${f.min}"`:''}${f.max!=null?` max="${f.max}"`:''}>${f.hint?`<small>${esc(f.hint)}</small>`:''}</div>`;
   }).join('');
   modalSaveHandler=onSave;
   document.getElementById('editModalOverlay').classList.add('open');
