@@ -257,6 +257,8 @@ footer{padding:35px 20px;text-align:center;border-top:1px solid var(--border);co
 }
 
 /* ================= MEJORAS: PROGRESO, PARTÍCULAS, REVELADO, TILT, RIPPLE ================= */
+/* Refuerzo: los controles de edición deben permanecer ocultos hasta activar "Modo edición",
+   incluso en botones (.icon-btn/.questions-btn/.dragon-eye-btn) que definen su propio "display". */
 .edit-ctrl{display:none}
 #scrollProgress{position:fixed;top:0;left:0;height:3px;width:0%;background:linear-gradient(90deg,var(--blood),var(--gold) 55%,var(--gold2));z-index:60;box-shadow:0 0 14px color-mix(in srgb,var(--gold) 70%,transparent);transition:width .1s linear}
 
@@ -422,8 +424,6 @@ body.act-open #app-screen>nav,body.act-open #app-screen>header,body.act-open #ap
 <li><a href="#grimorio">Grimorio</a></li>
 <li><a href="#unidades">Unidades</a></li>
 <li class="admin-flag"><button type="button" class="logout" id="editModeBtn">✎ Modo edición</button></li>
-<li class="admin-flag"><button type="button" class="logout" onclick="ghPublish()">☁ Publicar</button></li>
-<li class="admin-flag"><button type="button" class="logout" onclick="ghConfig()">⚙ GitHub</button></li>
 <li class="admin-flag"><button type="button" class="logout" onclick="resetContent()">⟲ Restablecer</button></li>
 <li><button id="logout-btn" class="logout">Salir</button></li>
 </ul>
@@ -555,12 +555,11 @@ document.addEventListener('keydown',function(e){
   if(e.key==='ArrowRight'||e.key==='ArrowDown')changePage(1);
   if(e.key==='ArrowLeft'||e.key==='ArrowUp')changePage(-1);
 });
-async function openActivityPdf(unitKey,weekId,actId){
+function openActivityPdf(unitKey,weekId,actId){
   document.getElementById('pdfModalOverlay').dataset.house=unitKey;
   const w=appState.units[unitKey].weeks.find(x=>x.id===weekId);
   const a=w.activities.find(x=>x.id===actId);
-  if(!isPdf(a)){await dlAct(unitKey,weekId,actId);return;}
-  openPDF(await actUrl(a), a.dispFilename||a.filename, a.title||a.label, w.num);
+  openPDF('pdf/'+a.filename, a.dispFilename||a.filename, a.title||a.label, w.num);
 }
 
 /* ================= UTILIDADES ================= */
@@ -799,7 +798,7 @@ document.querySelectorAll('.login-tab').forEach(tab=>tab.addEventListener('click
   document.querySelectorAll('.login-tab').forEach(t=>t.classList.remove('active'));
   tab.classList.add('active');
   }));
-document.getElementById('login-form').addEventListener('submit',async function(e){
+document.getElementById('login-form').addEventListener('submit',function(e){
   e.preventDefault();
   const u=document.getElementById('user').value.trim();
   const p=document.getElementById('pass').value;
@@ -808,7 +807,6 @@ document.getElementById('login-form').addEventListener('submit',async function(e
   else if(u.toLowerCase()===ACCOUNTS.user.user.toLowerCase() && p===ACCOUNTS.user.pass) matched='user';
   const errorEl=document.getElementById('login-error');
   if(matched){
-    appState=await loadStateAsync();
     role=matched;
     document.body.setAttribute('data-role',role);
     setEditMode(false);
@@ -816,6 +814,7 @@ document.getElementById('login-form').addEventListener('submit',async function(e
     document.getElementById('login-screen').style.display='none';
     document.getElementById('app-screen').style.display='block';
     errorEl.style.display='none';
+    appState=loadState();
     currentUnit='1';
     renderAll();
     botWelcome();
@@ -1064,155 +1063,50 @@ function renderActivitiesPanel(k,w){
     ${empty}${addBtn}
   </div>`;
 }
-/* ===== Tipo de archivo ===== */
-function fext(a){const m=/\.([a-z0-9]+)$/i.exec(a.dispFilename||a.filename||'');return m?m[1].toLowerCase():'';}
-function isPdf(a){return fext(a)==='pdf';}
 function renderActivityBlock(k,w,a){
   const toolbar= role==='admin' ? `<div class="entity-toolbar edit-ctrl">
     <button type="button" class="icon-btn" title="Editar" onclick="editActivity('${k}','${w.id}','${a.id}')">✎</button>
     <button type="button" class="icon-btn danger" title="Eliminar" onclick="deleteActivity('${k}','${w.id}','${a.id}')">🗑</button>
   </div>`:'';
-  const pdf=isPdf(a),ext=(fext(a)||'archivo').toUpperCase();
-  const open=pdf?`openActivityPdf('${k}','${w.id}','${a.id}')`:`dlAct('${k}','${w.id}','${a.id}')`;
-  const eye='<svg viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>Ver PDF';
-  const dl='<svg viewBox="0 0 24 24"><path d="M12 16l-5-5h3V4h4v7h3l-5 5zm-7 2h14v2H5v-2z"/></svg>Descargar '+esc(ext);
+  const url='pdf/'+a.filename;
   return `<div class="activity-block">${toolbar}
-    <div class="activity-label">${esc(a.label)}${a.fid&&!a.pub?' <small title="Guardado solo en este navegador">💾</small>':''}</div>
-    <div class="card-pdf-thumb" onclick="${open}"><div class="thumb-placeholder"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14,2 14,8 20,8"/><line x1="9" y1="13" x2="15" y2="13"/><line x1="9" y1="17" x2="15" y2="17"/></svg>${pdf?'Clic para ver':esc(ext)+' · Clic para descargar'}</div></div>
+    <div class="activity-label">${esc(a.label)}</div>
+    <div class="card-pdf-thumb" onclick="openActivityPdf('${k}','${w.id}','${a.id}')"><div class="thumb-placeholder"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14,2 14,8 20,8"/><line x1="9" y1="13" x2="15" y2="13"/><line x1="9" y1="17" x2="15" y2="17"/></svg>Clic para ver</div></div>
     <div class="card-actions">
-      <button type="button" class="preview-btn" onclick="event.stopPropagation();${open}">${pdf?eye:dl}</button>
-      <a class="download-btn" href="#" title="Descargar" onclick="event.stopPropagation();dlAct('${k}','${w.id}','${a.id}');return false"><svg viewBox="0 0 24 24"><path d="M12 16l-5-5h3V4h4v7h3l-5 5zm-7 2h14v2H5v-2z"/></svg></a>
+      <button type="button" class="preview-btn" onclick="event.stopPropagation();openActivityPdf('${k}','${w.id}','${a.id}')"><svg viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>Ver PDF</button>
+      <a class="download-btn" href="${esc(url)}" download onclick="event.stopPropagation()"><svg viewBox="0 0 24 24"><path d="M12 16l-5-5h3V4h4v7h3l-5 5zm-7 2h14v2H5v-2z"/></svg></a>
     </div>
   </div>`;
-}
-/* ===== Archivos locales (IndexedDB) ===== */
-function idb(){return new Promise((res,rej)=>{const r=indexedDB.open('gotFiles',1);r.onupgradeneeded=()=>r.result.createObjectStore('f');r.onsuccess=()=>res(r.result);r.onerror=()=>rej(r.error);});}
-async function idbGet(k){try{const d=await idb();return await new Promise(res=>{const q=d.transaction('f').objectStore('f').get(k);q.onsuccess=()=>res(q.result);q.onerror=()=>res(null);});}catch(e){return null;}}
-async function idbSet(k,v){const d=await idb();return new Promise((res,rej)=>{const t=d.transaction('f','readwrite');t.objectStore('f').put(v,k);t.oncomplete=res;t.onerror=()=>rej(t.error);});}
-async function idbDel(k){try{const d=await idb();d.transaction('f','readwrite').objectStore('f').delete(k);}catch(e){}}
-async function actUrl(a){
-  if(a.fid){const b=await idbGet(a.fid);if(b)return URL.createObjectURL(b);}
-  return 'pdf/'+a.filename;
-}
-async function dlAct(k,wid,aid){
-  const a=appState.units[k].weeks.find(x=>x.id===wid).activities.find(x=>x.id===aid);
-  const l=document.createElement('a');l.href=await actUrl(a);l.download=a.dispFilename||a.filename;
-  document.body.appendChild(l);l.click();l.remove();
-}
-function slug(n){return n.replace(/\.[^.]+$/,'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-zA-Z0-9_-]+/g,'-').replace(/^-+|-+$/g,'').toLowerCase()||'archivo';}
-function okFile(f){
-  if(!(f&&f.size))return true;
-  if(f.size>50*1024*1024){showToast('El archivo supera los 50 MB.');return false;}
-  return true;
-}
-async function attachFile(a,f){
-  if(!(f&&f.size))return;
-  if(a.fid)await idbDel(a.fid);
-  const ext=((/\.([a-z0-9]+)$/i.exec(f.name)||[])[1]||'bin').toLowerCase();
-  a.fid=uid();a.pub=false;a.filename=slug(f.name)+'-'+Date.now().toString(36)+'.'+ext;
-  await idbSet(a.fid,f);
-}
-function afterActSave(k,msg){
-  saveState();renderUnitPanel(k);if(actView)renderActivityPage();
-  if(ghCfg())ghPublish();else showToast(msg+' Guardada solo en este navegador: conecta GitHub (⚙) para que la vean los demás.');
 }
 function addActivity(k,weekId){
   openEditModal('Añadir actividad',[
     {key:'label',label:'Etiqueta',value:'📄 Actividad'},
-    {key:'title',label:'Título del documento',value:''},
-    {key:'file',label:'Archivo (cualquier tipo)',type:'file',hint:'Elígelo desde tu computadora.'},
-    {key:'filename',label:'…o nombre de un archivo ya subido a la carpeta pdf/ (opcional)',value:''}
-  ],async vals=>{
-    const f=vals.file,fn=vals.filename.trim();
-    if(!okFile(f))return false;
-    if(!(f&&f.size)&&!fn){showToast('Elige un archivo o escribe el nombre de uno existente.');return false;}
+    {key:'filename',label:'Archivo (ruta dentro de /pdf)',value:'',hint:'Ej: semana5_actividad1.pdf — sube el archivo real a la carpeta pdf/ de tu sitio.'},
+    {key:'dispFilename',label:'Nombre a mostrar',value:''},
+    {key:'title',label:'Título del documento',value:''}
+  ],vals=>{
     const w=appState.units[k].weeks.find(x=>x.id===weekId);
-    const a={id:uid(),label:vals.label,title:vals.title,filename:fn,dispFilename:fn};
-    if(f&&f.size){await attachFile(a,f);a.dispFilename=f.name;}
-    w.activities.push(a);
-    afterActSave(k,'Actividad añadida.');
+    w.activities.push({id:uid(),label:vals.label,filename:vals.filename,dispFilename:vals.dispFilename||vals.filename,title:vals.title});
+    saveState();renderUnitPanel(k);
+    showToast('Actividad añadida.');
   });
 }
 function editActivity(k,weekId,actId){
   const w=appState.units[k].weeks.find(x=>x.id===weekId);
   const a=w.activities.find(x=>x.id===actId);
-  const fields=[
+  openEditModal('Editar actividad',[
     {key:'label',label:'Etiqueta',value:a.label},
-    {key:'title',label:'Título del documento',value:a.title},
+    {key:'filename',label:'Archivo (ruta dentro de /pdf)',value:a.filename},
     {key:'dispFilename',label:'Nombre a mostrar',value:a.dispFilename},
-    {key:'file',label:'Reemplazar archivo (opcional)',type:'file'}
-  ];
-  if(!a.fid)fields.push({key:'filename',label:'Archivo (ruta dentro de /pdf)',value:a.filename});
-  openEditModal('Editar actividad',fields,async vals=>{
-    const f=vals.file;delete vals.file;
-    if(!okFile(f))return false;
-    const oldName=a.dispFilename;
-    Object.assign(a,vals);
-    await attachFile(a,f);
-    if(f&&f.size&&vals.dispFilename===oldName)a.dispFilename=f.name;
-    afterActSave(k,'Actividad actualizada.');
-  });
+    {key:'title',label:'Título del documento',value:a.title}
+  ],vals=>{Object.assign(a,vals);saveState();renderUnitPanel(k);showToast('Actividad actualizada.');});
 }
 function deleteActivity(k,weekId,actId){
   if(!confirm('¿Eliminar esta actividad?'))return;
   const w=appState.units[k].weeks.find(x=>x.id===weekId);
-  const a=w.activities.find(x=>x.id===actId);if(a&&a.fid)idbDel(a.fid);
   w.activities=w.activities.filter(a=>a.id!==actId);
-  saveState();renderUnitPanel(k);if(actView)renderActivityPage();
-  showToast('Actividad eliminada. Usa ☁ Publicar para reflejarlo en GitHub.');
-}
-
-/* ===== Publicación en GitHub (sin salir de la página) ===== */
-const GH_KEY='gotGhCfg',DATA_PATH='data/portfolio.json';
-function ghCfg(){try{const c=JSON.parse(localStorage.getItem(GH_KEY));return c&&c.token&&c.owner&&c.repo?c:null;}catch(e){return null;}}
-function ghHdr(){return{Authorization:'Bearer '+ghCfg().token,Accept:'application/vnd.github+json'};}
-function ghUrl(p){const c=ghCfg();return `https://api.github.com/repos/${c.owner}/${c.repo}/contents/${p}`;}
-const toB64=t=>{let b='';new TextEncoder().encode(t).forEach(x=>b+=String.fromCharCode(x));return btoa(b);};
-const blobB64=b=>new Promise(res=>{const r=new FileReader();r.onload=()=>res(r.result.split(',')[1]);r.readAsDataURL(b);});
-async function ghPut(path,b64,msg){
-  const c=ghCfg();
-  const g=await fetch(ghUrl(path)+'?ref='+encodeURIComponent(c.branch),{headers:ghHdr()});
-  if(!g.ok&&g.status!==404)throw new Error('GitHub '+g.status+(g.status===401?' (token inválido)':''));
-  const sha=g.ok?(await g.json()).sha:null;
-  const r=await fetch(ghUrl(path),{method:'PUT',headers:ghHdr(),body:JSON.stringify(Object.assign({message:msg,content:b64,branch:c.branch},sha?{sha}:{}))});
-  if(!r.ok)throw new Error('GitHub '+r.status+' '+(((await r.json().catch(()=>({}))).message)||''));
-}
-function ghConfig(){
-  const seg=location.pathname.split('/')[1]||'';
-  const c=ghCfg()||{owner:/\.github\.io$/.test(location.hostname)?location.hostname.split('.')[0]:'',repo:seg&&!/\./.test(seg)?seg:location.hostname,branch:'main',token:''};
-  openEditModal('Conexión con GitHub',[
-    {key:'owner',label:'Usuario u organización de GitHub',value:c.owner},
-    {key:'repo',label:'Repositorio',value:c.repo},
-    {key:'branch',label:'Rama',value:c.branch},
-    {key:'token',label:'Token de acceso (fine-grained)',type:'password',value:c.token,hint:'Permiso «Contents: Read and write» solo sobre este repositorio. Se guarda únicamente en este navegador. Déjalo vacío para desconectar.'}
-  ],vals=>{
-    if(!vals.token.trim()){localStorage.removeItem(GH_KEY);showToast('GitHub desconectado.');return;}
-    localStorage.setItem(GH_KEY,JSON.stringify({owner:vals.owner.trim(),repo:vals.repo.trim(),branch:vals.branch.trim()||'main',token:vals.token.trim()}));
-    showToast('GitHub conectado. Usa ☁ Publicar para subir los cambios.');
-  });
-}
-let ghBusy=false;
-async function ghPublish(){
-  if(!ghCfg()){ghConfig();return;}
-  if(ghBusy)return;ghBusy=true;showToast('Publicando en GitHub…');
-  try{
-    for(const u of Object.values(appState.units))for(const w of u.weeks)for(const a of w.activities){
-      if(!a.fid||a.pub)continue;
-      const b=await idbGet(a.fid);if(!b)continue;
-      await ghPut('pdf/'+a.filename,await blobB64(b),'Subir '+a.filename);
-      a.pub=true;
-    }
-    saveState();
-    await ghPut(DATA_PATH,toB64(JSON.stringify(appState)),'Actualizar portafolio');
-    renderUnitPanel(currentUnit);if(actView)renderActivityPage();
-    showToast('✓ Publicado. GitHub Pages puede tardar ~1 min en mostrarlo a los demás.');
-  }catch(e){showToast('Error al publicar: '+e.message);}
-  ghBusy=false;
-}
-async function loadStateAsync(){
-  try{const raw=localStorage.getItem(STORAGE_KEY);if(raw)return JSON.parse(raw);}catch(e){}
-  try{const r=await fetch(DATA_PATH+'?t='+Date.now(),{cache:'no-store'});if(r.ok)return await r.json();}catch(e){}
-  return defaultState();
+  saveState();renderUnitPanel(k);
+  showToast('Actividad eliminada.');
 }
 
 function renderQuestionsPanel(){
@@ -1297,8 +1191,8 @@ document.getElementById('editModalForm').addEventListener('submit',function(e){
   const data=new FormData(this);
   const values={};
   for(const [k,v] of data.entries())values[k]=v;
-  const r=modalSaveHandler?modalSaveHandler(values):null;
-  Promise.resolve(r).then(x=>{if(x!==false)closeEditModal();});
+  if(modalSaveHandler)modalSaveHandler(values);
+  closeEditModal();
 });
 
 
@@ -1397,3 +1291,4 @@ document.getElementById('bot-form').addEventListener('submit',function(e){
 });
 </script>
 </body></html>
+
