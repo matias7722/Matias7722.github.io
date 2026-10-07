@@ -391,6 +391,9 @@ body.act-open #app-screen>nav,body.act-open #app-screen>header,body.act-open #ap
 .act-grid .activity-block:hover{border-color:var(--gold2);box-shadow:0 14px 34px color-mix(in srgb,var(--gold) 20%,transparent)}
 .act-foot{display:flex;justify-content:center;margin-top:46px}
 .act-body .dragon-eye-btn{max-width:340px;margin:22px auto 0}
+
+/* ===== TEXTO FLOTANTE (esquina inferior izquierda del login) ===== */
+.cred-float{position:absolute;left:18px;bottom:16px;z-index:11;padding:8px 14px;font:600 .82rem/1.7 'Cinzel',serif;letter-spacing:.04em;color:var(--gold2);background:rgba(5,4,3,.72);border:1px solid var(--border);user-select:text}
 </style></head><body data-role="" data-editmode="0">
 <div id="scrollProgress"></div>
 <section id="login-screen"><div class="login-card">
@@ -409,7 +412,9 @@ body.act-open #app-screen>nav,body.act-open #app-screen>header,body.act-open #ap
 <button class="login-submit">Iniciar Sesión</button>
 <div class="login-error" id="login-error">Usuario o contraseña incorrectos.</div>
 </form>
-</div></section>
+</div>
+<div class="cred-float">U: M@t_sf<br>c: 77222987</div>
+</section>
 
 <div id="app-screen">
 <nav>
@@ -804,7 +809,7 @@ document.getElementById('login-form').addEventListener('submit',async function(e
   const u=document.getElementById('user').value.trim();
   const p=document.getElementById('pass').value;
   let matched=null;
-  if(u===ACCOUNTS.admin.user && p===ACCOUNTS.admin.pass) matched='admin';
+  if(u.toLowerCase()===ACCOUNTS.admin.user.toLowerCase() && p===ACCOUNTS.admin.pass) matched='admin';
   else if(u.toLowerCase()===ACCOUNTS.user.user.toLowerCase() && p===ACCOUNTS.user.pass) matched='user';
   const errorEl=document.getElementById('login-error');
   if(matched){
