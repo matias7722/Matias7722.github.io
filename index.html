@@ -406,27 +406,44 @@ body.act-open #app-screen>nav,body.act-open #app-screen>header,body.act-open #ap
 .html-frame-wrap{flex:1;position:relative;background:#fff}
 .html-frame-wrap iframe{position:absolute;inset:0;width:100%;height:100%;border:0;background:#fff}
 @media(max-width:700px){.html-modal{width:100vw;height:100vh;border:0}.html-modal-actions .btn-download-modal{display:none}}
+
+/* ===== VENTANA DE ACCESO (invitado / administrador) ===== */
+.access-overlay{position:fixed;inset:0;z-index:1100;display:none;place-items:center;padding:20px;background:rgba(0,0,0,.74);backdrop-filter:blur(6px)}
+.access-overlay.open{display:grid}
+.access-card{position:relative;width:min(400px,100%);padding:30px 30px 26px;text-align:center;background:linear-gradient(180deg,rgba(10,9,7,.98),rgba(5,4,3,.99));border:1px solid var(--gold);outline:1px solid rgba(201,162,39,.25);outline-offset:5px;box-shadow:0 30px 100px rgba(0,0,0,.85),inset 0 0 50px rgba(0,0,0,.5);animation:fadeUp .4s ease}
+.access-crest{width:48px;height:48px;margin:0 auto 10px}
+.access-crest svg{width:100%;height:100%;filter:drop-shadow(0 3px 6px rgba(0,0,0,.8))}
+.access-title{font-size:1.35rem;color:var(--gold2);text-transform:uppercase;letter-spacing:.06em}
+.access-sub{color:var(--muted);font-size:1rem;margin:8px 0 20px;font-style:italic}
+.access-step[hidden]{display:none!important}
+.access-choices{display:grid;gap:12px}
+.access-btn{display:flex;align-items:center;justify-content:center;gap:10px;padding:14px;border:1px solid var(--gold);background:rgba(5,4,3,.6);color:var(--gold2);font:700 .8rem 'Cinzel',serif;text-transform:uppercase;letter-spacing:.1em;transition:.2s;position:relative;overflow:hidden}
+.access-btn:hover{background:rgba(201,162,39,.14)}
+.access-btn.primary{background:linear-gradient(180deg,#8a2323,var(--blood) 55%,#4a1010);box-shadow:0 10px 25px rgba(110,27,27,.45)}
+.access-btn.primary:hover{filter:brightness(1.12)}
+.access-btn.ghost{border-color:var(--border);color:var(--muted)}
+.access-row{display:grid;grid-template-columns:1fr 1.4fr;gap:10px;margin-top:4px}
+.access-card .login-form{margin-top:0}
 </style></head><body data-role="" data-editmode="0">
 <div id="scrollProgress"></div>
-<section id="login-screen"><div class="login-card">
-<div class="login-crest"><svg viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M50 6c3 10 9 16 18 20-6 2-10 6-12 12 8-2 14 0 19 6-8 1-13 5-16 11 7 1 12 5 15 11-8-1-14 2-18 8-2-9-6-15-6-15s-4 6-6 15c-4-6-10-9-18-8 3-6 8-10 15-11-3-6-8-10-16-11 5-6 11-8 19-6-2-6-6-10-12-12 9-4 15-10 18-20z" fill="var(--gold2)" stroke="var(--gold)" stroke-width="1"/></svg></div>
-<h1 class="login-title">Winter Is Coming</h1>
-<p class="login-sub">Accede a tu Reino</p>
-<div class="login-tabs">
-  <button type="button" class="login-tab active" data-acc="admin">👑 Administrador</button>
-  <button type="button" class="login-tab" data-acc="user">🛡 Usuario</button>
-</div>
-<div class="login-divider"><span>◇</span></div>
+<div class="access-overlay" id="accessOverlay"><div class="access-card" role="dialog" aria-modal="true" aria-labelledby="accessTitle">
+<div class="access-crest"><svg viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M50 6c3 10 9 16 18 20-6 2-10 6-12 12 8-2 14 0 19 6-8 1-13 5-16 11 7 1 12 5 15 11-8-1-14 2-18 8-2-9-6-15-6-15s-4 6-6 15c-4-6-10-9-18-8 3-6 8-10 15-11-3-6-8-10-16-11 5-6 11-8 19-6-2-6-6-10-12-12 9-4 15-10 18-20z" fill="var(--gold2)" stroke="var(--gold)" stroke-width="1"/></svg></div>
+<h2 class="access-title" id="accessTitle">Winter Is Coming</h2>
+<div class="access-step" id="accessChoice">
+<p class="access-sub">¿Cómo deseas ingresar?</p>
+<div class="access-choices">
+<button type="button" class="access-btn primary" id="btnGuest">🛡 Ingresar como invitado</button>
+<button type="button" class="access-btn" id="btnAdmin">👑 Ingresar como administrador</button>
+</div></div>
+<div class="access-step" id="accessAdmin" hidden>
+<p class="access-sub">Identifícate para administrar el portafolio</p>
 <form class="login-form" id="login-form">
 <div class="input-group"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M12 12a4 4 0 100-8 4 4 0 000 8zM4 21c0-4 4-7 8-7s8 3 8 7" stroke-linecap="round" stroke-linejoin="round"/></svg><input id="user" placeholder="Usuario" autocomplete="off" required></div>
 <div class="input-group"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="5" y="11" width="14" height="9" rx="1"/><path d="M8 11V7a4 4 0 018 0v4" stroke-linecap="round"/></svg><input id="pass" type="password" placeholder="Contraseña" required><button type="button" class="toggle-pass" id="togglePass" aria-label="Mostrar contraseña"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7z" stroke-linecap="round" stroke-linejoin="round"/><circle cx="12" cy="12" r="3"/></svg></button></div>
-<div class="login-options"><label class="checkbox-label"><input type="checkbox">Recordarme</label><a href="#" class="forgot-link" onclick="return false">¿Olvidaste tu contraseña?</a></div>
-<button class="login-submit">Iniciar Sesión</button>
 <div class="login-error" id="login-error">Usuario o contraseña incorrectos.</div>
-</form>
-</div>
-<div class="cred-float">U: M@t_sf<br>c: 77222987</div>
-</section>
+<div class="access-row"><button type="button" class="access-btn ghost" id="btnBack">← Volver</button><button class="access-btn primary" type="submit">Entrar</button></div>
+</form></div>
+</div></div>
 
 <div id="app-screen">
 <nav>
@@ -442,7 +459,7 @@ body.act-open #app-screen>nav,body.act-open #app-screen>header,body.act-open #ap
 <li class="admin-flag"><button type="button" class="logout" onclick="ghPublish()">☁ Publicar</button></li>
 <li class="admin-flag"><button type="button" class="logout" onclick="ghConfig()">⚙ GitHub</button></li>
 <li class="admin-flag"><button type="button" class="logout" onclick="resetContent()">⟲ Restablecer</button></li>
-<li><button id="logout-btn" class="logout">Salir</button></li>
+<li><button id="logout-btn" class="logout">Cambiar acceso</button></li>
 </ul>
 </nav>
 
@@ -823,49 +840,55 @@ let role=null;
 let editMode=false;
 let currentUnit='1';
 
-/* ================= LOGIN ================= */
-const ACCOUNTS={admin:{user:'M@t_SF',pass:'77222987'},user:{user:'Invitado',pass:'upla2026'}};
-document.querySelectorAll('.login-tab').forEach(tab=>tab.addEventListener('click',()=>{
-  document.querySelectorAll('.login-tab').forEach(t=>t.classList.remove('active'));
-  tab.classList.add('active');
-  }));
-document.getElementById('login-form').addEventListener('submit',async function(e){
+/* ================= ACCESO (invitado / administrador) ================= */
+const ADMIN={user:'M@t_SF',pass:'77222987'};
+const accessEl=document.getElementById('accessOverlay');
+function enterApp(r){
+  role=r;
+  document.body.setAttribute('data-role',role);
+  setEditMode(false);
+  document.getElementById('roleBadgeText').textContent= role==='admin' ? '👑 Administrador' : '🛡 Invitado';
+  currentUnit='1';
+  renderAll();
+  botWelcome();
+  syncView();
+  window.scrollTo(0,0);
+}
+function showAccess(){
+  document.getElementById('accessChoice').hidden=false;
+  document.getElementById('accessAdmin').hidden=true;
+  document.getElementById('login-error').style.display='none';
+  document.getElementById('user').value='';
+  document.getElementById('pass').value='';
+  accessEl.classList.add('open');
+  document.body.style.overflow='hidden';
+}
+function closeAccess(){
+  accessEl.classList.remove('open');
+  document.body.style.overflow='';
+}
+document.getElementById('btnGuest').onclick=()=>{enterApp('user');closeAccess();};
+document.getElementById('btnAdmin').onclick=()=>{
+  document.getElementById('accessChoice').hidden=true;
+  document.getElementById('accessAdmin').hidden=false;
+  setTimeout(()=>document.getElementById('user').focus(),50);
+};
+document.getElementById('btnBack').onclick=showAccess;
+document.getElementById('login-form').addEventListener('submit',function(e){
   e.preventDefault();
   const u=document.getElementById('user').value.trim();
   const p=document.getElementById('pass').value;
-  let matched=null;
-  if(u.toLowerCase()===ACCOUNTS.admin.user.toLowerCase() && p===ACCOUNTS.admin.pass) matched='admin';
-  else if(u.toLowerCase()===ACCOUNTS.user.user.toLowerCase() && p===ACCOUNTS.user.pass) matched='user';
-  const errorEl=document.getElementById('login-error');
-  if(matched){
-    appState=await loadStateAsync();
-    role=matched;
-    document.body.setAttribute('data-role',role);
-    setEditMode(false);
-    document.getElementById('roleBadgeText').textContent= role==='admin' ? '👑 Administrador' : '🛡 Usuario';
-    document.getElementById('login-screen').style.display='none';
-    document.getElementById('app-screen').style.display='block';
-    errorEl.style.display='none';
-    currentUnit='1';
-    renderAll();
-    botWelcome();
-    syncView();
-    window.scrollTo(0,0);
-    spawnEmbers();
-    setupNavSpy();
-    onScrollFX();
+  if(u.toLowerCase()===ADMIN.user.toLowerCase() && p===ADMIN.pass){
+    enterApp('admin');closeAccess();
   } else {
-    errorEl.style.display='block';
+    document.getElementById('login-error').style.display='block';
   }
 });
 document.getElementById('logout-btn').onclick=()=>{
   hideAct();try{history.replaceState(null,'',location.pathname+location.search);}catch(e){}
-  document.getElementById('app-screen').style.display='none';
-  document.getElementById('login-screen').style.display='grid';
-  document.getElementById('pass').value='';
   document.getElementById('navLinks').classList.remove('open');
-  role=null;
-  window.scrollTo(0,0);
+  enterApp('user');
+  showAccess();
 };
 document.getElementById('togglePass').onclick=function(){
   const p=document.getElementById('pass');
@@ -873,6 +896,15 @@ document.getElementById('togglePass').onclick=function(){
   this.style.color=p.type==='text'?'var(--gold2)':'';
 };
 document.getElementById('navToggle').onclick=()=>document.getElementById('navLinks').classList.toggle('open');
+async function boot(){
+  appState=await loadStateAsync();
+  document.getElementById('app-screen').style.display='block';
+  enterApp('user');
+  spawnEmbers();
+  setupNavSpy();
+  onScrollFX();
+  showAccess();
+}
 
 /* ================= MODO EDICIÓN (solo administrador) ================= */
 function setEditMode(on){
@@ -1443,5 +1475,6 @@ document.getElementById('bot-form').addEventListener('submit',function(e){
   e.preventDefault();const i=document.getElementById('bot-input'),t=i.value.trim();
   if(!t)return;botAsk(t);i.value='';
 });
+boot();
 </script>
 </body></html>
