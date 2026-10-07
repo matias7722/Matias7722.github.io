@@ -394,6 +394,18 @@ body.act-open #app-screen>nav,body.act-open #app-screen>header,body.act-open #ap
 
 /* ===== TEXTO FLOTANTE (esquina inferior izquierda del login) ===== */
 .cred-float{position:absolute;left:18px;bottom:16px;z-index:11;padding:8px 14px;font:600 .82rem/1.7 'Cinzel',serif;letter-spacing:.04em;color:var(--gold2);background:rgba(5,4,3,.72);border:1px solid var(--border);user-select:text}
+
+/* ===== VISOR DE DOCUMENTOS HTML (infografías) ===== */
+.html-modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.92);backdrop-filter:blur(8px);z-index:999;display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:opacity .3s ease}
+.html-modal-overlay.open{opacity:1;pointer-events:all}
+.html-modal{background:linear-gradient(180deg,var(--panel),var(--dark2));border:1px solid var(--gold);width:98vw;height:95vh;display:flex;flex-direction:column;overflow:hidden;box-shadow:0 40px 110px rgba(0,0,0,.8)}
+.html-modal-header{background:var(--panel2);border-bottom:1px solid var(--border);padding:12px 18px;display:flex;align-items:center;gap:14px;flex-shrink:0}
+.html-modal-header .pdf-modal-close{margin-left:0}
+.html-modal-actions{margin-left:auto;display:flex;gap:8px;align-items:center}
+.html-modal-actions .btn-fullscreen,.html-modal-actions .btn-download-modal{padding:8px 14px;font-size:.7rem}
+.html-frame-wrap{flex:1;position:relative;background:#fff}
+.html-frame-wrap iframe{position:absolute;inset:0;width:100%;height:100%;border:0;background:#fff}
+@media(max-width:700px){.html-modal{width:100vw;height:100vh;border:0}.html-modal-actions .btn-download-modal{display:none}}
 </style></head><body data-role="" data-editmode="0">
 <div id="scrollProgress"></div>
 <section id="login-screen"><div class="login-card">
@@ -460,6 +472,8 @@ body.act-open #app-screen>nav,body.act-open #app-screen>header,body.act-open #ap
 <aside class="bot-panel" id="bot-panel"><div class="bot-head"><strong>Asistente del portafolio</strong><button id="bot-close" class="logout">×</button></div><div class="bot-messages" id="bot-messages"></div><form class="bot-form" id="bot-form"><input id="bot-input" placeholder="Escribe una pregunta…" autocomplete="off"><button>↑</button></form></aside>
 
 <div class="pdf-modal-overlay" id="pdfModalOverlay" onclick="closePDFonOverlay(event)"><div class="pdf-modal"><div class="pdf-modal-header"><span style="font-size:1.2rem;">📁</span><div><div class="pdf-modal-folder" id="modalTitle">Documento</div><div class="pdf-modal-subtitle">Lea el pdf directamente aquí abajo:</div></div><button class="pdf-modal-close" onclick="closePDF()">✕</button></div><div class="pdf-modal-body"><div class="pdf-sidebar" id="pdfSidebar"></div><div class="pdf-viewer-area"><div class="pdf-toolbar"><div class="pdf-filename" id="pdfFilename">SEMANA.pdf</div><div class="toolbar-sep"></div><div class="pdf-toolbar-group"><button class="pdf-nav-btn" id="btnPrev" onclick="changePage(-1)" title="Anterior">‹</button><div class="pdf-page-info"><input class="pdf-page-input" id="pageInput" type="number" min="1" value="1" onchange="jumpToPage(this.value)"><span>/ <span id="totalPages">?</span></span></div><button class="pdf-nav-btn" id="btnNext" onclick="changePage(1)" title="Siguiente">›</button></div><div class="toolbar-sep"></div><div class="pdf-toolbar-group"><button class="pdf-zoom-btn" onclick="changeZoom(-0.15)">− Zoom</button><span class="pdf-zoom-level" id="zoomLevel">93%</span><button class="pdf-zoom-btn" onclick="changeZoom(0.15)">+ Zoom</button></div></div><div class="pdf-canvas-area" id="pdfCanvasArea"><div class="pdf-loading" id="pdfLoading"><div class="pdf-spinner"></div><span>Cargando PDF...</span></div><canvas id="pdf-main-canvas" style="display:none;"></canvas></div></div></div><div class="pdf-modal-footer"><div class="pdf-footer-info" id="footerInfo">Listo para visualizar</div><button class="btn-fullscreen" onclick="openFullscreen()">🖥 Pantalla completa</button><a class="btn-download-modal" id="btnDownload" href="#" download>💾 Descargar</a></div></div></div>
+
+<div class="html-modal-overlay" id="htmlModalOverlay" onclick="if(event.target===this)closeHtmlDoc()"><div class="html-modal"><div class="html-modal-header"><span style="font-size:1.2rem;">🗺</span><div><div class="pdf-modal-folder" id="htmlModalTitle">Documento</div><div class="pdf-modal-subtitle" id="htmlModalSub">Documento interactivo</div></div><div class="html-modal-actions"><button type="button" class="btn-fullscreen" onclick="openHtmlNewTab()">🖥 Pestaña nueva</button><a class="btn-download-modal" id="htmlBtnDownload" href="#" download>💾 Descargar</a><button type="button" class="pdf-modal-close" onclick="closeHtmlDoc()" aria-label="Cerrar">✕</button></div></div><div class="html-frame-wrap"><iframe id="htmlFrame" title="Documento" loading="lazy"></iframe></div></div></div>
 
 <div class="edit-modal-overlay" id="editModalOverlay"><div class="edit-modal">
 <div class="edit-modal-head"><h3 id="editModalTitle">Editar</h3><button type="button" onclick="closeEditModal()">✕</button></div>
@@ -555,6 +569,7 @@ function jumpToPage(val){const n=parseInt(val);if(n>=1&&n<=totalPages)renderPage
 function changeZoom(delta){scale=Math.max(0.4,Math.min(2.5,scale+delta));document.getElementById('zoomLevel').textContent=Math.round(scale*100)+'%';renderPage(currentPage);}
 function openFullscreen(){if(currentPdfUrl)window.open(currentPdfUrl,'_blank');}
 document.addEventListener('keydown',function(e){
+  if(e.key==='Escape'&&document.getElementById('htmlModalOverlay').classList.contains('open')){closeHtmlDoc();return;}
   if(!document.getElementById('pdfModalOverlay').classList.contains('open'))return;
   if(e.key==='Escape')closePDF();
   if(e.key==='ArrowRight'||e.key==='ArrowDown')changePage(1);
@@ -564,6 +579,7 @@ async function openActivityPdf(unitKey,weekId,actId){
   document.getElementById('pdfModalOverlay').dataset.house=unitKey;
   const w=appState.units[unitKey].weeks.find(x=>x.id===weekId);
   const a=w.activities.find(x=>x.id===actId);
+  if(isHtml(a)){openHtmlDoc(await actUrl(a),a.dispFilename||a.filename,a.title||a.label,w.num);return;}
   if(!isPdf(a)){await dlAct(unitKey,weekId,actId);return;}
   openPDF(await actUrl(a), a.dispFilename||a.filename, a.title||a.label, w.num);
 }
@@ -742,7 +758,8 @@ function defaultState(){
             {id:'a6',label:'📜 Actividad única',filename:'semana3.pdf',dispFilename:'SEMANA3.pdf',title:'Modelamiento físico e integración'}
           ]},
           {id:'w4',num:'Semana 04',title:'Sustentación y validación de la infraestructura de datos',desc:'Sustentar el primer avance del proyecto mediante un informe técnico y una demostración en vivo, comprobando que el diseño de la arquitectura y la carga inicial de datos cumplen con los criterios de rendimiento e integración planteados. Cierra con el ingreso de notas al sistema.',progress:25.0,questionsBtn:false,activities:[
-            {id:'a7',label:'📜 Actividad única',filename:'semana4.pdf',dispFilename:'SEMANA4.pdf',title:'Sustentación y validación'}
+            {id:'a7',label:'📜 Actividad única',filename:'semana4.pdf',dispFilename:'SEMANA4.pdf',title:'Sustentación y validación'},
+            {id:'a8',label:'🗺 Documento Maestro',filename:'Documento-Maestro-18-Infografias.html',dispFilename:'Documento-Maestro-18-Infografias.html',title:'Documento Maestro · 18 infografías'}
           ]}
         ]
       },
@@ -785,6 +802,14 @@ function defaultState(){
       {id:'q32',num:'32',title:'Nicho de los DBMS de código libre',text:'Los DBMS de código libre ocupan un espacio importante en proyectos educativos, emprendimientos, organizaciones y empresas que buscan reducir costos de licenciamiento y contar con soluciones flexibles. También son útiles para desarrolladores y equipos que necesitan adaptar la tecnología a sus necesidades.'}
     ]
   };
+}
+function ensureDefaults(st){
+  try{
+    const w=st&&st.units&&st.units['1']&&st.units['1'].weeks.find(x=>x.id==='w4');
+    if(w&&!w.activities.some(a=>a.id==='a8'))
+      w.activities.push({id:'a8',label:'🗺 Documento Maestro',filename:'Documento-Maestro-18-Infografias.html',dispFilename:'Documento-Maestro-18-Infografias.html',title:'Documento Maestro · 18 infografías'});
+  }catch(e){}
+  return st;
 }
 function loadState(){
   try{const raw=localStorage.getItem(STORAGE_KEY);if(raw)return JSON.parse(raw);}catch(e){}
@@ -1072,20 +1097,38 @@ function renderActivitiesPanel(k,w){
 /* ===== Tipo de archivo ===== */
 function fext(a){const m=/\.([a-z0-9]+)$/i.exec(a.dispFilename||a.filename||'');return m?m[1].toLowerCase():'';}
 function isPdf(a){return fext(a)==='pdf';}
+function isHtml(a){const e=fext(a);return e==='html'||e==='htm';}
+let htmlDocUrl='';
+function openHtmlDoc(url,filename,title,subtitle){
+  htmlDocUrl=url;
+  document.getElementById('htmlModalTitle').textContent=title;
+  document.getElementById('htmlModalSub').textContent=subtitle+' · '+filename;
+  const d=document.getElementById('htmlBtnDownload');d.href=url;d.download=filename;
+  document.getElementById('htmlFrame').src=url;
+  document.getElementById('htmlModalOverlay').classList.add('open');
+  document.body.style.overflow='hidden';
+}
+function closeHtmlDoc(){
+  document.getElementById('htmlModalOverlay').classList.remove('open');
+  document.getElementById('htmlFrame').src='about:blank';
+  document.body.style.overflow='';
+}
+function openHtmlNewTab(){if(htmlDocUrl)window.open(htmlDocUrl,'_blank');}
 function renderActivityBlock(k,w,a){
   const toolbar= role==='admin' ? `<div class="entity-toolbar edit-ctrl">
     <button type="button" class="icon-btn" title="Editar" onclick="editActivity('${k}','${w.id}','${a.id}')">✎</button>
     <button type="button" class="icon-btn danger" title="Eliminar" onclick="deleteActivity('${k}','${w.id}','${a.id}')">🗑</button>
   </div>`:'';
-  const pdf=isPdf(a),ext=(fext(a)||'archivo').toUpperCase();
-  const open=pdf?`openActivityPdf('${k}','${w.id}','${a.id}')`:`dlAct('${k}','${w.id}','${a.id}')`;
+  const pdf=isPdf(a),htm=isHtml(a),ext=(fext(a)||'archivo').toUpperCase();
+  const open=(pdf||htm)?`openActivityPdf('${k}','${w.id}','${a.id}')`:`dlAct('${k}','${w.id}','${a.id}')`;
   const eye='<svg viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>Ver PDF';
+  const eyeH='<svg viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>Abrir documento';
   const dl='<svg viewBox="0 0 24 24"><path d="M12 16l-5-5h3V4h4v7h3l-5 5zm-7 2h14v2H5v-2z"/></svg>Descargar '+esc(ext);
   return `<div class="activity-block">${toolbar}
     <div class="activity-label">${esc(a.label)}${a.fid&&!a.pub?' <small title="Guardado solo en este navegador">💾</small>':''}</div>
-    <div class="card-pdf-thumb" onclick="${open}"><div class="thumb-placeholder"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14,2 14,8 20,8"/><line x1="9" y1="13" x2="15" y2="13"/><line x1="9" y1="17" x2="15" y2="17"/></svg>${pdf?'Clic para ver':esc(ext)+' · Clic para descargar'}</div></div>
+    <div class="card-pdf-thumb" onclick="${open}"><div class="thumb-placeholder"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14,2 14,8 20,8"/><line x1="9" y1="13" x2="15" y2="13"/><line x1="9" y1="17" x2="15" y2="17"/></svg>${(pdf||htm)?'Clic para ver':esc(ext)+' · Clic para descargar'}</div></div>
     <div class="card-actions">
-      <button type="button" class="preview-btn" onclick="event.stopPropagation();${open}">${pdf?eye:dl}</button>
+      <button type="button" class="preview-btn" onclick="event.stopPropagation();${open}">${pdf?eye:htm?eyeH:dl}</button>
       <a class="download-btn" href="#" title="Descargar" onclick="event.stopPropagation();dlAct('${k}','${w.id}','${a.id}');return false"><svg viewBox="0 0 24 24"><path d="M12 16l-5-5h3V4h4v7h3l-5 5zm-7 2h14v2H5v-2z"/></svg></a>
     </div>
   </div>`;
@@ -1215,8 +1258,8 @@ async function ghPublish(){
   ghBusy=false;
 }
 async function loadStateAsync(){
-  try{const raw=localStorage.getItem(STORAGE_KEY);if(raw)return JSON.parse(raw);}catch(e){}
-  try{const r=await fetch(DATA_PATH+'?t='+Date.now(),{cache:'no-store'});if(r.ok)return await r.json();}catch(e){}
+  try{const raw=localStorage.getItem(STORAGE_KEY);if(raw)return ensureDefaults(JSON.parse(raw));}catch(e){}
+  try{const r=await fetch(DATA_PATH+'?t='+Date.now(),{cache:'no-store'});if(r.ok)return ensureDefaults(await r.json());}catch(e){}
   return defaultState();
 }
 
