@@ -46,6 +46,10 @@
         url('fondo-trono.jpg') center 28%/cover no-repeat;
       pointer-events: none;
       z-index: 0;
+      transition: filter 0.6s ease;
+    }
+    body.ceremony-light:before {
+      filter: brightness(1.6) sepia(0.3) hue-rotate(-10deg);
     }
     h1, h2, h3 { letter-spacing: 0.02em; font-family: 'Cinzel', serif; font-weight: 700; }
     button, input, textarea { font: inherit; }
@@ -183,6 +187,7 @@
       filter: drop-shadow(0 0 35px rgba(201, 162, 39, 0.7));
     }
     .guide-avatar svg { width: 100%; height: 100%; }
+    .guide-avatar .crow-pupil { transition: transform 0.15s ease-out; transform-origin: 50px 50px; }
     @keyframes floatAvatar {
       0%, 100% { transform: translateY(0px); }
       50% { transform: translateY(-10px); }
@@ -510,7 +515,7 @@
     @keyframes rippleAnim { to { transform: scale(3); opacity: 0; } }
     .login-submit, .questions-btn, .dragon-eye-btn, .preview-btn, .btn-save, .unit-tab, .logout { position: relative; overflow: hidden; }
 
-    .hero-embers .ember { position: absolute; bottom: -14px; width: 4px; height: 4px; border-radius: 50%; background: radial-gradient(circle, #ffe6ad, #e8842a 55%, transparent 100%); opacity: 0; animation: emberRise linear infinite; filter: drop-shadow(0 0 5px rgba(255, 150, 50, 0.85)); }
+    .hero-embers .ember { position: absolute; bottom: -14px; width: 4px; height: 4px; border-radius: 50%; background: radial-gradient(circle, #ffe6ad, #e8842a 55%, transparent 100%); opacity: 0; animation: emberRise linear infinite; filter: drop-shadow(0 0 5px rgba(255, 150, 50, 0.85)); transition: transform 0.08s linear; will-change: transform; }
     @keyframes emberRise { 0% { transform: translate(0, 0); opacity: 0; } 8% { opacity: 0.9; } 92% { opacity: 0.5; } 100% { transform: translate(var(--drift, 24px), -92vh); opacity: 0; } }
     #scrollProgress { position: fixed; top: 0; left: 0; height: 3px; width: 0%; background: linear-gradient(90deg, var(--blood), var(--gold) 55%, var(--gold2)); z-index: 60; box-shadow: 0 0 14px color-mix(in srgb, var(--gold) 70%, transparent); transition: width 0.1s linear; }
     .footer-sigil { display: block; text-align: center; color: var(--gold); font-size: 1.1rem; margin-bottom: 10px; letter-spacing: 0.4em; opacity: 0.85; }
@@ -570,10 +575,110 @@
     .entrance-guest { animation: guestEntrance 0.8s cubic-bezier(0.2, 0.8, 0.2, 1) forwards; }
     @keyframes flamePulse { 0% { box-shadow: 0 0 20px rgba(201, 162, 39, 0.3), 0 0 60px rgba(110, 27, 27, 0.2); } 50% { box-shadow: 0 0 40px rgba(201, 162, 39, 0.6), 0 0 120px rgba(110, 27, 27, 0.4); } 100% { box-shadow: 0 0 20px rgba(201, 162, 39, 0.3), 0 0 60px rgba(110, 27, 27, 0.2); } }
     .admin-glow { animation: flamePulse 2s ease-in-out 1; }
+
+    /* ====== NUEVAS ANIMACIONES: LETRAS CENIZA / SELLO / BRILLO ====== */
+    .hero-name .title-letter {
+      display: inline-block;
+      transition: transform 0.6s cubic-bezier(0.2, 0.8, 0.2, 1), opacity 0.6s ease, filter 0.6s ease;
+      will-change: transform, opacity;
+    }
+    .hero-name .title-letter.fly {
+      opacity: 0;
+      filter: blur(4px);
+      transform: translate(var(--dx, 0px), var(--dy, 0px)) rotate(var(--dr, 0deg)) scale(0.4);
+    }
+
+    /* Sello de cera que se rompe */
+    .wax-seal-overlay {
+      position: fixed;
+      inset: 0;
+      z-index: 1500;
+      display: none;
+      place-items: center;
+      background: rgba(0, 0, 0, 0.7);
+      backdrop-filter: blur(3px);
+      pointer-events: none;
+    }
+    .wax-seal-overlay.active { display: grid; }
+    .wax-seal {
+      width: 140px;
+      height: 140px;
+      border-radius: 50%;
+      background: radial-gradient(circle at 35% 30%, #c0392b, #7a1414 55%, #4a0a0a);
+      border: 3px solid var(--gold);
+      box-shadow: 0 0 40px rgba(201, 162, 39, 0.6), inset 0 0 25px rgba(0, 0, 0, 0.6);
+      display: grid;
+      place-items: center;
+      font-size: 3rem;
+      color: var(--gold2);
+      position: relative;
+      animation: sealPulse 0.5s ease-in-out infinite alternate;
+    }
+    @keyframes sealPulse {
+      from { transform: scale(1); box-shadow: 0 0 30px rgba(201, 162, 39, 0.5); }
+      to { transform: scale(1.08); box-shadow: 0 0 60px rgba(201, 162, 39, 0.9); }
+    }
+    .seal-shard {
+      position: absolute;
+      width: 20px;
+      height: 20px;
+      background: radial-gradient(circle at 30% 30%, #e8ce7a, #c0392b 60%, #4a0a0a);
+      border: 1px solid var(--gold);
+      border-radius: 30% 70% 60% 40%;
+      pointer-events: none;
+      animation: shardFly 0.9s ease-out forwards;
+      z-index: 1600;
+    }
+    @keyframes shardFly {
+      0% { opacity: 1; transform: translate(0, 0) scale(1) rotate(0deg); }
+      100% { opacity: 0; transform: translate(var(--sx), var(--sy)) scale(0.3) rotate(var(--sr)); }
+    }
+    .gold-particle {
+      position: fixed;
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: radial-gradient(circle, #fff6d8, var(--gold) 55%, transparent);
+      pointer-events: none;
+      z-index: 1600;
+      animation: goldBurst 1s ease-out forwards;
+    }
+    @keyframes goldBurst {
+      0% { opacity: 1; transform: translate(0, 0) scale(1); }
+      100% { opacity: 0; transform: translate(var(--gx), var(--gy)) scale(0.2); }
+    }
+
+    /* Destello de luz central */
+    .door-light {
+      position: fixed;
+      left: 50%;
+      top: 50%;
+      width: 0;
+      height: 0;
+      z-index: 1590;
+      pointer-events: none;
+      background: radial-gradient(circle, rgba(255, 240, 200, 0.95) 0%, rgba(232, 206, 122, 0.6) 30%, rgba(110, 27, 27, 0.15) 60%, transparent 75%);
+      border-radius: 50%;
+      transform: translate(-50%, -50%);
+      animation: doorOpen 1s ease-out forwards;
+    }
+    @keyframes doorOpen {
+      0% { width: 0; height: 0; opacity: 0; }
+      30% { opacity: 1; }
+      100% { width: 200vmax; height: 200vmax; opacity: 0; }
+    }
+
+    /* Parallax brasas */
+    .hero-embers { will-change: transform; transition: transform 0.12s ease-out; }
   </style>
 </head>
 <body data-role="" data-editmode="0">
   <div id="scrollProgress"></div>
+
+  <!-- ===== WAX SEAL OVERLAY (ROMPER SELLO) ===== -->
+  <div class="wax-seal-overlay" id="waxSealOverlay">
+    <div class="wax-seal" id="waxSeal">⚜</div>
+  </div>
 
   <!-- ===== ACCESS OVERLAY ===== -->
   <div class="access-overlay" id="accessOverlay">
@@ -622,7 +727,7 @@
       <path d="M50 20 L58 38 L78 40 L62 54 L68 74 L50 62 L32 74 L38 54 L22 40 L42 38 Z" fill="var(--gold2)" opacity="0.12"/>
       <circle cx="50" cy="50" r="12" fill="#1C160E" stroke="var(--gold)" stroke-width="1.5"/>
       <circle cx="50" cy="50" r="5" fill="var(--gold2)"/>
-      <circle cx="50" cy="50" r="2" fill="#0C0906"/>
+      <circle class="crow-pupil" cx="50" cy="50" r="2" fill="#0C0906"/>
       <path d="M42 38 L50 24 L58 38" stroke="var(--gold)" stroke-width="1.2" fill="none"/>
       <circle cx="44" cy="44" r="2" fill="var(--gold2)" opacity="0.7"/>
       <circle cx="56" cy="44" r="2" fill="var(--gold2)" opacity="0.7"/>
@@ -977,11 +1082,12 @@
       setTimeout(() => dot.remove(), 650);
     });
 
+    // ===== BRASAS CON PARALLAX =====
     function spawnEmbers() {
       const box = document.getElementById('heroEmbers');
       if (!box || box.dataset.filled) return;
       box.dataset.filled = '1';
-      for (let i = 0; i < 22; i++) {
+      for (let i = 0; i < 26; i++) {
         const e = document.createElement('span');
         e.className = 'ember';
         e.style.left = Math.random() * 100 + '%';
@@ -990,9 +1096,21 @@
         e.style.animationDuration = (9 + Math.random() * 10) + 's';
         e.style.animationDelay = (Math.random() * 12) + 's';
         e.style.setProperty('--drift', (Math.random() * 80 - 40).toFixed(0) + 'px');
+        e.dataset.depth = (0.3 + Math.random() * 1.4).toFixed(2); // profundidad para parallax
         box.appendChild(e);
       }
     }
+    // Parallax de brasas con el ratón
+    document.addEventListener('mousemove', function(e) {
+      const box = document.getElementById('heroEmbers');
+      if (!box) return;
+      const cx = window.innerWidth / 2, cy = window.innerHeight / 2;
+      const dx = (e.clientX - cx) / cx, dy = (e.clientY - cy) / cy;
+      box.querySelectorAll('.ember').forEach(ember => {
+        const depth = parseFloat(ember.dataset.depth) || 0.8;
+        ember.style.transform = `translate(${dx * depth * 18}px, ${dy * depth * 12}px)`;
+      });
+    });
 
     function onScrollFX() {
       const doc = document.documentElement;
@@ -1140,7 +1258,174 @@
     const ADMIN = { user: 'M@t_SF', pass: '77222987' };
     const accessEl = document.getElementById('accessOverlay');
 
-    // ===== ENTRADA =====
+    // ===== FUNCIONES DE LA NUEVA INTERACCIÓN =====
+
+    // 1. Efecto ceniza al hacer clic en el título del hero
+    function setupTitleAsh() {
+      const heroName = document.getElementById('heroName');
+      if (!heroName) return;
+      let ashDone = false;
+      heroName.addEventListener('click', function() {
+        if (ashDone) return;
+        ashDone = true;
+        // Tomar el texto actual y dividirlo en letras
+        const originalHTML = heroName.innerHTML;
+        const plainText = heroName.textContent.replace(/\s+/g, ' ').trim();
+        heroName.innerHTML = '';
+        const wrap = document.createElement('span');
+        wrap.style.display = 'inline-block';
+        // Reconstruir preservando el <span> de apellido con gradiente
+        // Como el HTML original tiene <br> y un <span> con gradiente, hacemos un enfoque simple:
+        // Dividimos el texto visible letra por letra, aplicando el gradiente a todas.
+        [...plainText].forEach((ch, i) => {
+          const s = document.createElement('span');
+          s.className = 'title-letter';
+          s.textContent = ch;
+          // Aplicar el gradiente al apellido (asumimos que es la segunda palabra en adelante)
+          // Para simplificar, damos color dorado a todas las letras
+          s.style.color = 'var(--gold2)';
+          s.style.textShadow = '0 0 8px rgba(201,162,39,0.5)';
+          wrap.appendChild(s);
+        });
+        heroName.appendChild(wrap);
+        // Animar cada letra
+        wrap.querySelectorAll('.title-letter').forEach((letter) => {
+          const dx = (Math.random() - 0.5) * 400;
+          const dy = (Math.random() - 0.5) * 300 - 100;
+          const dr = (Math.random() - 0.5) * 720;
+          letter.style.setProperty('--dx', dx + 'px');
+          letter.style.setProperty('--dy', dy + 'px');
+          letter.style.setProperty('--dr', dr + 'deg');
+          setTimeout(() => letter.classList.add('fly'), Math.random() * 300);
+        });
+        // Restaurar después de 2.5s
+        setTimeout(() => {
+          heroName.innerHTML = originalHTML;
+          ashDone = false;
+        }, 2600);
+        crowSay('El nombre del Señor se dispersa como ceniza al viento… pero su legado permanece.');
+      });
+    }
+
+    // 2. Cuervo que sigue al ratón con la cabeza (pupila)
+    function setupCrowEyeTracking() {
+      const avatar = document.getElementById('guideAvatar');
+      if (!avatar) return;
+      const pupil = avatar.querySelector('.crow-pupil');
+      if (!pupil) return;
+      document.addEventListener('mousemove', function(e) {
+        const rect = avatar.getBoundingClientRect();
+        const cx = rect.left + rect.width / 2;
+        const cy = rect.top + rect.height / 2;
+        const dx = e.clientX - cx;
+        const dy = e.clientY - cy;
+        const dist = Math.hypot(dx, dy) || 1;
+        const maxMove = 3.5;
+        const px = (dx / dist) * Math.min(maxMove, dist / 20);
+        const py = (dy / dist) * Math.min(maxMove, dist / 20);
+        pupil.style.transform = `translate(${px}px, ${py}px)`;
+      });
+      avatar.addEventListener('mouseleave', function() {
+        pupil.style.transform = 'translate(0,0)';
+      });
+    }
+
+    // 3. Graznido de cuervo con Web Audio API
+    function playCrowCaw() {
+      try {
+        const AC = window.AudioContext || window.webkitAudioContext;
+        if (!AC) return;
+        const ctx = new AC();
+        const now = ctx.currentTime;
+        // Dos osciladores para simular el graznido rasposo
+        const osc1 = ctx.createOscillator();
+        const osc2 = ctx.createOscillator();
+        const gain = ctx.createGain();
+        const filter = ctx.createBiquadFilter();
+        filter.type = 'bandpass';
+        filter.frequency.value = 900;
+        filter.Q.value = 1.2;
+        osc1.type = 'sawtooth';
+        osc2.type = 'square';
+        osc1.frequency.setValueAtTime(420, now);
+        osc1.frequency.exponentialRampToValueAtTime(180, now + 0.35);
+        osc2.frequency.setValueAtTime(610, now);
+        osc2.frequency.exponentialRampToValueAtTime(240, now + 0.35);
+        gain.gain.setValueAtTime(0.0001, now);
+        gain.gain.exponentialRampToValueAtTime(0.18, now + 0.03);
+        gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.45);
+        osc1.connect(filter);
+        osc2.connect(filter);
+        filter.connect(gain);
+        gain.connect(ctx.destination);
+        osc1.start(now);
+        osc2.start(now);
+        osc1.stop(now + 0.5);
+        osc2.stop(now + 0.5);
+        setTimeout(() => { try { ctx.close(); } catch(e){} }, 700);
+      } catch (e) { /* silencio */ }
+    }
+
+    // 4. Romper el sello de cera + brillo de puerta + partículas doradas
+    function breakWaxSeal(callback) {
+      const overlay = document.getElementById('waxSealOverlay');
+      const seal = document.getElementById('waxSeal');
+      if (!overlay || !seal) { callback && callback(); return; }
+      overlay.classList.add('active');
+      playCrowCaw();
+      // Crear luz de puerta
+      const light = document.createElement('div');
+      light.className = 'door-light';
+      document.body.appendChild(light);
+      // Crear partículas doradas desde el sello
+      const rect = seal.getBoundingClientRect();
+      const cx = rect.left + rect.width / 2;
+      const cy = rect.top + rect.height / 2;
+      for (let i = 0; i < 36; i++) {
+        const p = document.createElement('div');
+        p.className = 'gold-particle';
+        p.style.left = cx + 'px';
+        p.style.top = cy + 'px';
+        const angle = Math.random() * Math.PI * 2;
+        const dist = 60 + Math.random() * 260;
+        p.style.setProperty('--gx', Math.cos(angle) * dist + 'px');
+        p.style.setProperty('--gy', Math.sin(angle) * dist + 'px');
+        p.style.animationDelay = (Math.random() * 0.15) + 's';
+        document.body.appendChild(p);
+        setTimeout(() => p.remove(), 1300);
+      }
+      // Fragmentos del sello
+      for (let i = 0; i < 14; i++) {
+        const shard = document.createElement('div');
+        shard.className = 'seal-shard';
+        shard.style.left = cx + 'px';
+        shard.style.top = cy + 'px';
+        const angle = Math.random() * Math.PI * 2;
+        const dist = 40 + Math.random() * 160;
+        shard.style.setProperty('--sx', Math.cos(angle) * dist + 'px');
+        shard.style.setProperty('--sy', Math.sin(angle) * dist + 'px');
+        shard.style.setProperty('--sr', (Math.random() * 720 - 360) + 'deg');
+        document.body.appendChild(shard);
+        setTimeout(() => shard.remove(), 1000);
+      }
+      // El sello se encoge y desaparece
+      seal.style.transition = 'transform 0.35s ease, opacity 0.35s ease';
+      seal.style.transform = 'scale(0.1) rotate(180deg)';
+      seal.style.opacity = '0';
+      // Iluminar el fondo
+      document.body.classList.add('ceremony-light');
+      setTimeout(() => {
+        overlay.classList.remove('active');
+        seal.style.transition = '';
+        seal.style.transform = '';
+        seal.style.opacity = '';
+        document.body.classList.remove('ceremony-light');
+        light.remove();
+        callback && callback();
+      }, 1100);
+    }
+
+    // ===== ENTRADA CON SELLO =====
     function enterApp(r) {
       role = r;
       document.body.setAttribute('data-role', role);
@@ -1163,7 +1448,6 @@
         appEl.classList.add('entrance-guest');
         crowSay('Bienvenido, viajero. Explora las unidades y descubre los secretos de las bases de datos. Si necesitas ayuda, aquí estaré.');
       }
-      // Mensaje de bienvenida en el chat
       setTimeout(() => {
         initCrowChat();
         addCrowMessage('⚜ Hola, soy el Cuervo de Tres Ojos. Puedo guiarte por las unidades, contarte qué actividades hay en cada semana y responder tus dudas. ¿Qué deseas saber?', 'bot');
@@ -1184,7 +1468,13 @@
       document.body.style.overflow = '';
     }
 
-    document.getElementById('btnGuest').onclick = () => { enterApp('user'); closeAccess(); };
+    // Botones de acceso con romper sello
+    document.getElementById('btnGuest').onclick = () => {
+      breakWaxSeal(() => {
+        enterApp('user');
+        closeAccess();
+      });
+    };
     document.getElementById('btnAdmin').onclick = () => {
       document.getElementById('accessChoice').hidden = true;
       document.getElementById('accessAdmin').hidden = false;
@@ -1196,7 +1486,10 @@
       e.preventDefault();
       const u = document.getElementById('user').value.trim(), p = document.getElementById('pass').value;
       if (u.toLowerCase() === ADMIN.user.toLowerCase() && p === ADMIN.pass) {
-        enterApp('admin'); closeAccess();
+        breakWaxSeal(() => {
+          enterApp('admin');
+          closeAccess();
+        });
       } else {
         document.getElementById('login-error').style.display = 'block';
       }
@@ -1226,6 +1519,8 @@
       setupNavSpy();
       onScrollFX();
       showAccess();
+      setupTitleAsh();
+      setupCrowEyeTracking();
       setTimeout(() => crowSay('Saludos, viajero. Soy el Cuervo de Tres Ojos. Te guiaré por los confines de Poniente. Explora las unidades y descubre los secretos de las bases de datos.'), 1200);
     }
 
@@ -1270,6 +1565,7 @@
         : '';
       updateStats();
       initReveal();
+      setupTitleAsh();
     }
 
     function editProfile() {
@@ -1888,7 +2184,6 @@
             return `<b>${week.num}: ${week.title}</b>\n${acts || 'No hay actividades en esta semana.'}\n\nPuedes abrirlas desde «Unidades» → «Ver actividades».`;
           }
         }
-        // Todas las actividades por unidad
         let info = '';
         for (const k in U) {
           const u = U[k];
@@ -1902,7 +2197,6 @@
         return 'Estas son las actividades registradas:' + info;
       }
 
-      // --- Preguntas específicas ---
       if (q.includes('cuantos pdf') || q.includes('numero de pdf')) {
         const wMatch = q.match(/semana\s*(\d+)/);
         if (wMatch) {
@@ -1915,7 +2209,6 @@
         }
       }
 
-      // --- Base de conocimiento general ---
       const KB = [
         { k: ['quien es', 'matias', 'saforas', 'eduardo', 'estudiante', 'sobre mi', 'presentate'], a: () => `<b>${esc(p.nombre)} ${esc(p.apellido)}</b> es estudiante de Ingeniería de Sistemas en la ${esc(p.universidad)}. Le interesan ${esc(p.enfoque.toLowerCase())} y el ${esc(p.especialidad.toLowerCase())}.\nRevisa la sección «Sobre mí» para ver su perfil completo.` },
         { k: ['curso', 'base de datos', '332151', 'semestre', 'de que trata', 'materia'], a: () => `El curso es <b>${esc(p.curso)}</b>, semestre ${esc(p.semestre)}, en la ${esc(p.universidad)}. Se organiza en 4 unidades: arquitecturas, instancias, seguridad y monitoreo.` },
@@ -1935,7 +2228,6 @@
       KB.forEach(e => { const sc = e.k.reduce((a, w) => a + (q.includes(w) ? w.length : 0), 0); if (sc > top) { top = sc; best = e; } });
       if (best) return best.a();
 
-      // Búsqueda en preguntas
       const words = q.split(' ').filter(w => w.length > 3);
       const hit = appState.questions.map(x => ({ x, s: words.filter(w => (x.title + ' ' + x.text).toLowerCase().includes(w)).length })).filter(o => o.s > 0).sort((a, b) => b.s - a.s)[0];
       if (hit) return `Encontré esto en el banco de preguntas:\n<b>${esc(hit.x.num)}. ${esc(hit.x.title)}</b>\n${esc(hit.x.text.slice(0, 300))}…`;
@@ -1980,7 +2272,6 @@
       }
     };
 
-    // Observar secciones para guía contextual
     const sectionObserver = new IntersectionObserver((entries) => {
       entries.forEach(entry => {
         if (entry.isIntersecting) {
@@ -2001,7 +2292,6 @@
       if (el) sectionObserver.observe(el);
     });
 
-    // ===== EVENTOS PDF =====
     document.addEventListener('keydown', function(e) {
       if (e.key === 'Escape' && document.getElementById('htmlModalOverlay').classList.contains('open')) { closeHtmlDoc(); return; }
       if (!document.getElementById('pdfModalOverlay').classList.contains('open')) return;
@@ -2059,6 +2349,8 @@
     window.setPhoto = setPhoto;
     window.crowSay = crowSay;
     window.hideGuideBubble = hideGuideBubble;
+    window.breakWaxSeal = breakWaxSeal;
+    window.playCrowCaw = playCrowCaw;
   </script>
 </body>
 </html>
