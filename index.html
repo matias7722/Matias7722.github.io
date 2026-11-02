@@ -1254,9 +1254,11 @@
     // ===== FUNCIONES DE LA NUEVA INTERACCIÓN =====
 
     // 1. Efecto ceniza al hacer clic en el título del hero
-    function setupTitleAsh() {
+        function setupTitleAsh() {
       const heroName = document.getElementById('heroName');
       if (!heroName) return;
+      if (heroName.dataset.ash) return;   // evita añadir el listener más de una vez
+      heroName.dataset.ash = '1';
       let ashDone = false;
       heroName.addEventListener('click', function() {
         if (ashDone) return;
@@ -1446,7 +1448,9 @@
         crowChatMessages.innerHTML = '';
         delete crowChatChips.dataset.init;
         initCrowChat();
-        addCrowMessage('⚜ Hola, soy el Cuervo de Tres Ojos. Puedo guiarte por las unidades, contarte qué actividades hay en cada semana y responder tus dudas.
+        addCrowMessage('⚜ Hola, soy el Cuervo de Tres Ojos. Puedo guiarte por las unidades, contarte qué actividades hay en cada semana y responder tus dudas. ¿Qué deseas saber?', 'bot');
+      }, 500);
+    }
 
     function showAccess() {
       document.getElementById('login-error').style.display = 'none';
