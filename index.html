@@ -680,7 +680,7 @@
     <div class="wax-seal" id="waxSeal">⚜</div>
   </div>
 
-  <!-- ===== ACCESS OVERLAY ===== -->
+   <!-- ===== ACCESS OVERLAY (solo login de administrador) ===== -->
   <div class="access-overlay" id="accessOverlay">
     <div class="access-card" role="dialog" aria-modal="true" aria-labelledby="accessTitle">
       <div class="access-crest">
@@ -688,15 +688,8 @@
           <path d="M50 6c3 10 9 16 18 20-6 2-10 6-12 12 8-2 14 0 19 6-8 1-13 5-16 11 7 1 12 5 15 11-8-1-14 2-18 8-2-9-6-15-6-15s-4 6-6 15c-4-6-10-9-18-8 3-6 8-10 15-11-3-6-8-10-16-11 5-6 11-8 19-6-2-6-6-10-12-12 9-4 15-10 18-20z" fill="var(--gold2)" stroke="var(--gold)" stroke-width="1"/>
         </svg>
       </div>
-      <h2 class="access-title" id="accessTitle">Winter Is Coming</h2>
-      <div class="access-step" id="accessChoice">
-        <p class="access-sub">¿Cómo deseas ingresar?</p>
-        <div class="access-choices">
-          <button type="button" class="access-btn primary" id="btnGuest">🛡 Ingresar como invitado</button>
-          <button type="button" class="access-btn" id="btnAdmin">👑 Ingresar como administrador</button>
-        </div>
-      </div>
-      <div class="access-step" id="accessAdmin" hidden>
+      <h2 class="access-title" id="accessTitle">Modo administrador</h2>
+      <div class="access-step" id="accessAdmin">
         <p class="access-sub">Identifícate para administrar el portafolio</p>
         <form class="login-form" id="login-form">
           <div class="input-group">
@@ -712,7 +705,7 @@
           </div>
           <div class="login-error" id="login-error">Usuario o contraseña incorrectos.</div>
           <div class="access-row">
-            <button type="button" class="access-btn ghost" id="btnBack">← Volver</button>
+            <button type="button" class="access-btn ghost" id="btnBack">← Cancelar</button>
             <button class="access-btn primary" type="submit">Entrar</button>
           </div>
         </form>
@@ -1431,6 +1424,7 @@
       document.body.setAttribute('data-role', role);
       setEditMode(false);
       document.getElementById('roleBadgeText').textContent = role === 'admin' ? '👑 Administrador' : '🛡 Invitado';
+      document.getElementById('logout-btn').textContent = role === 'admin' ? 'Salir de administrador' : 'Modo administrador';
       currentUnit = '1';
       renderAll();
       syncView();
@@ -1449,38 +1443,26 @@
         crowSay('Bienvenido, viajero. Explora las unidades y descubre los secretos de las bases de datos. Si necesitas ayuda, aquí estaré.');
       }
       setTimeout(() => {
+        crowChatMessages.innerHTML = '';
+        delete crowChatChips.dataset.init;
         initCrowChat();
-        addCrowMessage('⚜ Hola, soy el Cuervo de Tres Ojos. Puedo guiarte por las unidades, contarte qué actividades hay en cada semana y responder tus dudas. ¿Qué deseas saber?', 'bot');
-      }, 500);
-    }
+        addCrowMessage('⚜ Hola, soy el Cuervo de Tres Ojos. Puedo guiarte por las unidades, contarte qué actividades hay en cada semana y responder tus dudas.
 
     function showAccess() {
-      document.getElementById('accessChoice').hidden = false;
-      document.getElementById('accessAdmin').hidden = true;
       document.getElementById('login-error').style.display = 'none';
       document.getElementById('user').value = '';
       document.getElementById('pass').value = '';
       accessEl.classList.add('open');
       document.body.style.overflow = 'hidden';
+      setTimeout(() => document.getElementById('user').focus(), 50);
     }
     function closeAccess() {
       accessEl.classList.remove('open');
       document.body.style.overflow = '';
     }
 
-    // Botones de acceso con romper sello
-    document.getElementById('btnGuest').onclick = () => {
-      breakWaxSeal(() => {
-        enterApp('user');
-        closeAccess();
-      });
-    };
-    document.getElementById('btnAdmin').onclick = () => {
-      document.getElementById('accessChoice').hidden = true;
-      document.getElementById('accessAdmin').hidden = false;
-      setTimeout(() => document.getElementById('user').focus(), 50);
-    };
-    document.getElementById('btnBack').onclick = showAccess;
+    document.getElementById('btnBack').onclick = closeAccess;
+    accessEl.addEventListener('click', e => { if (e.target === accessEl) closeAccess(); });
 
     document.getElementById('login-form').addEventListener('submit', function(e) {
       e.preventDefault();
@@ -1495,13 +1477,17 @@
       }
     });
 
+    // Botón del menú: invitado -> abre login admin | admin -> vuelve a invitado
     document.getElementById('logout-btn').onclick = () => {
-      hideAct();
-      try { history.replaceState(null, '', location.pathname + location.search); } catch (e) { }
       document.getElementById('navLinks').classList.remove('open');
-      closeCrowChat();
-      enterApp('user');
-      showAccess();
+      if (role === 'admin') {
+        hideAct();
+        try { history.replaceState(null, '', location.pathname + location.search); } catch (e) { }
+        closeCrowChat();
+        enterApp('user');
+      } else {
+        showAccess();
+      }
     };
 
     document.getElementById('togglePass').onclick = function() {
@@ -1513,15 +1499,15 @@
 
     async function boot() {
       appState = await loadStateAsync();
-      document.getElementById('app-screen').style.display = 'block';
-      enterApp('user');
       spawnEmbers();
       setupNavSpy();
-      onScrollFX();
-      showAccess();
-      setupTitleAsh();
       setupCrowEyeTracking();
-      setTimeout(() => crowSay('Saludos, viajero. Soy el Cuervo de Tres Ojos. Te guiaré por los confines de Poniente. Explora las unidades y descubre los secretos de las bases de datos.'), 1200);
+      // El portafolio permanece oculto hasta que se rompe el sello
+      breakWaxSeal(() => {
+        document.getElementById('app-screen').style.display = 'block';
+        enterApp('user');
+        onScrollFX();
+      });
     }
 
     function setEditMode(on) {
