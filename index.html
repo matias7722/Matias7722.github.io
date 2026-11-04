@@ -241,6 +241,7 @@
     }
     .guide-bubble .close-bubble:hover { color: var(--gold2); }
 
+    
     /* ====== PANEL CHAT DEL CUERVO ====== */
     .crow-chat-panel {
       display: none;
@@ -307,7 +308,8 @@
       align-self: flex-end;
       color: var(--text);
     }
-    .crow-chat-messages .msg b { color: var(--gold2); }
+     .crow-chat-messages .msg b { color: var(--gold2); }
+    .crow-chat-messages .msg { white-space: pre-line; }
     .crow-chat-chips {
       display: flex;
       flex-wrap: wrap;
@@ -519,6 +521,12 @@
     @keyframes emberRise { 0% { transform: translate(0, 0); opacity: 0; } 8% { opacity: 0.9; } 92% { opacity: 0.5; } 100% { transform: translate(var(--drift, 24px), -92vh); opacity: 0; } }
     #scrollProgress { position: fixed; top: 0; left: 0; height: 3px; width: 0%; background: linear-gradient(90deg, var(--blood), var(--gold) 55%, var(--gold2)); z-index: 60; box-shadow: 0 0 14px color-mix(in srgb, var(--gold) 70%, transparent); transition: width 0.1s linear; }
     .footer-sigil { display: block; text-align: center; color: var(--gold); font-size: 1.1rem; margin-bottom: 10px; letter-spacing: 0.4em; opacity: 0.85; }
+        .toast-wrap { position: fixed; right: 20px; bottom: 20px; z-index: 2000; display: grid; gap: 8px; }
+    .toast { background: var(--panel); border: 1px solid var(--gold); color: var(--gold2); padding: 12px 18px; font: 600 0.78rem 'Cinzel', serif; letter-spacing: 0.04em; box-shadow: 0 10px 30px rgba(0, 0, 0, 0.6); animation: fadeUp 0.3s ease; }
+    .entity-toolbar { position: absolute; top: 10px; right: 10px; gap: 6px; z-index: 3; }
+    .icon-btn { width: 30px; height: 30px; border: 1px solid var(--border); background: rgba(5, 4, 3, 0.85); color: var(--gold2); font-size: 0.85rem; display: inline-flex; align-items: center; justify-content: center; }
+    .icon-btn:hover { border-color: var(--gold); background: var(--blood); }
+    .icon-btn.danger:hover { background: var(--danger); }
 
     /* ====== MODALES ====== */
     .edit-modal-overlay { position: fixed; inset: 0; background: rgba(0, 0, 0, 0.85); backdrop-filter: blur(6px); z-index: 998; display: flex; align-items: center; justify-content: center; opacity: 0; pointer-events: none; transition: opacity 0.25s; padding: 20px; }
@@ -762,6 +770,7 @@
         <li class="admin-flag"><button type="button" class="logout" onclick="ghPublish()">☁ Publicar</button></li>
         <li class="admin-flag"><button type="button" class="logout" onclick="ghConfig()">⚙ GitHub</button></li>
         <li class="admin-flag"><button type="button" class="logout" onclick="resetContent()">⟲ Restablecer</button></li>
+                   <li class="admin-flag"><button type="button" class="logout" onclick="runOcrIndex()">🔍 Indexar con OCR</button></li>
         <li><button id="logout-btn" class="logout">Cambiar acceso</button></li>
       </ul>
     </nav>
@@ -1503,6 +1512,7 @@
 
     async function boot() {
       appState = await loadStateAsync();
+               initPdfIndex();   // sin await: trabaja en segundo plano
       spawnEmbers();
       setupNavSpy();
       setupCrowEyeTracking();
@@ -1530,6 +1540,7 @@
       saveState();
       renderAll();
       showToast('Contenido restablecido a los valores originales.');
+      initPdfIndex();
     }
 
     // ===== RENDER =====
@@ -1819,6 +1830,7 @@
     function afterActSave(k, msg) {
       saveState(); renderUnitPanel(k); if (actView) renderActivityPage();
       if (ghCfg()) ghPublish(); else showToast(msg + ' Guardada solo en este navegador: conecta GitHub (⚙) para que la vean los demás.');
+      initPdfIndex();
     }
 
     function addActivity(k, weekId) {
@@ -1867,6 +1879,7 @@
       w.activities = w.activities.filter(a => a.id !== actId);
       saveState(); renderUnitPanel(k); if (actView) renderActivityPage();
       showToast('Actividad eliminada. Usa ☁ Publicar para reflejarlo en GitHub.');
+     initPdfIndex();
     }
 
     const GH_KEY = 'gotGhCfg', DATA_PATH = 'data/portfolio.json';
@@ -1913,6 +1926,7 @@
         }
         saveState();
         await ghPut(DATA_PATH, toB64(JSON.stringify(appState)), 'Actualizar portafolio');
+                   if (pdfIdxState.ready && pdfIndex.length) await ghPut(PDF_IDX_PATH, toB64(JSON.stringify({ sig: pdfIdxSig, data: pdfIndex.map(({ _n, _w, ...c }) => c) })), 'Actualizar índice de PDF');
         renderUnitPanel(currentUnit); if (actView) renderActivityPage();
         showToast('✓ Publicado. GitHub Pages puede tardar ~1 min en mostrarlo a los demás.');
       } catch (e) { showToast('Error al publicar: ' + e.message); }
@@ -2106,6 +2120,136 @@
     const _rp = renderProfile;
     renderProfile = function() { _rp(); renderAbout(); };
 
+
+    // ===== ÍNDICE DE CONTENIDO DE LOS PDF (con OCR opcional) =====
+    const PDF_IDX_PATH = 'data/pdf-index.json', PDF_MIN_SCORE = 2;
+    let pdfIndex = [], pdfIdxSig = '', pdfIdxState = { ready: false, done: 0, total: 0 };
+    const STOP = new Set('de la el en y a los las del se que por con para una un es al lo como mas pero sus le ya o fue este si porque esta son entre cuando muy sin sobre ser tiene tambien me hasta hay donde han quien estan estado desde todo nos durante todos uno les ni contra otros ese eso ante ellos e esto mi antes algunos unos yo otro otras otra tanto esa estos mucho nada muchos cual poco ella estar estas algunas algo nosotros dice dime explica explicame cuentame habla hablar pagina actividad actividades semana pdf documento curso unidad matias eduardo saforas gomez quien quienes trata tratan casa casas'.split(' '));
+
+    function norm(s) { return String(s).toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, ''); }
+    function tokens(s) { return norm(s).split(/[^a-z0-9ñ]+/).filter(w => w.length > 2 && !STOP.has(w)); }
+    function stem(w) { return w.length > 3 ? w.replace(/s$/, '') : w; }
+    function words(s) { return norm(s).split(/[^a-z0-9ñ]+/).filter(Boolean).map(stem); }
+    function pdfActs() {
+      const list = [];
+      for (const [k, u] of Object.entries(appState.units)) for (const w of u.weeks) for (const a of w.activities) if (isPdf(a)) list.push({ k, w, a });
+      return list;
+    }
+    function setPdfIndex(data) {
+      pdfIndex = data.map(c => Object.assign({ _n: norm(c.text), _w: words(c.text) }, c));
+      pdfIdxState.ready = true;
+    }
+
+    async function initPdfIndex(useOcr = false) {
+      if (typeof pdfjsLib === 'undefined' || !appState) return;
+      const acts = pdfActs();
+      pdfIdxSig = 'v1|' + acts.map(x => x.a.filename).join('|');
+      pdfIdxState = { ready: false, done: 0, total: acts.length };
+      const cached = await idbGet('pdf-index');
+      if (!useOcr) {
+        if (cached && cached.sig === pdfIdxSig) return setPdfIndex(cached.data);
+        try {
+          const r = await fetch(PDF_IDX_PATH + '?t=' + Date.now(), { cache: 'no-store' });
+          if (r.ok) { const j = await r.json(); if (j.sig === pdfIdxSig) { idbSet('pdf-index', j).catch(() => {}); return setPdfIndex(j.data); } }
+        } catch (e) { }
+      }
+      // reutiliza lo ya leído (así no se repite el OCR al añadir una actividad)
+      const src = pdfIndex.length ? pdfIndex.map(({ _n, _w, ...c }) => c) : (cached ? cached.data : []);
+      const seed = {};
+      src.forEach(c => (seed[c.aid] = seed[c.aid] || []).push(c));
+      const data = [];
+      let worker = null;
+      try {
+        for (const { k, w, a } of acts) {
+          const old = seed[a.id];
+          if (old && old[0].file === a.filename) { data.push(...old); pdfIdxState.done++; continue; }
+          try {
+            const pdf = await pdfjsLib.getDocument(await actUrl(a)).promise;
+            for (let p = 1; p <= pdf.numPages; p++) {
+              const page = await pdf.getPage(p);
+              const tc = await page.getTextContent();
+              let text = tc.items.map(i => i.str).join(' ').replace(/\s+/g, ' ').trim();
+              if (text.length <= 20 && useOcr) {            // página sin texto -> OCR
+                if (!worker) worker = await (await loadTesseract()).createWorker('spa');
+                text = await ocrPage(worker, page);
+              }
+              if (text.length > 20) data.push({ k, wid: w.id, aid: a.id, file: a.filename, week: w.num, title: a.title || a.label, page: p, text });
+            }
+          } catch (e) { console.warn('No se pudo leer', a.filename, e); }
+          pdfIdxState.done++;
+          if (useOcr) showToast('OCR: ' + pdfIdxState.done + '/' + pdfIdxState.total + ' documentos');
+        }
+      } finally { if (worker) await worker.terminate(); }
+      if (useOcr) idbSet('pdf-index', { sig: pdfIdxSig, data }).catch(() => {});
+      setPdfIndex(data);
+    }
+
+    async function loadTesseract() {
+      if (window.Tesseract) return window.Tesseract;
+      await new Promise((res, rej) => {
+        const s = document.createElement('script');
+        s.src = 'https://cdn.jsdelivr.net/npm/tesseract.js@5.1.1/dist/tesseract.min.js';
+        s.onload = res; s.onerror = () => rej(new Error('No se pudo cargar Tesseract.js'));
+        document.head.appendChild(s);
+      });
+      return window.Tesseract;
+    }
+
+    async function ocrPage(worker, page) {
+      const vp = page.getViewport({ scale: 2 });
+      const c = document.createElement('canvas');
+      c.width = vp.width; c.height = vp.height;
+      await page.render({ canvasContext: c.getContext('2d'), viewport: vp }).promise;
+      const { data } = await worker.recognize(c);
+      return data.text.replace(/\s+/g, ' ').trim();
+    }
+
+    async function runOcrIndex() {
+      if (!confirm('Se aplicará OCR a las páginas que son imágenes. Puede tardar varios minutos y no debes cerrar la pestaña. ¿Continuar?')) return;
+      showToast('Iniciando OCR…');
+      try {
+        await initPdfIndex(true);
+        showToast('✓ OCR terminado. Pulsa ☁ Publicar para compartir el índice.');
+      } catch (e) { showToast('Error en OCR: ' + e.message); }
+    }
+    window.runOcrIndex = runOcrIndex;
+
+    function searchPdf(query, max = 3) {
+      const qt = [...new Set(tokens(query).map(stem))];
+      if (!qt.length || !pdfIndex.length) return [];
+      const pool = pdfIndex.filter(c => role === 'admin' || !appState.units[c.k].locked);
+      const hit = (w, t) => w === t || (t.length > 3 && w.length > 3 && (w.startsWith(t) || t.startsWith(w)));
+      const count = (c, t) => { let n = 0; for (const w of c._w) if (hit(w, t)) n++; return n; };
+      const tfs = pool.map(c => qt.map(t => count(c, t)));
+      const idf = qt.map((t, j) => {
+        const df = tfs.filter(r => r[j] > 0).length;
+        if (pool.length >= 10 && df > 0.4 * pool.length) return 0;   // palabra demasiado común
+        return Math.log(1 + pool.length / (1 + df));
+      });
+      return pool.map((c, i) => {
+        let score = 0, pos = 0, best = 0, matched = 0;
+        qt.forEach((t, j) => {
+          const tf = tfs[i][j];
+          if (!tf || !idf[j]) return;
+          matched++;
+          const s = (1 + Math.log(tf)) * idf[j];
+          score += s;
+          if (s > best) { best = s; pos = Math.max(0, c._n.indexOf(t)); }
+        });
+        return { c, pos, score: score * (0.5 + matched / qt.length) };
+      }).filter(r => r.score > 0).sort((a, b) => b.score - a.score).slice(0, max);
+    }
+
+    function snippet(c, pos) {
+      const s = Math.max(0, pos - 120), e = Math.min(c.text.length, pos + 280);
+      return (s > 0 ? '…' : '') + c.text.slice(s, e).trim() + (e < c.text.length ? '…' : '');
+    }
+    function pdfAnswer(hits) {
+      return 'Esto encontré en los pergaminos:' + hits.map(({ c, pos }) =>
+        `<br><br><b>${esc(c.week)} · ${esc(c.title)}</b> (pág. ${c.page})<br>${esc(snippet(c, pos))}<br><a href="#" style="color:var(--gold2)" onclick="openActivityPdf('${c.k}','${c.wid}','${c.aid}');return false">Abrir documento →</a>`
+      ).join('');
+    }
+
     // ===== CHAT DEL CUERVO =====
     const crowChatPanel = document.getElementById('crowChatPanel');
     const crowChatMessages = document.getElementById('crowChatMessages');
@@ -2159,6 +2303,12 @@
     // Conocimiento del cuervo
     function crowReply(text) {
       const q = text.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+      // --- Contenido de los PDF ---
+      if (!pdfIdxState.ready && pdfIdxState.total && /dice|explica|resumen|contenido|pdf|documento|pagina/.test(q)) {
+        return 'Aún estoy leyendo los pergaminos (' + pdfIdxState.done + '/' + pdfIdxState.total + '). Pregúntame de nuevo en unos segundos.';
+      }
+      const hits = searchPdf(text);
+      if (hits.length && hits[0].score >= PDF_MIN_SCORE) return pdfAnswer(hits);
       const U = appState.units;
       const p = appState.profile;
 
