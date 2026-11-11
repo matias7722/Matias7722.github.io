@@ -1540,7 +1540,7 @@
       saveState();
       renderAll();
       showToast('Contenido restablecido a los valores originales.');
-      initPdfIndex();
+      initPdfIndex(false, true);
     }
 
     // ===== RENDER =====
@@ -1829,8 +1829,8 @@
     }
     function afterActSave(k, msg) {
       saveState(); renderUnitPanel(k); if (actView) renderActivityPage();
-      if (ghCfg()) ghPublish(); else showToast(msg + ' Guardada solo en este navegador: conecta GitHub (⚙) para que la vean los demás.');
-      initPdfIndex();
+      const idx = initPdfIndex(false, true);   // relee solo lo nuevo
+      if (ghCfg()) idx.then(() => ghPublish()); else showToast(msg + ' Guardada solo en este navegador: conecta GitHub (⚙) para que la vean los demás.');
     }
 
     function addActivity(k, weekId) {
@@ -1879,7 +1879,7 @@
       w.activities = w.activities.filter(a => a.id !== actId);
       saveState(); renderUnitPanel(k); if (actView) renderActivityPage();
       showToast('Actividad eliminada. Usa ☁ Publicar para reflejarlo en GitHub.');
-     initPdfIndex();
+     initPdfIndex(false, true);
     }
 
     const GH_KEY = 'gotGhCfg', DATA_PATH = 'data/portfolio.json';
@@ -1926,7 +1926,7 @@
         }
         saveState();
         await ghPut(DATA_PATH, toB64(JSON.stringify(appState)), 'Actualizar portafolio');
-                   if (pdfIdxState.ready && pdfIndex.length) await ghPut(PDF_IDX_PATH, toB64(JSON.stringify({ sig: pdfIdxSig, data: pdfIndex.map(({ _n, _w, ...c }) => c) })), 'Actualizar índice de PDF');
+                          if (pdfIdxState.ready && pdfIndex.length) await ghPut(PDF_IDX_PATH, toB64(JSON.stringify({ sig: pdfIdxSig, ts: Date.now(), data: stripIdx(pdfIndex) })), 'Actualizar índice de PDF');
         renderUnitPanel(currentUnit); if (actView) renderActivityPage();
         showToast('✓ Publicado. GitHub Pages puede tardar ~1 min en mostrarlo a los demás.');
       } catch (e) { showToast('Error al publicar: ' + e.message); }
@@ -2140,47 +2140,74 @@
       pdfIdxState.ready = true;
     }
 
-    async function initPdfIndex(useOcr = false) {
+    let pdfRun = 0;
+ let ocrBusy = false;
+    const stripIdx = arr => arr.map(({ _n, _w, ...c }) => c);
+
+    async function initPdfIndex(useOcr = false, refresh = false) {
+      if (ocrBusy && !useOcr) return;   // no interrumpir un OCR en curso
       if (typeof pdfjsLib === 'undefined' || !appState) return;
+      const run = ++pdfRun;
       const acts = pdfActs();
-      pdfIdxSig = 'v1|' + acts.map(x => x.a.filename).join('|');
-      pdfIdxState = { ready: false, done: 0, total: acts.length };
+      pdfIdxSig = 'v2|' + acts.map(x => x.a.filename).join('|');
+      pdfIdxState = { ready: false, done: 0, total: acts.length, failed: [] };
+      const valid = c => acts.some(x => x.a.id === c.aid && x.a.filename === c.file);
       const cached = await idbGet('pdf-index');
+      let base = [];
       if (!useOcr) {
-        if (cached && cached.sig === pdfIdxSig) return setPdfIndex(cached.data);
-        try {
-          const r = await fetch(PDF_IDX_PATH + '?t=' + Date.now(), { cache: 'no-store' });
-          if (r.ok) { const j = await r.json(); if (j.sig === pdfIdxSig) { idbSet('pdf-index', j).catch(() => {}); return setPdfIndex(j.data); } }
-        } catch (e) { }
+        // toma el índice MÁS NUEVO (caché local o publicado), sin exigir que la firma coincida
+        let pub = null;
+        try { const r = await fetch(PDF_IDX_PATH + '?t=' + Date.now(), { cache: 'no-store' }); if (r.ok) pub = await r.json(); } catch (e) { }
+        const newest = [cached, pub].filter(x => x && x.data && x.data.length).sort((a, b) => (b.ts || 0) - (a.ts || 0))[0];
+        if (newest) {
+          base = newest.data;
+          if (!refresh) {                       // carga normal: no se lee ningún PDF
+            if (newest !== cached) idbSet('pdf-index', newest).catch(() => {});
+            if (run === pdfRun) setPdfIndex(base.filter(valid));
+            return;
+          }
+        }
       }
-      // reutiliza lo ya leído (así no se repite el OCR al añadir una actividad)
-      const src = pdfIndex.length ? pdfIndex.map(({ _n, _w, ...c }) => c) : (cached ? cached.data : []);
+      const src = pdfIndex.length ? stripIdx(pdfIndex) : (base.length ? base : (cached ? cached.data : []));
       const seed = {};
       src.forEach(c => (seed[c.aid] = seed[c.aid] || []).push(c));
       const data = [];
       let worker = null;
+      const getWorker = async () => {
+        if (worker) return worker;
+        try { worker = await (await loadTesseract()).createWorker('spa'); return worker; }
+        catch (e) { e.fatal = true; throw e; }
+      };
       try {
         for (const { k, w, a } of acts) {
+          if (run !== pdfRun) return;
           const old = seed[a.id];
-          if (old && old[0].file === a.filename) { data.push(...old); pdfIdxState.done++; continue; }
+           if (old && old[0].file === a.filename && (!useOcr || old[0].ocr === 2)) { data.push(...old); pdfIdxState.done++; continue; }
+
           try {
             const pdf = await pdfjsLib.getDocument(await actUrl(a)).promise;
             for (let p = 1; p <= pdf.numPages; p++) {
               const page = await pdf.getPage(p);
               const tc = await page.getTextContent();
               let text = tc.items.map(i => i.str).join(' ').replace(/\s+/g, ' ').trim();
-              if (text.length <= 20 && useOcr) {            // página sin texto -> OCR
-                if (!worker) worker = await (await loadTesseract()).createWorker('spa');
-                text = await ocrPage(worker, page);
+              if (useOcr && (text.length < 100 || await pageHasImages(page))) {
+                const o = await ocrPage(await getWorker(), page);
+                text = text.length < 100 ? (o.length > text.length ? o : text) : (text + ' ' + o);
               }
-              if (text.length > 20) data.push({ k, wid: w.id, aid: a.id, file: a.filename, week: w.num, title: a.title || a.label, page: p, text });
+              if (text.length > 20) data.push({ k, wid: w.id, aid: a.id, file: a.filename, week: w.num, title: a.title || a.label, page: p, text, ocr: useOcr ? 2 : false });
             }
-          } catch (e) { console.warn('No se pudo leer', a.filename, e); }
+          } catch (e) {
+            if (e.fatal) throw e;
+            console.warn('No se pudo leer', a.filename, e);
+            pdfIdxState.failed.push(a.title || a.filename);
+          }
+
           pdfIdxState.done++;
           if (useOcr) showToast('OCR: ' + pdfIdxState.done + '/' + pdfIdxState.total + ' documentos');
         }
       } finally { if (worker) await worker.terminate(); }
-      if (useOcr) idbSet('pdf-index', { sig: pdfIdxSig, data }).catch(() => {});
+      if (run !== pdfRun) return;
+      if (useOcr || refresh) idbSet('pdf-index', { sig: pdfIdxSig, ts: Date.now(), data }).catch(() => {});
       setPdfIndex(data);
     }
 
@@ -2201,16 +2228,32 @@
       c.width = vp.width; c.height = vp.height;
       await page.render({ canvasContext: c.getContext('2d'), viewport: vp }).promise;
       const { data } = await worker.recognize(c);
-      return data.text.replace(/\s+/g, ' ').trim();
+              c.width = c.height = 0;
+              return data.text.replace(/\s+/g, ' ').trim();
+    }
+    async function pageHasImages(page) {
+      try {
+        const ops = await page.getOperatorList(), O = pdfjsLib.OPS;
+        const img = [O.paintImageXObject, O.paintInlineImageXObject, O.paintJpegXObject].filter(x => x != null);
+        return ops.fnArray.some(f => img.includes(f));
+      } catch (e) { return false; }
     }
 
-    async function runOcrIndex() {
-      if (!confirm('Se aplicará OCR a las páginas que son imágenes. Puede tardar varios minutos y no debes cerrar la pestaña. ¿Continuar?')) return;
+           async function runOcrIndex() {
+      if (ocrBusy) { showToast('El OCR ya está en curso.'); return; }
+      if (location.protocol === 'file:') { alert('Abre la página desde su dirección https://…github.io/…, no desde el archivo local. El OCR no funciona desde file://.'); return; }
+      if (!confirm('Se aplicará OCR a las páginas con imágenes. Puede tardar varios minutos y no debes cerrar la pestaña ni editar actividades. ¿Continuar?')) return;
+      ocrBusy = true;
       showToast('Iniciando OCR…');
       try {
         await initPdfIndex(true);
-        showToast('✓ OCR terminado. Pulsa ☁ Publicar para compartir el índice.');
-      } catch (e) { showToast('Error en OCR: ' + e.message); }
+        const f = pdfIdxState.failed || [];
+        if (!pdfIndex.length) alert('El OCR terminó pero no se indexó ninguna página. Abre la consola (F12) y revisa los errores.');
+        else showToast('✓ OCR terminado: ' + pdfIndex.length + ' páginas indexadas' + (f.length ? ' · fallaron: ' + f.join(', ') : '') + '. Pulsa ☁ Publicar.');
+      } catch (e) {
+        ocrBusy = false; initPdfIndex();
+        alert('Error en OCR: ' + e.message + '\n\nSi dice que no pudo cargar Tesseract, revisa tu conexión o desactiva el bloqueador de scripts.');
+      } finally { ocrBusy = false; }
     }
     window.runOcrIndex = runOcrIndex;
 
