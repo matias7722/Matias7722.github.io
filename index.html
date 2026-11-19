@@ -2401,17 +2401,60 @@
       return node;
     }
 
-    function crowCatalogText() {
+    function crowNormalize(value) {
+      return String(value || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+        .replace(/[^\p{L}\p{N}\s]/gu, ' ').replace(/\s+/g, ' ').trim();
+    }
+
+    function crowRequestedWeek(question) {
+      const q = crowNormalize(question);
+      const match = q.match(/\bsemana\s*(\d{1,2})\b/);
+      return match ? String(Number(match[1])).padStart(2, '0') : null;
+    }
+
+    function crowCatalogWeeks() {
       const units = appState?.units || {};
+      const out = [];
+      Object.entries(units).forEach(([key, unit]) => {
+        if (unit.locked && role !== 'admin') return;
+        (unit.weeks || []).forEach(week => out.push({ key, unit, week }));
+      });
+      return out;
+    }
+
+    function crowWeekActivities(question) {
+      const requested = crowRequestedWeek(question);
+      if (!requested) return null;
+      const matches = crowCatalogWeeks().filter(({week}) => {
+        const raw = String(week.num || week.number || '');
+        const digits = raw.match(/\d+/);
+        return digits && String(Number(digits[0])).padStart(2, '0') === requested;
+      });
+      if (!matches.length) return { requested, found: false, answer:
+        `No encuentro la Semana ${requested} en el catálogo disponible del portafolio. Es posible que esa semana todavía no se haya cargado. No voy a sustituirla por documentos de otras semanas.` };
       const lines = [];
-      Object.keys(units).forEach(key => {
-        const u = units[key];
-        if (u.locked && role !== 'admin') return;
-        lines.push(`UNIDAD ${key}: ${u.nombre} (${u.weeks.length} semanas registradas)`);
-        (u.weeks || []).forEach(w => {
-          const activities = (w.activities || []).map(a => `${a.label}: ${a.title || a.dispFilename || a.filename || 'Sin archivo'}`).join('; ');
-          lines.push(`${w.num} — ${w.title}. Actividades: ${activities || 'Sin actividades registradas'}`);
+      matches.forEach(({key, unit, week}) => {
+        lines.push(`${unit.nombre || `Unidad ${key}`} · ${week.num || `Semana ${requested}`} — ${week.title || 'Sin título'}`);
+        const activities = week.activities || [];
+        if (!activities.length) lines.push('Todavía no hay actividades registradas en esta semana.');
+        else activities.forEach((a, i) => {
+          const title = a.title || a.dispFilename || a.filename || a.label || 'Actividad sin título';
+          const label = a.label && crowNormalize(a.label) !== crowNormalize(title) ? ` (${a.label})` : '';
+          const status = a.fid || a.filename ? 'archivo registrado' : 'archivo aún no disponible';
+          lines.push(`${i + 1}. ${title}${label} — ${status}`);
         });
+      });
+      return { requested, found: true, answer:
+        `En el catálogo del portafolio, esto figura para la Semana ${requested}:\n\n${lines.join('\n')}\n\nPuedes encontrarla en «Unidades» → selecciona la unidad correspondiente → «Ver actividades». Solo estoy enumerando lo que está registrado actualmente; si faltan archivos, la semana puede estar incompleta.` };
+    }
+
+    function crowCatalogText() {
+      const lines = [];
+      crowCatalogWeeks().forEach(({key, unit, week}) => {
+        const activities = (week.activities || []).map(a =>
+          `${a.label || 'Actividad'}: ${a.title || a.dispFilename || a.filename || 'Sin archivo'}`
+        ).join('; ');
+        lines.push(`UNIDAD ${key}: ${unit.nombre || 'Sin nombre'} · ${week.num || ''} — ${week.title || ''}. Actividades: ${activities || 'Sin actividades registradas'}`);
       });
       return lines.join('\n').slice(0, 10000);
     }
@@ -2419,10 +2462,18 @@
     function crowRelevantEvidence(question) {
       try {
         if (!pdfIdxState.ready) return [];
-        return searchPdf(question, 5).filter(x => x.score >= 1.1).map(({c, pos, score}) => ({
+        const requestedWeek = crowRequestedWeek(question);
+        const hits = searchPdf(question, 20).filter(x => x.score >= 1.1);
+        const scoped = requestedWeek
+          ? hits.filter(({c}) => {
+              const raw = String(c.week || '');
+              const digits = raw.match(/\d+/);
+              return digits && String(Number(digits[0])).padStart(2, '0') === requestedWeek;
+            })
+          : hits;
+        return scoped.slice(0, 5).map(({c, pos, score}) => ({
           unit: c.k, week: c.week, title: c.title, page: c.page,
-          score: Number(score.toFixed(2)),
-          text: snippet(c, pos)
+          score: Number(score.toFixed(2)), text: snippet(c, pos)
         }));
       } catch (e) {
         console.warn('Cuervo: búsqueda documental local no disponible', e);
@@ -2464,6 +2515,20 @@
       pending.classList.add('crow-thinking');
 
       try {
+        const normalizedQuestion = crowNormalize(question);
+        const asksActivities = /actividades?|que hay|que tiene|contenido|documentos?|pdfs?|archivos?/.test(normalizedQuestion);
+        const weekCatalogResult = asksActivities ? crowWeekActivities(question) : null;
+
+        // Una pregunta explícita sobre actividades de una semana se resuelve desde el catálogo,
+        // no desde fragmentos OCR de semanas ajenas.
+        if (weekCatalogResult) {
+          pending.classList.remove('crow-thinking');
+          pending.textContent = weekCatalogResult.answer;
+          crowLocalHistory.push({ role: 'user', content: question }, { role: 'assistant', content: weekCatalogResult.answer });
+          crowLocalHistory = crowLocalHistory.slice(-8);
+          return;
+        }
+
         const evidence = crowRelevantEvidence(question);
         let answer = null;
         if (crowLocalEngine) {
