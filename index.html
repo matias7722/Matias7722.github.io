@@ -171,9 +171,11 @@
 
     /* ====== AVATAR GUÍA / CHAT UNIFICADO ====== */
     .guide-avatar {
+      appearance: none; -webkit-appearance: none;
       position: fixed;
-      left: 24px;
-      bottom: 90px;
+      right: 24px;
+      left: auto;
+      bottom: 24px;
       z-index: 35;
       width: 90px;
       height: 90px;
@@ -194,8 +196,9 @@
     }
     .guide-bubble {
       position: fixed;
-      left: 120px;
-      bottom: 110px;
+      right: 124px;
+      left: auto;
+      bottom: 34px;
       z-index: 36;
       max-width: 300px;
       background: var(--panel);
@@ -246,8 +249,9 @@
     .crow-chat-panel {
       display: none;
       position: fixed;
-      left: 120px;
-      bottom: 90px;
+      right: 124px;
+      left: auto;
+      bottom: 24px;
       z-index: 40;
       width: min(380px, calc(100vw - 28px));
       background: var(--panel);
@@ -574,7 +578,37 @@
     .access-card .login-form { margin-top: 0; }
 
     @media (max-width: 800px) { nav { padding: 14px 18px; } .nav-toggle { display: flex; } .nav-links { display: none; position: absolute; top: 100%; left: 0; right: 0; flex-direction: column; align-items: stretch; background: rgba(5, 4, 3, 0.98); padding: 14px 18px; border-bottom: 1px solid var(--border); gap: 12px; } .nav-links.open { display: flex; } .nav-links a { padding: 6px 0; } nav { position: sticky; } .profile-grid, .codex-grid, .weeks-grid, .questions-grid { grid-template-columns: 1fr 1fr; } .hero { min-height: auto; } .pdf-sidebar { display: none; } .pdf-modal { height: 94vh; width: 100vw; } }
-    @media (max-width: 560px) { .nav-brand { font-size: 0.68rem; } .profile-grid, .codex-grid, .weeks-grid, .questions-grid { grid-template-columns: 1fr; } main section { padding-block: 65px; } .question-card { grid-template-columns: 34px 1fr; } .login-card { padding: 32px 24px 28px; } .guide-avatar { left: 10px; bottom: 130px; width: 65px; height: 65px; } .guide-bubble { left: 85px; bottom: 140px; max-width: 220px; font-size: 0.8rem; padding: 10px 14px; } .crow-chat-panel { left: 8px; bottom: 80px; width: calc(100vw - 16px); max-height: 420px; } }
+    @media (max-width: 560px) { .nav-brand { font-size: 0.68rem; } .profile-grid, .codex-grid, .weeks-grid, .questions-grid { grid-template-columns: 1fr; } main section { padding-block: 65px; } .question-card { grid-template-columns: 34px 1fr; } .login-card { padding: 32px 24px 28px; } .guide-avatar { right: 14px; left: auto; bottom: 18px; width: 64px; height: 64px; } .guide-bubble { right: 88px; left: auto; bottom: 30px; max-width: min(220px, calc(100vw - 112px)); font-size: 0.8rem; padding: 10px 14px; } .guide-bubble:before { left: auto; right: -8px; border-right: 0; border-left: 8px solid var(--gold); } .crow-chat-panel { right: 12px; left: 12px; bottom: 92px; width: auto; max-height: min(68vh, 480px); } }
+
+
+    /* ===== CUERVO 2.0 · flotante híbrido sin API ===== */
+    .guide-avatar {
+      display: grid; place-items: center; padding: 0;
+      border: 1px solid var(--gold); border-radius: 50%;
+      background: rgba(5,4,3,.94);
+      box-shadow: 0 12px 38px rgba(0,0,0,.65), 0 0 24px rgba(201,162,39,.22);
+    }
+    .guide-avatar:focus-visible, .crow-chat-panel button:focus-visible,
+    .crow-chat-form input:focus-visible { outline: 2px solid var(--gold2); outline-offset: 4px; }
+    .crow-chat-panel {
+      width: min(390px, calc(100vw - 32px));
+      max-height: min(560px, 76vh);
+      border-radius: 4px; overflow: hidden;
+      box-shadow: 0 24px 70px rgba(0,0,0,.78), 0 0 0 1px rgba(232,206,122,.08);
+    }
+    .crow-chat-messages { overflow-y: auto; }
+    .crow-local-status { display:flex; align-items:center; gap:7px; padding:7px 12px; border-bottom:1px solid var(--border); color:var(--muted); font-size:.72rem; }
+    .crow-local-status i { width:7px; height:7px; border-radius:50%; background:#b38b45; display:inline-block; }
+    .crow-local-status.ready i { background:#6ca879; }
+    .crow-local-actions { display:flex; gap:6px; padding:7px 10px; border-top:1px solid var(--border); }
+    .crow-local-actions button { flex:1; padding:7px 6px; border:1px solid var(--border); background:var(--dark2); color:var(--gold2); font-size:.62rem; }
+    .crow-local-actions button:disabled { opacity:.5; cursor:not-allowed; }
+    .crow-thinking { color:var(--gold2); font-style:italic; opacity:.85; }
+    .crow-answer-sources { margin-top:10px; padding-top:8px; border-top:1px solid var(--border); color:var(--muted); font-size:.76rem; }
+    .crow-answer-sources strong { display:block; color:var(--gold2); margin-bottom:4px; }
+    @media (prefers-reduced-motion: reduce) {
+      .guide-avatar, .guide-avatar *, .crow-chat-panel, .guide-bubble { animation:none !important; transition:none !important; }
+    }
 
     /* ====== ANIMACIONES ENTRADA ====== */
     @keyframes adminEntrance { 0% { opacity: 0; transform: scale(0.92) translateY(20px); filter: blur(12px); } 60% { opacity: 0.9; filter: blur(2px); } 100% { opacity: 1; transform: scale(1) translateY(0); filter: blur(0); } }
@@ -722,7 +756,7 @@
   </div>
 
   <!-- ===== CUERVO GUÍA (AVATAR + CHAT UNIFICADO) ===== -->
-  <div class="guide-avatar" id="guideAvatar" title="Cuervo de Tres Ojos · Tu guía">
+  <button type="button" class="guide-avatar" id="guideAvatar" title="Abrir Cuervo de Tres Ojos · Tu guía" aria-label="Abrir Cuervo de Tres Ojos" aria-controls="crowChatPanel" aria-expanded="false">
     <svg viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
       <circle cx="50" cy="50" r="46" fill="#14100B" stroke="var(--gold)" stroke-width="2" opacity="0.9"/>
       <path d="M50 20 L58 38 L78 40 L62 54 L68 74 L50 62 L32 74 L38 54 L22 40 L42 38 Z" fill="var(--gold2)" opacity="0.12"/>
@@ -735,7 +769,7 @@
       <circle cx="44" cy="56" r="1.5" fill="var(--gold2)" opacity="0.5"/>
       <circle cx="56" cy="56" r="1.5" fill="var(--gold2)" opacity="0.5"/>
     </svg>
-  </div>
+  </button>
   <div class="guide-bubble" id="guideBubble">
     <button class="close-bubble" onclick="hideGuideBubble()">✕</button>
     <span id="guideBubbleText">Saludos, viajero. Soy el Cuervo de Tres Ojos. Te guiaré por los confines de Poniente...</span>
@@ -747,7 +781,12 @@
       <span>⚜ Cuervo de Tres Ojos</span>
       <button class="close-chat" onclick="closeCrowChat()">✕</button>
     </div>
+    <div class="crow-local-status" id="crowLocalStatus"><i></i><span>Modo gratuito · búsqueda documental disponible</span></div>
     <div class="crow-chat-messages" id="crowChatMessages"></div>
+    <div class="crow-local-actions">
+      <button type="button" id="crowLoadLocalAI">Activar IA local (opcional)</button>
+      <button type="button" id="crowClearHistory">Limpiar conversación</button>
+    </div>
     <div class="crow-chat-chips" id="crowChatChips"></div>
     <form class="crow-chat-form" id="crowChatForm">
       <input id="crowChatInput" placeholder="Pregunta al cuervo…" autocomplete="off">
@@ -2301,12 +2340,14 @@
 
     function openCrowChat() {
       crowChatPanel.classList.add('open');
+      guideAvatar.setAttribute('aria-expanded', 'true');
       hideGuideBubble();
       initCrowChat();
       crowChatInput.focus();
     }
     function closeCrowChat() {
       crowChatPanel.classList.remove('open');
+      guideAvatar.setAttribute('aria-expanded', 'false');
     }
 
     function addCrowMessage(text, who) {
@@ -2334,14 +2375,177 @@
       crowChatChips.innerHTML = chips.map(c => `<button type="button" onclick="askCrow('${esc(c)}')">${esc(c)}</button>`).join('');
     }
 
-    function askCrow(text) {
-      if (!text.trim()) return;
-      addCrowMessage(esc(text), 'user');
-      crowChatInput.value = '';
-      setTimeout(() => {
-        addCrowMessage(crowReply(text), 'bot');
-      }, 250);
+    // ===== CUERVO 2.0 · motor híbrido 100% gratuito =====
+    // Nivel 1: catálogo + índice OCR/BM25 local. Nivel 2: modelo WebLLM opcional en el navegador.
+    let crowLocalEngine = null;
+    let crowLocalLoading = false;
+    let crowLocalHistory = [];
+
+    const crowLocalStatus = document.getElementById('crowLocalStatus');
+    const crowLoadButton = document.getElementById('crowLoadLocalAI');
+    const crowClearButton = document.getElementById('crowClearHistory');
+
+    function crowSetLocalStatus(message, ready = false) {
+      if (!crowLocalStatus) return;
+      crowLocalStatus.classList.toggle('ready', !!ready);
+      const label = crowLocalStatus.querySelector('span');
+      if (label) label.textContent = message;
     }
+
+    function crowSafeMessage(text, who) {
+      const node = document.createElement('div');
+      node.className = 'msg ' + who;
+      node.textContent = String(text || '');
+      crowChatMessages.appendChild(node);
+      crowChatMessages.scrollTop = crowChatMessages.scrollHeight;
+      return node;
+    }
+
+    function crowCatalogText() {
+      const units = appState?.units || {};
+      const lines = [];
+      Object.keys(units).forEach(key => {
+        const u = units[key];
+        if (u.locked && role !== 'admin') return;
+        lines.push(`UNIDAD ${key}: ${u.nombre} (${u.weeks.length} semanas registradas)`);
+        (u.weeks || []).forEach(w => {
+          const activities = (w.activities || []).map(a => `${a.label}: ${a.title || a.dispFilename || a.filename || 'Sin archivo'}`).join('; ');
+          lines.push(`${w.num} — ${w.title}. Actividades: ${activities || 'Sin actividades registradas'}`);
+        });
+      });
+      return lines.join('\n').slice(0, 10000);
+    }
+
+    function crowRelevantEvidence(question) {
+      try {
+        if (!pdfIdxState.ready) return [];
+        return searchPdf(question, 5).filter(x => x.score >= 1.1).map(({c, pos, score}) => ({
+          unit: c.k, week: c.week, title: c.title, page: c.page,
+          score: Number(score.toFixed(2)),
+          text: snippet(c, pos)
+        }));
+      } catch (e) {
+        console.warn('Cuervo: búsqueda documental local no disponible', e);
+        return [];
+      }
+    }
+
+    function crowEvidenceAnswer(hits) {
+      if (!hits.length) return '';
+      const chunks = hits.map(({c, pos}) =>
+        `• ${c.week || 'Semana sin identificar'} · ${c.title || 'Documento'} · página ${c.page || '?'}\n${snippet(c, pos)}`
+      );
+      return 'He encontrado estos fragmentos en los documentos disponibles:\n\n' + chunks.join('\n\n') +
+        '\n\nEsta respuesta se basa en los fragmentos recuperados. Si necesitas una explicación más amplia, activa la IA local cuando tu equipo sea compatible.';
+    }
+
+    async function crowAskLocalModel(question, evidence) {
+      if (!crowLocalEngine) return null;
+      const system = `Eres el Cuervo de Tres Ojos, guía académico de este portafolio. Responde en español claro y elaborado. Distingue evidencia documental de explicación general. No inventes datos, páginas ni actividades. Si falta información o una semana está incompleta, dilo. Utiliza el catálogo y los extractos como fuentes prioritarias. Para explicar, organiza con definición, desarrollo, ejemplo y síntesis cuando ayude. Para navegación, da la ruta exacta dentro del portafolio.`;
+      const context = `CATÁLOGO DEL PORTAFOLIO:\n${crowCatalogText()}\n\nEXTRACTOS DEL ÍNDICE OCR:\n${evidence.length ? evidence.map((e,i)=>`[${i+1}] Unidad ${e.unit}, ${e.week}, ${e.title}, página ${e.page}:\n${e.text}`).join('\n\n') : 'No se encontraron extractos relevantes.'}`;
+      const messages = [
+        { role: 'system', content: system + '\n\n' + context },
+        ...crowLocalHistory.slice(-6),
+        { role: 'user', content: question }
+      ];
+      const result = await crowLocalEngine.chat.completions.create({
+        messages, temperature: 0.25, max_tokens: 700
+      });
+      return result.choices?.[0]?.message?.content?.trim() || null;
+    }
+
+    async function askCrow(text) {
+      const question = String(text || '').trim();
+      if (!question) return;
+      crowSafeMessage(question, 'user');
+      crowChatInput.value = '';
+
+      const pending = crowSafeMessage('Consultando el catálogo y los pergaminos disponibles…', 'bot');
+      pending.classList.add('crow-thinking');
+
+      try {
+        const evidence = crowRelevantEvidence(question);
+        let answer = null;
+        if (crowLocalEngine) {
+          try { answer = await crowAskLocalModel(question, evidence); }
+          catch (e) {
+            console.warn('El modelo local no pudo responder; se utilizará búsqueda documental.', e);
+            crowSetLocalStatus('IA local no disponible · búsqueda documental activa', false);
+          }
+        }
+
+        if (!answer) {
+          const legacy = crowReply(question);
+          // If legacy knowledge is only a generic fallback, prefer actual retrieved PDF evidence.
+          const generic = /No encontré una respuesta exacta|Prueba con alguna de estas preguntas/i.test(legacy);
+          answer = evidence.length && generic ? crowEvidenceAnswer(evidence) : legacy.replace(/<br\s*\/?>/gi, '\n').replace(/<[^>]*>/g, '');
+        }
+
+        pending.classList.remove('crow-thinking');
+        pending.textContent = answer;
+        if (evidence.length) {
+          const sourceBox = document.createElement('div');
+          sourceBox.className = 'crow-answer-sources';
+          const heading = document.createElement('strong');
+          heading.textContent = 'Fuentes locales consultadas';
+          sourceBox.appendChild(heading);
+          evidence.forEach(e => {
+            const row = document.createElement('div');
+            row.textContent = `${e.week || 'Semana'} · ${e.title || 'Documento'} · pág. ${e.page || '?'}`;
+            sourceBox.appendChild(row);
+          });
+          pending.appendChild(sourceBox);
+        }
+        crowLocalHistory.push({ role: 'user', content: question }, { role: 'assistant', content: answer });
+        crowLocalHistory = crowLocalHistory.slice(-8);
+      } catch (error) {
+        pending.classList.remove('crow-thinking');
+        pending.textContent = 'No pude completar la consulta. Puedes intentar con el nombre de la unidad, semana o documento. Detalle: ' + (error.message || 'error local');
+      }
+      crowChatMessages.scrollTop = crowChatMessages.scrollHeight;
+    }
+
+    async function crowLoadWebLLM() {
+      if (crowLocalEngine || crowLocalLoading) return;
+      if (!('gpu' in navigator)) {
+        crowSetLocalStatus('Este navegador no ofrece WebGPU · búsqueda documental activa', false);
+        alert('Tu navegador o equipo no ofrece WebGPU. El Cuervo seguirá funcionando con búsqueda documental y guía local, sin IA generativa.');
+        return;
+      }
+      crowLocalLoading = true;
+      crowLoadButton.disabled = true;
+      crowLoadButton.textContent = 'Preparando modelo…';
+      crowSetLocalStatus('Descargando modelo local gratuito; puede ocupar varios cientos de MB…', false);
+      try {
+        const { CreateMLCEngine } = await import('https://esm.run/@mlc-ai/web-llm');
+        const model = 'Qwen2.5-0.5B-Instruct-q4f16_1-MLC';
+        crowLocalEngine = await CreateMLCEngine(model, {
+          initProgressCallback: progress => {
+            const pct = progress?.progress != null ? Math.round(progress.progress * 100) + '%' : '…';
+            crowSetLocalStatus('Preparando IA local: ' + pct, false);
+            crowLoadButton.textContent = 'Descargando ' + pct;
+          }
+        });
+        crowSetLocalStatus('IA local lista en este dispositivo · sin API de pago', true);
+        crowLoadButton.textContent = 'IA local activada';
+      } catch (e) {
+        console.error('WebLLM:', e);
+        crowSetLocalStatus('No se pudo iniciar IA local · búsqueda documental activa', false);
+        crowLoadButton.textContent = 'Reintentar IA local';
+        alert('No se pudo iniciar el modelo local. El Cuervo seguirá funcionando con búsqueda documental. Motivo: ' + (e.message || e));
+      } finally {
+        crowLocalLoading = false;
+        crowLoadButton.disabled = false;
+      }
+    }
+
+    crowLoadButton?.addEventListener('click', crowLoadWebLLM);
+    crowClearButton?.addEventListener('click', () => {
+      crowLocalHistory = [];
+      crowChatMessages.innerHTML = '';
+      crowSafeMessage('Conversación limpiada. Los documentos y el índice permanecen intactos.', 'bot');
+    });
+
 
     // Conocimiento del cuervo
     function crowReply(text) {
@@ -2427,9 +2631,7 @@
       e.preventDefault();
       askCrow(crowChatInput.value);
     });
-    document.getElementById('crowChatInput').addEventListener('keydown', function(e) {
-      if (e.key === 'Enter') { e.preventDefault(); askCrow(this.value); }
-    });
+    // Enter se gestiona mediante el submit del formulario para evitar envíos duplicados.
 
     // ===== BURBUJA GUÍA =====
     const guideAvatar = document.getElementById('guideAvatar');
