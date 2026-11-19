@@ -2365,7 +2365,8 @@
         '¿Quién es Matías?',
         '¿De qué trata el curso?',
         '¿Qué actividades hay en la Semana 01?',
-        '¿Cuántos PDFs tiene la Semana 02?',
+        'Resume los documentos de la Semana 02.',
+        '¿Qué semanas tienen archivos pendientes o sin indexar?',
         '¿Qué casa es cada unidad?',
         '¿Dónde están las 32 preguntas?',
         '¿Cuál es mi rol?',
@@ -2401,84 +2402,145 @@
       return node;
     }
 
-    function crowNormalize(value) {
-      return String(value || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '')
-        .replace(/[^\p{L}\p{N}\s]/gu, ' ').replace(/\s+/g, ' ').trim();
-    }
-
-    function crowRequestedWeek(question) {
-      const q = crowNormalize(question);
-      const match = q.match(/\bsemana\s*(\d{1,2})\b/);
-      return match ? String(Number(match[1])).padStart(2, '0') : null;
-    }
-
-    function crowCatalogWeeks() {
-      const units = appState?.units || {};
-      const out = [];
-      Object.entries(units).forEach(([key, unit]) => {
-        if (unit.locked && role !== 'admin') return;
-        (unit.weeks || []).forEach(week => out.push({ key, unit, week }));
-      });
-      return out;
-    }
-
-    function crowWeekActivities(question) {
-      const requested = crowRequestedWeek(question);
-      if (!requested) return null;
-      const matches = crowCatalogWeeks().filter(({week}) => {
-        const raw = String(week.num || week.number || '');
-        const digits = raw.match(/\d+/);
-        return digits && String(Number(digits[0])).padStart(2, '0') === requested;
-      });
-      if (!matches.length) return { requested, found: false, answer:
-        `No encuentro la Semana ${requested} en el catálogo disponible del portafolio. Es posible que esa semana todavía no se haya cargado. No voy a sustituirla por documentos de otras semanas.` };
-      const lines = [];
-      matches.forEach(({key, unit, week}) => {
-        lines.push(`${unit.nombre || `Unidad ${key}`} · ${week.num || `Semana ${requested}`} — ${week.title || 'Sin título'}`);
-        const activities = week.activities || [];
-        if (!activities.length) lines.push('Todavía no hay actividades registradas en esta semana.');
-        else activities.forEach((a, i) => {
-          const title = a.title || a.dispFilename || a.filename || a.label || 'Actividad sin título';
-          const label = a.label && crowNormalize(a.label) !== crowNormalize(title) ? ` (${a.label})` : '';
-          const status = a.fid || a.filename ? 'archivo registrado' : 'archivo aún no disponible';
-          lines.push(`${i + 1}. ${title}${label} — ${status}`);
-        });
-      });
-      return { requested, found: true, answer:
-        `En el catálogo del portafolio, esto figura para la Semana ${requested}:\n\n${lines.join('\n')}\n\nPuedes encontrarla en «Unidades» → selecciona la unidad correspondiente → «Ver actividades». Solo estoy enumerando lo que está registrado actualmente; si faltan archivos, la semana puede estar incompleta.` };
-    }
-
     function crowCatalogText() {
+      const units = appState?.units || {};
       const lines = [];
-      crowCatalogWeeks().forEach(({key, unit, week}) => {
-        const activities = (week.activities || []).map(a =>
-          `${a.label || 'Actividad'}: ${a.title || a.dispFilename || a.filename || 'Sin archivo'}`
-        ).join('; ');
-        lines.push(`UNIDAD ${key}: ${unit.nombre || 'Sin nombre'} · ${week.num || ''} — ${week.title || ''}. Actividades: ${activities || 'Sin actividades registradas'}`);
+      Object.keys(units).forEach(key => {
+        const u = units[key];
+        if (u.locked && role !== 'admin') return;
+        lines.push(`UNIDAD ${key}: ${u.nombre} (${u.weeks.length} semanas registradas)`);
+        (u.weeks || []).forEach(w => {
+          const activities = (w.activities || []).map(a => `${a.label}: ${a.title || a.dispFilename || a.filename || 'Sin archivo'}`).join('; ');
+          lines.push(`${w.num} — ${w.title}. Actividades: ${activities || 'Sin actividades registradas'}`);
+        });
       });
       return lines.join('\n').slice(0, 10000);
     }
 
-    function crowRelevantEvidence(question) {
+    function crowNorm(value) {
+      return norm(String(value || '')).replace(/[^\p{L}\p{N}\s]/gu, ' ').replace(/\s+/g, ' ').trim();
+    }
+    function crowWeekNumber(value) {
+      const m = String(value || '').match(/\d+/);
+      return m ? String(Number(m[0])).padStart(2, '0') : null;
+    }
+    function crowRequestedWeek(question) {
+      const m = crowNorm(question).match(/\bsemana\s*(\d{1,2})\b/);
+      return m ? String(Number(m[1])).padStart(2, '0') : null;
+    }
+    function crowAllWeeks() {
+      const rows = [];
+      Object.entries(appState?.units || {}).forEach(([k, u]) => {
+        if (u.locked && role !== 'admin') return;
+        (u.weeks || []).forEach(w => rows.push({ k, unit: u, week: w }));
+      });
+      return rows;
+    }
+    function crowWeekRows(num) {
+      return crowAllWeeks().filter(x => crowWeekNumber(x.week.num) === num);
+    }
+    function crowIsIndexed(k, w, a) {
+      return pdfIndex.some(c => c.k === k && c.wid === w.id && c.aid === a.id && c.file === a.filename);
+    }
+    function crowCatalogText() {
+      return crowAllWeeks().map(({k, unit, week}) => {
+        const acts = (week.activities || []).map(a => `${a.label || 'Actividad'}: ${a.title || a.dispFilename || a.filename || 'Sin título'}`).join('; ');
+        return `${unit.nombre || 'Unidad ' + k} · ${week.num} — ${week.title}. Actividades: ${acts || 'Sin actividades registradas'}`;
+      }).join('\n').slice(0, 14000);
+    }
+    function crowRelevantEvidence(question, limit = 8, weekOnly = null) {
       try {
         if (!pdfIdxState.ready) return [];
-        const requestedWeek = crowRequestedWeek(question);
-        const hits = searchPdf(question, 20).filter(x => x.score >= 1.1);
-        const scoped = requestedWeek
-          ? hits.filter(({c}) => {
-              const raw = String(c.week || '');
-              const digits = raw.match(/\d+/);
-              return digits && String(Number(digits[0])).padStart(2, '0') === requestedWeek;
-            })
-          : hits;
-        return scoped.slice(0, 5).map(({c, pos, score}) => ({
-          unit: c.k, week: c.week, title: c.title, page: c.page,
-          score: Number(score.toFixed(2)), text: snippet(c, pos)
+        let hits = searchPdf(question, Math.max(limit * 3, 15));
+        if (weekOnly) hits = hits.filter(({c}) => crowWeekNumber(c.week) === weekOnly);
+        return hits.filter(x => x.score >= 0.75).slice(0, limit).map(({c, pos, score}) => ({
+          k: c.k, wid: c.wid, aid: c.aid, unit: c.k, week: c.week,
+          title: c.title, page: c.page, score: Number(score.toFixed(2)),
+          text: snippet(c, pos)
         }));
       } catch (e) {
         console.warn('Cuervo: búsqueda documental local no disponible', e);
         return [];
       }
+    }
+    function crowAllWeekEvidence(k, week) {
+      return pdfIndex.filter(c => c.k === k && c.wid === week.id)
+        .sort((a,b) => String(a.title).localeCompare(String(b.title)) || a.page-b.page);
+    }
+    function crowIsActivityQuestion(q) {
+      return /actividades?|archivos?|documentos?|pdfs?|que hay|que contiene|que tiene/.test(crowNorm(q));
+    }
+    function crowIsSummaryQuestion(q) {
+      return /explica|resumen|resume|sintesis|contenido|de que trata|ensen|desarrolla/.test(crowNorm(q));
+    }
+    function crowIsMissingInventoryQuestion(q) {
+      const n = crowNorm(q);
+      return /(que|cuales).*(semanas|documentos|archivos).*(faltan|pendientes|no tienen|sin cargar|no cargados)/.test(n) ||
+        /(semanas|documentos|archivos).*(faltan|pendientes|sin cargar|no cargados)/.test(n);
+    }
+    async function crowCheckActivityFile(a) {
+      if (a.fid) return (await idbGet(a.fid)) ? 'archivo local disponible' : 'archivo local no encontrado';
+      if (!a.filename) return 'sin archivo asociado';
+      if (isHtml(a)) return 'documento HTML registrado';
+      if (!isPdf(a)) return 'archivo registrado (tipo distinto de PDF)';
+      try {
+        const r = await fetch('pdf/' + encodeURIComponent(a.filename), { method: 'HEAD', cache: 'no-store' });
+        return r.ok ? 'PDF disponible en el sitio' : 'PDF no encontrado en la carpeta pdf/';
+      } catch (_) { return 'no se pudo verificar el archivo'; }
+    }
+    async function crowMissingInventory() {
+      const rows = crowAllWeeks();
+      const result = [];
+      for (const {k, unit, week} of rows) {
+        const acts = week.activities || [];
+        const states = [];
+        for (const a of acts) states.push({ a, state: await crowCheckActivityFile(a) });
+        const missing = states.filter(x => /sin archivo|no encontrado/.test(x.state));
+        const notIndexed = states.filter(x => isPdf(x.a) && !x.a.fid && !crowIsIndexed(k, week, x.a));
+        if (!acts.length || missing.length || notIndexed.length) {
+          result.push({
+            label: `${unit.nombre} · ${week.num} — ${week.title}`,
+            activities: acts.length,
+            missing: missing.map(x => `${x.a.title || x.a.dispFilename || x.a.filename}: ${x.state}`),
+            notIndexed: notIndexed.map(x => x.a.title || x.a.dispFilename || x.a.filename),
+            empty: !acts.length
+          });
+        }
+      }
+      return result;
+    }
+    function crowWeekCatalogAnswer(num) {
+      const matches = crowWeekRows(num);
+      if (!matches.length) return `La Semana ${num} no aparece registrada en el catálogo visible. Puede que todavía no se haya incorporado al portafolio.`;
+      const blocks = matches.map(({unit, week}) => {
+        const acts = week.activities || [];
+        const list = acts.length ? acts.map((a,i) => `${i+1}. ${a.title || a.dispFilename || a.filename || a.label || 'Actividad sin título'} — ${a.filename ? 'archivo asociado' : 'sin archivo asociado'}`).join('\n') : 'Todavía no hay actividades registradas.';
+        return `${unit.nombre}\n${week.num} — ${week.title}\n${week.desc ? 'Propósito: ' + week.desc + '\n' : ''}${list}`;
+      });
+      return `En el catálogo actual, la Semana ${num} contiene:\n\n${blocks.join('\n\n')}\n\nRuta: Unidades → ${matches[0].unit.nombre} → Ver actividades. La lista describe lo registrado; la disponibilidad real de cada archivo se verifica por separado.`;
+    }
+    function crowDeterministicWeekSummary(matches) {
+      const sections = [];
+      matches.forEach(({k, unit, week}) => {
+        const docs = crowAllWeekEvidence(k, week);
+        sections.push(`${unit.nombre} · ${week.num}: ${week.title}\n${week.desc ? 'Propósito registrado: ' + week.desc + '\n' : ''}`);
+        if (!docs.length) {
+          sections.push('No hay páginas indexadas de esta semana. No puedo resumir sus PDF hasta que se indexen.');
+          return;
+        }
+        const byDoc = new Map();
+        docs.forEach(c => {
+          const key = c.aid;
+          if (!byDoc.has(key)) byDoc.set(key, []);
+          byDoc.get(key).push(c);
+        });
+        byDoc.forEach(pages => {
+          const first = pages[0];
+          const selected = pages.slice(0, 3).map(p => `pág. ${p.page}: ${p.text.slice(0, 650)}`).join('\n');
+          sections.push(`Documento: ${first.title} (${pages.length} página(s) indexadas)\n${selected}`);
+        });
+      });
+      return `Resumen documental preliminar de la Semana:\n\n${sections.join('\n\n')}\n\nNota: este modo gratuito sin modelo generativo organiza extractos OCR; no equivale a una síntesis semántica completa. Activa la IA local para elaborar una explicación más integrada.`;
     }
 
     function crowEvidenceAnswer(hits) {
@@ -2490,9 +2552,9 @@
         '\n\nEsta respuesta se basa en los fragmentos recuperados. Si necesitas una explicación más amplia, activa la IA local cuando tu equipo sea compatible.';
     }
 
-    async function crowAskLocalModel(question, evidence) {
+    async function crowAskLocalModel(question, evidence, fullWeek = false) {
       if (!crowLocalEngine) return null;
-      const system = `Eres el Cuervo de Tres Ojos, guía académico de este portafolio. Responde en español claro y elaborado. Distingue evidencia documental de explicación general. No inventes datos, páginas ni actividades. Si falta información o una semana está incompleta, dilo. Utiliza el catálogo y los extractos como fuentes prioritarias. Para explicar, organiza con definición, desarrollo, ejemplo y síntesis cuando ayude. Para navegación, da la ruta exacta dentro del portafolio.`;
+      const system = `Eres el Cuervo de Tres Ojos, guía académico de este portafolio. Responde en español claro y elaborado. Distingue evidencia documental de explicación general. No inventes datos, páginas ni actividades. Si falta información o una semana está incompleta, dilo. Cuando el usuario pida un resumen, sintetiza cada documento por separado, explica conceptos y procedimientos, relaciona los documentos y termina con ideas clave; no respondas solo con una lista de fragmentos. Utiliza el catálogo y los extractos como fuentes prioritarias. Para explicar, organiza con definición, desarrollo, ejemplo y síntesis cuando ayude. Para navegación, da la ruta exacta dentro del portafolio.`;
       const context = `CATÁLOGO DEL PORTAFOLIO:\n${crowCatalogText()}\n\nEXTRACTOS DEL ÍNDICE OCR:\n${evidence.length ? evidence.map((e,i)=>`[${i+1}] Unidad ${e.unit}, ${e.week}, ${e.title}, página ${e.page}:\n${e.text}`).join('\n\n') : 'No se encontraron extractos relevantes.'}`;
       const messages = [
         { role: 'system', content: system + '\n\n' + context },
@@ -2500,7 +2562,7 @@
         { role: 'user', content: question }
       ];
       const result = await crowLocalEngine.chat.completions.create({
-        messages, temperature: 0.25, max_tokens: 700
+        messages, temperature: 0.2, max_tokens: fullWeek ? 1100 : 700
       });
       return result.choices?.[0]?.message?.content?.trim() || null;
     }
@@ -2510,66 +2572,96 @@
       if (!question) return;
       crowSafeMessage(question, 'user');
       crowChatInput.value = '';
-
-      const pending = crowSafeMessage('Consultando el catálogo y los pergaminos disponibles…', 'bot');
+      const pending = crowSafeMessage('Consultando el catálogo y los documentos…', 'bot');
       pending.classList.add('crow-thinking');
 
       try {
-        const normalizedQuestion = crowNormalize(question);
-        const asksActivities = /actividades?|que hay|que tiene|contenido|documentos?|pdfs?|archivos?/.test(normalizedQuestion);
-        const weekCatalogResult = asksActivities ? crowWeekActivities(question) : null;
-
-        // Una pregunta explícita sobre actividades de una semana se resuelve desde el catálogo,
-        // no desde fragmentos OCR de semanas ajenas.
-        if (weekCatalogResult) {
-          pending.classList.remove('crow-thinking');
-          pending.textContent = weekCatalogResult.answer;
-          crowLocalHistory.push({ role: 'user', content: question }, { role: 'assistant', content: weekCatalogResult.answer });
-          crowLocalHistory = crowLocalHistory.slice(-8);
-          return;
-        }
-
-        const evidence = crowRelevantEvidence(question);
+        const weekNum = crowRequestedWeek(question);
         let answer = null;
-        if (crowLocalEngine) {
-          try { answer = await crowAskLocalModel(question, evidence); }
-          catch (e) {
-            console.warn('El modelo local no pudo responder; se utilizará búsqueda documental.', e);
-            crowSetLocalStatus('IA local no disponible · búsqueda documental activa', false);
+        let sources = [];
+
+        // 1. Inventario documental: compara catálogo, archivos y páginas indexadas.
+        if (crowIsMissingInventoryQuestion(question)) {
+          const missing = await crowMissingInventory();
+          if (!missing.length) {
+            answer = 'Según el catálogo visible, no detecto semanas sin actividades registradas, archivos ausentes ni PDF pendientes de indexación. Esto no garantiza que el contenido de cada documento esté completo; solo comprueba los archivos y el índice accesibles.';
+          } else {
+            answer = 'Revisión del inventario documental del portafolio:\n\n' + missing.map(x =>
+              `• ${x.label}\n  Actividades registradas: ${x.activities}\n` +
+              (x.empty ? '  Estado: semana sin actividades.\n' : '') +
+              (x.missing.length ? '  Archivos ausentes:\n    - ' + x.missing.join('\n    - ') + '\n' : '') +
+              (x.notIndexed.length ? '  PDF disponibles pero aún no indexados:\n    - ' + x.notIndexed.join('\n    - ') : '')
+            ).join('\n\n') + '\n\nLas semanas que no aparecen en este informe no presentan incidencias detectables con los archivos actualmente registrados.';
+          }
+        }
+        // 2. Preguntas por actividades: responde desde el catálogo exacto.
+        else if (weekNum && crowIsActivityQuestion(question) && !crowIsSummaryQuestion(question)) {
+          answer = crowWeekCatalogAnswer(weekNum);
+        }
+        // 3. Explicación/resumen de semana: agrupa todos los documentos de esa semana.
+        else if (weekNum && crowIsSummaryQuestion(question)) {
+          const matches = crowWeekRows(weekNum);
+          const weekEvidence = matches.flatMap(({k, week}) => crowAllWeekEvidence(k, week));
+          sources = weekEvidence.slice(0, 18).map(c => ({
+            k:c.k,wid:c.wid,aid:c.aid,week:c.week,title:c.title,page:c.page,text:c.text.slice(0,1100)
+          }));
+          if (crowLocalEngine && sources.length) {
+            try {
+              answer = await crowAskLocalModel(
+                question,
+                sources.map(e => ({unit:e.k,week:e.week,title:e.title,page:e.page,text:e.text})),
+                true
+              );
+            } catch (e) { console.warn('IA local no disponible para resumen:',e); }
+          }
+          if (!answer) answer = crowDeterministicWeekSummary(matches);
+        }
+        // 4. Pregunta sobre una semana sin categoría clara: recuperar solo esa semana.
+        else {
+          const evidence = crowRelevantEvidence(question, 8, weekNum);
+          sources = evidence;
+          if (crowLocalEngine) {
+            try { answer = await crowAskLocalModel(question, evidence); }
+            catch (e) { console.warn('IA local no disponible:',e); }
+          }
+          if (!answer) {
+            const legacy = crowReply(question);
+            const generic = /No encontré una respuesta exacta|Prueba con alguna de estas preguntas/i.test(legacy);
+            answer = evidence.length && generic ? crowEvidenceAnswer(evidence) : legacy.replace(/<br\s*\/?>/gi, '\n').replace(/<[^>]*>/g, '');
           }
         }
 
-        if (!answer) {
-          const legacy = crowReply(question);
-          // If legacy knowledge is only a generic fallback, prefer actual retrieved PDF evidence.
-          const generic = /No encontré una respuesta exacta|Prueba con alguna de estas preguntas/i.test(legacy);
-          answer = evidence.length && generic ? crowEvidenceAnswer(evidence) : legacy.replace(/<br\s*\/?>/gi, '\n').replace(/<[^>]*>/g, '');
-        }
-
         pending.classList.remove('crow-thinking');
-        pending.textContent = answer;
-        if (evidence.length) {
-          const sourceBox = document.createElement('div');
-          sourceBox.className = 'crow-answer-sources';
+        pending.textContent = answer || 'No encontré suficiente información verificable en el catálogo o en los documentos indexados.';
+        if (sources.length) {
+          const box = document.createElement('div');
+          box.className = 'crow-answer-sources';
           const heading = document.createElement('strong');
-          heading.textContent = 'Fuentes locales consultadas';
-          sourceBox.appendChild(heading);
-          evidence.forEach(e => {
+          heading.textContent = 'Fuentes documentales';
+          box.appendChild(heading);
+          sources.forEach(e => {
             const row = document.createElement('div');
             row.textContent = `${e.week || 'Semana'} · ${e.title || 'Documento'} · pág. ${e.page || '?'}`;
-            sourceBox.appendChild(row);
+            box.appendChild(row);
+            if (e.k && e.wid && e.aid) {
+              const link = document.createElement('button');
+              link.type = 'button';
+              link.textContent = 'Abrir documento';
+              link.style.cssText = 'margin:3px 0 7px;padding:4px 8px;background:var(--dark2);border:1px solid var(--border);color:var(--gold2);cursor:pointer;';
+              link.addEventListener('click', () => openActivityPdf(e.k,e.wid,e.aid));
+              box.appendChild(link);
+            }
           });
-          pending.appendChild(sourceBox);
+          pending.appendChild(box);
         }
-        crowLocalHistory.push({ role: 'user', content: question }, { role: 'assistant', content: answer });
+        crowLocalHistory.push({role:'user',content:question},{role:'assistant',content:answer || ''});
         crowLocalHistory = crowLocalHistory.slice(-8);
       } catch (error) {
         pending.classList.remove('crow-thinking');
-        pending.textContent = 'No pude completar la consulta. Puedes intentar con el nombre de la unidad, semana o documento. Detalle: ' + (error.message || 'error local');
+        pending.textContent = 'No pude completar la consulta: ' + (error.message || 'error local');
       }
       crowChatMessages.scrollTop = crowChatMessages.scrollHeight;
     }
-
     async function crowLoadWebLLM() {
       if (crowLocalEngine || crowLocalLoading) return;
       if (!('gpu' in navigator)) {
