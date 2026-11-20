@@ -2525,23 +2525,43 @@
 
     async function crowAskLocalModel(question, evidence, fullWeek = false) {
       if (!crowLocalEngine) return null;
-      const system = `Eres el Cuervo de Tres Ojos, profesor virtual y guía académico del portafolio. Enseña, no te limites a buscar fragmentos. Responde en español, con paciencia y profundidad universitaria.
-EVIDENCIA: Prioriza catálogo y documentos recibidos. No inventes actividades, procedimientos, resultados, páginas ni afirmaciones atribuidas a los PDF. Distingue lo que dicen los documentos, tu explicación didáctica y los ejemplos hipotéticos. Si el OCR está incompleto, dilo. Nunca presentes una selección de páginas como lectura íntegra. Cita documento y página solo cuando estén disponibles.
-MÉTODO DOCENTE: Para explicar o enseñar, comienza con una idea sencilla, desarrolla paso a paso, define términos técnicos, incluye un ejemplo práctico y termina con una síntesis. Para procedimientos, presenta requisitos, pasos, resultado esperado y errores frecuentes solo si están respaldados o claramente marcados como orientación general. Para resúmenes semanales, explica el propósito, resume cada documento por separado, relaciona actividades, destaca conceptos clave y señala documentos ausentes o sin OCR. Para ejercicios, ofrece pistas y razonamiento; si piden solución, desarrolla el procedimiento. Para navegación, indica la ruta exacta.
-ESTILO: Usa encabezados breves y listas. No repitas literalmente el OCR ni afirmes haber resumido documentos cuyas páginas no recibiste. No añadas botones ni preguntas sugeridas automáticamente.`;
-      const evidenceText = evidence.length
-        ? evidence.map((e,i)=>`[${i+1}] Unidad ${e.unit}, ${e.week}, ${e.title}, página ${e.page}:\n${e.text}`).join('\n\n').slice(0, 14500)
-        : 'No hay extractos OCR disponibles para esta consulta. No afirmes haber leído ni resumido los PDF. Puedes explicar únicamente el propósito o los títulos que aparecen en el catálogo y debes señalar esta limitación.';
-      const context = `CATÁLOGO DEL PORTAFOLIO:\n${crowCatalogText()}\n\nEXTRACTOS DEL ÍNDICE OCR:\n${evidenceText}`;
+
+      // WebLLM ejecuta el modelo en la memoria del navegador. Se limita el contexto
+      // para evitar exceder la ventana disponible en equipos con memoria/GPU modesta.
+      const weekNum = crowRequestedWeek(question);
+      const weekRows = weekNum ? crowWeekRows(weekNum) : [];
+      const weekCatalog = weekRows.map(({unit, week}) => {
+        const activities = (week.activities || []).map(a =>
+          `${a.label || 'Actividad'}: ${a.title || a.dispFilename || a.filename || 'Sin título'}`
+        ).join('; ');
+        return `${unit.nombre} · ${week.num} — ${week.title}. Actividades: ${activities || 'Sin actividades registradas'}`;
+      }).join('\n');
+
+      const system = `Eres el Cuervo de Tres Ojos, profesor virtual y guía académico del portafolio. Enseña en español claro, con paciencia y orden.
+REGLAS DE FUENTES: Prioriza el catálogo y los extractos OCR proporcionados. No inventes datos ni atribuyas al PDF información que no aparece en los extractos. Distingue claramente el contenido documental de la explicación general y de los ejemplos hipotéticos. Si solo recibes algunas páginas, indica que el resumen es parcial. Cita documento y página cuando estén disponibles.
+MÉTODO: Para enseñar, explica primero la idea sencilla, luego los pasos, define términos técnicos, ofrece un ejemplo práctico y termina con una síntesis. Para una semana, explica los documentos recibidos por separado y relaciona sus contenidos; identifica los documentos registrados sin OCR como pendientes de lectura, no como inexistentes. Para navegación, indica la ruta exacta.
+ESTILO: Encabezados breves y listas. No repitas el OCR literalmente. No generes preguntas sugeridas ni botones. Mantén la respuesta concreta para que pueda ejecutarse en un navegador.`;
+
+      // Máximo 8 fragmentos breves por consulta; se prioriza cubrir distintos documentos.
+      const compactEvidence = (evidence || []).slice(0, fullWeek ? 8 : 6).map((e,i) =>
+        `[${i+1}] ${e.title || 'Documento'} · ${e.week || ''} · pág. ${e.page || '?'}: ${String(e.text || '').slice(0, 520)}`
+      ).join('\n\n');
+      const evidenceText = compactEvidence || 'No hay extractos OCR disponibles. Puedes orientar con el catálogo, pero no afirmar que has leído los documentos.';
+      const context = `CATÁLOGO DE LA SEMANA CONSULTADA:\n${weekCatalog || 'No se identificó una semana concreta.'}\n\nEXTRACTOS OCR DISPONIBLES:\n${evidenceText}`;
+
       const messages = [
         { role: 'system', content: system + '\n\n' + context },
-        ...crowLocalHistory.slice(-6),
+        ...crowLocalHistory.slice(-2),
         { role: 'user', content: question }
       ];
       const result = await crowLocalEngine.chat.completions.create({
-        messages, temperature: 0.25, max_tokens: fullWeek ? 1500 : 1000
+        messages,
+        temperature: 0.2,
+        max_tokens: fullWeek ? 700 : 550
       });
-      return result.choices?.[0]?.message?.content?.trim() || null;
+      const answer = result.choices?.[0]?.message?.content?.trim();
+      if (!answer) throw new Error('El modelo terminó sin devolver texto. Prueba con una consulta más concreta.');
+      return answer;
     }
 
     async function askCrow(text) {
@@ -2593,7 +2613,7 @@ ESTILO: Usa encabezados breves y listas. No repitas literalmente el OCR ni afirm
               );
             } catch (e) {
               console.warn('IA local no disponible para resumen:',e);
-              crowSetLocalStatus('IA local cargada, pero falló esta consulta · revisa memoria o compatibilidad', false);
+              crowSetLocalStatus('Falló la generación local · abre F12 → Consola para ver el error', false);
             }
           }
           if (!answer) {
@@ -2610,7 +2630,7 @@ ESTILO: Usa encabezados breves y listas. No repitas literalmente el OCR ni afirm
             try { answer = await crowAskLocalModel(question, evidence); }
             catch (e) {
               console.warn('IA local no disponible:',e);
-              crowSetLocalStatus('IA local cargada, pero falló esta consulta · revisa memoria o compatibilidad', false);
+              crowSetLocalStatus('Falló la generación local · abre F12 → Consola para ver el error', false);
             }
           }
           if (!answer) {
