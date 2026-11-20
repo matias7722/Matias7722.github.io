@@ -2529,7 +2529,10 @@
 EVIDENCIA: Prioriza catálogo y documentos recibidos. No inventes actividades, procedimientos, resultados, páginas ni afirmaciones atribuidas a los PDF. Distingue lo que dicen los documentos, tu explicación didáctica y los ejemplos hipotéticos. Si el OCR está incompleto, dilo. Nunca presentes una selección de páginas como lectura íntegra. Cita documento y página solo cuando estén disponibles.
 MÉTODO DOCENTE: Para explicar o enseñar, comienza con una idea sencilla, desarrolla paso a paso, define términos técnicos, incluye un ejemplo práctico y termina con una síntesis. Para procedimientos, presenta requisitos, pasos, resultado esperado y errores frecuentes solo si están respaldados o claramente marcados como orientación general. Para resúmenes semanales, explica el propósito, resume cada documento por separado, relaciona actividades, destaca conceptos clave y señala documentos ausentes o sin OCR. Para ejercicios, ofrece pistas y razonamiento; si piden solución, desarrolla el procedimiento. Para navegación, indica la ruta exacta.
 ESTILO: Usa encabezados breves y listas. No repitas literalmente el OCR ni afirmes haber resumido documentos cuyas páginas no recibiste. No añadas botones ni preguntas sugeridas automáticamente.`;
-      const context = `CATÁLOGO DEL PORTAFOLIO:\n${crowCatalogText()}\n\nEXTRACTOS DEL ÍNDICE OCR:\n${evidence.length ? evidence.map((e,i)=>`[${i+1}] Unidad ${e.unit}, ${e.week}, ${e.title}, página ${e.page}:\n${e.text}`).join('\n\n') : 'No se encontraron extractos relevantes.'}`;
+      const evidenceText = evidence.length
+        ? evidence.map((e,i)=>`[${i+1}] Unidad ${e.unit}, ${e.week}, ${e.title}, página ${e.page}:\n${e.text}`).join('\n\n').slice(0, 14500)
+        : 'No hay extractos OCR disponibles para esta consulta. No afirmes haber leído ni resumido los PDF. Puedes explicar únicamente el propósito o los títulos que aparecen en el catálogo y debes señalar esta limitación.';
+      const context = `CATÁLOGO DEL PORTAFOLIO:\n${crowCatalogText()}\n\nEXTRACTOS DEL ÍNDICE OCR:\n${evidenceText}`;
       const messages = [
         { role: 'system', content: system + '\n\n' + context },
         ...crowLocalHistory.slice(-6),
@@ -2576,19 +2579,28 @@ ESTILO: Usa encabezados breves y listas. No repitas literalmente el OCR ni afirm
         else if (weekNum && crowIsSummaryQuestion(question)) {
           const matches = crowWeekRows(weekNum);
           const weekEvidence = matches.flatMap(({k, week}) => crowAllWeekEvidence(k, week));
-          sources = weekEvidence.slice(0, 18).map(c => ({
-            k:c.k,wid:c.wid,aid:c.aid,week:c.week,title:c.title,page:c.page,text:c.text.slice(0,1100)
+          // El modelo también debe recibir la consulta cuando no hay OCR:
+          // así puede explicar el catálogo y declarar qué documentos no pudo leer.
+          sources = weekEvidence.slice(0, 24).map(c => ({
+            k:c.k,wid:c.wid,aid:c.aid,week:c.week,title:c.title,page:c.page,text:c.text.slice(0,900)
           }));
-          if (crowLocalEngine && sources.length) {
+          if (crowLocalEngine) {
             try {
               answer = await crowAskLocalModel(
                 question,
                 sources.map(e => ({unit:e.k,week:e.week,title:e.title,page:e.page,text:e.text})),
                 true
               );
-            } catch (e) { console.warn('IA local no disponible para resumen:',e); }
+            } catch (e) {
+              console.warn('IA local no disponible para resumen:',e);
+              crowSetLocalStatus('IA local cargada, pero falló esta consulta · revisa memoria o compatibilidad', false);
+            }
           }
-          if (!answer) answer = crowDeterministicWeekSummary(matches);
+          if (!answer) {
+            answer = sources.length
+              ? crowDeterministicWeekSummary(matches) + '\n\nLa IA local no generó una explicación en esta consulta; lo anterior es únicamente un inventario de extractos.'
+              : `La Semana ${weekNum} está registrada en el catálogo, pero todavía no hay páginas OCR indexadas para que pueda resumir sus documentos. Puedo orientarte sobre el propósito y las actividades registradas, pero no atribuir contenido a PDF que aún no he podido leer.`;
+          }
         }
         // 4. Pregunta sobre una semana sin categoría clara: recuperar solo esa semana.
         else {
@@ -2596,7 +2608,10 @@ ESTILO: Usa encabezados breves y listas. No repitas literalmente el OCR ni afirm
           sources = evidence;
           if (crowLocalEngine) {
             try { answer = await crowAskLocalModel(question, evidence); }
-            catch (e) { console.warn('IA local no disponible:',e); }
+            catch (e) {
+              console.warn('IA local no disponible:',e);
+              crowSetLocalStatus('IA local cargada, pero falló esta consulta · revisa memoria o compatibilidad', false);
+            }
           }
           if (!answer) {
             const legacy = crowReply(question);
