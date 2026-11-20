@@ -314,25 +314,6 @@
     }
      .crow-chat-messages .msg b { color: var(--gold2); }
     .crow-chat-messages .msg { white-space: pre-line; }
-    .crow-chat-chips {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 5px;
-      padding: 8px 10px;
-      border-top: 1px solid var(--border);
-      background: var(--panel);
-    }
-    .crow-chat-chips button {
-      border: 1px solid var(--border);
-      background: var(--dark2);
-      color: var(--gold2);
-      font: 600 0.65rem 'Cinzel', serif;
-      padding: 5px 9px;
-      letter-spacing: 0.03em;
-      transition: 0.2s;
-      cursor: pointer;
-    }
-    .crow-chat-chips button:hover { border-color: var(--gold2); background: var(--panel2); }
     .crow-chat-form {
       display: flex;
       border-top: 1px solid var(--border);
@@ -787,7 +768,6 @@
       <button type="button" id="crowLoadLocalAI">Activar IA local (opcional)</button>
       <button type="button" id="crowClearHistory">Limpiar conversación</button>
     </div>
-    <div class="crow-chat-chips" id="crowChatChips"></div>
     <form class="crow-chat-form" id="crowChatForm">
       <input id="crowChatInput" placeholder="Pregunta al cuervo…" autocomplete="off">
       <button type="submit">↑</button>
@@ -1494,7 +1474,6 @@
       }
       setTimeout(() => {
         crowChatMessages.innerHTML = '';
-        delete crowChatChips.dataset.init;
         initCrowChat();
         addCrowMessage('⚜ Hola, soy el Cuervo de Tres Ojos. Puedo guiarte por las unidades, contarte qué actividades hay en cada semana y responder tus dudas. ¿Qué deseas saber?', 'bot');
       }, 500);
@@ -2335,7 +2314,6 @@
     // ===== CHAT DEL CUERVO =====
     const crowChatPanel = document.getElementById('crowChatPanel');
     const crowChatMessages = document.getElementById('crowChatMessages');
-    const crowChatChips = document.getElementById('crowChatChips');
     const crowChatInput = document.getElementById('crowChatInput');
 
     function openCrowChat() {
@@ -2359,21 +2337,7 @@
     }
 
     function initCrowChat() {
-      if (crowChatChips.dataset.init) return;
-      crowChatChips.dataset.init = '1';
-      const chips = [
-        '¿Quién es Matías?',
-        '¿De qué trata el curso?',
-        '¿Qué actividades hay en la Semana 01?',
-        'Resume los documentos de la Semana 02.',
-        '¿Qué semanas tienen archivos pendientes o sin indexar?',
-        '¿Qué casa es cada unidad?',
-        '¿Dónde están las 32 preguntas?',
-        '¿Cuál es mi rol?',
-        '¿Qué hay en la Semana 04?'
-      ];
-      if (role === 'admin') chips.push('¿Cómo edito el contenido?');
-      crowChatChips.innerHTML = chips.map(c => `<button type="button" onclick="askCrow('${esc(c)}')">${esc(c)}</button>`).join('');
+      // Se retiró el apartado de preguntas sugeridas. El usuario escribe libremente.
     }
 
     // ===== CUERVO 2.0 · motor híbrido 100% gratuito =====
@@ -2521,26 +2485,33 @@
     }
     function crowDeterministicWeekSummary(matches) {
       const sections = [];
+      let registered = 0;
+      let indexedDocs = 0;
       matches.forEach(({k, unit, week}) => {
+        const activities = week.activities || [];
+        registered += activities.length;
         const docs = crowAllWeekEvidence(k, week);
-        sections.push(`${unit.nombre} · ${week.num}: ${week.title}\n${week.desc ? 'Propósito registrado: ' + week.desc + '\n' : ''}`);
-        if (!docs.length) {
-          sections.push('No hay páginas indexadas de esta semana. No puedo resumir sus PDF hasta que se indexen.');
-          return;
-        }
         const byDoc = new Map();
         docs.forEach(c => {
           const key = c.aid;
           if (!byDoc.has(key)) byDoc.set(key, []);
           byDoc.get(key).push(c);
         });
+        indexedDocs += byDoc.size;
+        sections.push(`${unit.nombre} · ${week.num}: ${week.title}\n${week.desc ? 'Propósito registrado: ' + week.desc + '\n' : ''}`);
+        if (!activities.length) sections.push('No hay actividades registradas en el catálogo.');
+        if (!docs.length) {
+          sections.push('No hay páginas indexadas de esta semana. No puedo resumir sus PDF hasta que se indexen.');
+          return;
+        }
         byDoc.forEach(pages => {
           const first = pages[0];
           const selected = pages.slice(0, 3).map(p => `pág. ${p.page}: ${p.text.slice(0, 650)}`).join('\n');
-          sections.push(`Documento: ${first.title} (${pages.length} página(s) indexadas)\n${selected}`);
+          sections.push(`Documento: ${first.title} (${pages.length} página(s) indexadas)\nExtractos disponibles (máximo 3 páginas mostradas):\n${selected}`);
         });
       });
-      return `Resumen documental preliminar de la Semana:\n\n${sections.join('\n\n')}\n\nNota: este modo gratuito sin modelo generativo organiza extractos OCR; no equivale a una síntesis semántica completa. Activa la IA local para elaborar una explicación más integrada.`;
+      const countNote = `Inventario de esta semana: ${registered} actividad(es)/archivo(s) registrado(s) en el catálogo y ${indexedDocs} documento(s) con texto OCR indexado.`;
+      return `Revisión documental de la Semana solicitada:\n\n${countNote}\n\n${sections.join('\n\n')}\n\nLímite de esta respuesta: sin activar la IA local, esto es una guía preliminar basada en extractos OCR, no una explicación semántica completa. Solo se muestran hasta tres páginas por documento; no debe interpretarse como resumen íntegro. Para una clase desarrollada, activa el modelo local en este dispositivo. Si esperabas cinco documentos, revisa el inventario: el número real depende de las actividades registradas en el catálogo y de los documentos indexados.`;
     }
 
     function crowEvidenceAnswer(hits) {
@@ -2554,7 +2525,10 @@
 
     async function crowAskLocalModel(question, evidence, fullWeek = false) {
       if (!crowLocalEngine) return null;
-      const system = `Eres el Cuervo de Tres Ojos, guía académico de este portafolio. Responde en español claro y elaborado. Distingue evidencia documental de explicación general. No inventes datos, páginas ni actividades. Si falta información o una semana está incompleta, dilo. Cuando el usuario pida un resumen, sintetiza cada documento por separado, explica conceptos y procedimientos, relaciona los documentos y termina con ideas clave; no respondas solo con una lista de fragmentos. Utiliza el catálogo y los extractos como fuentes prioritarias. Para explicar, organiza con definición, desarrollo, ejemplo y síntesis cuando ayude. Para navegación, da la ruta exacta dentro del portafolio.`;
+      const system = `Eres el Cuervo de Tres Ojos, profesor virtual y guía académico del portafolio. Enseña, no te limites a buscar fragmentos. Responde en español, con paciencia y profundidad universitaria.
+EVIDENCIA: Prioriza catálogo y documentos recibidos. No inventes actividades, procedimientos, resultados, páginas ni afirmaciones atribuidas a los PDF. Distingue lo que dicen los documentos, tu explicación didáctica y los ejemplos hipotéticos. Si el OCR está incompleto, dilo. Nunca presentes una selección de páginas como lectura íntegra. Cita documento y página solo cuando estén disponibles.
+MÉTODO DOCENTE: Para explicar o enseñar, comienza con una idea sencilla, desarrolla paso a paso, define términos técnicos, incluye un ejemplo práctico y termina con una síntesis. Para procedimientos, presenta requisitos, pasos, resultado esperado y errores frecuentes solo si están respaldados o claramente marcados como orientación general. Para resúmenes semanales, explica el propósito, resume cada documento por separado, relaciona actividades, destaca conceptos clave y señala documentos ausentes o sin OCR. Para ejercicios, ofrece pistas y razonamiento; si piden solución, desarrolla el procedimiento. Para navegación, indica la ruta exacta.
+ESTILO: Usa encabezados breves y listas. No repitas literalmente el OCR ni afirmes haber resumido documentos cuyas páginas no recibiste. No añadas botones ni preguntas sugeridas automáticamente.`;
       const context = `CATÁLOGO DEL PORTAFOLIO:\n${crowCatalogText()}\n\nEXTRACTOS DEL ÍNDICE OCR:\n${evidence.length ? evidence.map((e,i)=>`[${i+1}] Unidad ${e.unit}, ${e.week}, ${e.title}, página ${e.page}:\n${e.text}`).join('\n\n') : 'No se encontraron extractos relevantes.'}`;
       const messages = [
         { role: 'system', content: system + '\n\n' + context },
@@ -2562,7 +2536,7 @@
         { role: 'user', content: question }
       ];
       const result = await crowLocalEngine.chat.completions.create({
-        messages, temperature: 0.2, max_tokens: fullWeek ? 1100 : 700
+        messages, temperature: 0.25, max_tokens: fullWeek ? 1500 : 1000
       });
       return result.choices?.[0]?.message?.content?.trim() || null;
     }
@@ -2683,8 +2657,8 @@
             crowLoadButton.textContent = 'Descargando ' + pct;
           }
         });
-        crowSetLocalStatus('IA local lista en este dispositivo · sin API de pago', true);
-        crowLoadButton.textContent = 'IA local activada';
+        crowSetLocalStatus('Profesor IA local activo en este dispositivo · sin API de pago', true);
+        crowLoadButton.textContent = 'Profesor IA activo';
       } catch (e) {
         console.error('WebLLM:', e);
         crowSetLocalStatus('No se pudo iniciar IA local · búsqueda documental activa', false);
@@ -2766,7 +2740,7 @@
         { k: ['editar', 'modificar', 'administrar', 'agregar', 'anadir', 'cambiar', 'foto', 'como edito'], a: () => role === 'admin' ? 'Activa «✎ Modo edición» en el menú. Podrás editar el perfil, semanas, actividades y preguntas, bloquear unidades y cambiar tu foto en «Sobre mí».' : 'La edición está reservada a la cuenta de Administrador.' },
         { k: ['sede', 'ubicacion', 'huancayo', 'lugar', 'universidad', 'upla'], a: () => `Sede: <b>${esc(p.sede)}</b> · ${esc(p.universidad)}, Facultad de Ingeniería de Sistemas y Computación.` },
         { k: ['gracias', 'genial', 'excelente'], a: () => '¡Con gusto! Si necesitas algo más, pregúntame. ⚜' },
-        { k: ['hola', 'buenas', 'hey', 'ayuda', 'que puedes', 'opciones'], a: () => 'Puedo ayudarte con estas consultas:' + crowChipsHTML() }
+        { k: ['hola', 'buenas', 'hey', 'ayuda', 'que puedes', 'opciones'], a: () => 'Puedo orientarte sobre el portafolio, sus unidades, actividades y documentos. Escribe tu consulta con tus propias palabras.' }
       ];
       let best = null, top = 0;
       KB.forEach(e => { const sc = e.k.reduce((a, w) => a + (q.includes(w) ? w.length : 0), 0); if (sc > top) { top = sc; best = e; } });
@@ -2776,13 +2750,9 @@
       const hit = appState.questions.map(x => ({ x, s: words.filter(w => (x.title + ' ' + x.text).toLowerCase().includes(w)).length })).filter(o => o.s > 0).sort((a, b) => b.s - a.s)[0];
       if (hit) return `Encontré esto en el banco de preguntas:\n<b>${esc(hit.x.num)}. ${esc(hit.x.title)}</b>\n${esc(hit.x.text.slice(0, 300))}…`;
 
-      return 'No encontré una respuesta exacta. Prueba con alguna de estas preguntas:' + crowChipsHTML();
+      return 'No encontré información suficiente para responder con seguridad. Puedes reformular la consulta indicando la unidad, semana o nombre del documento.';
     }
 
-    function crowChipsHTML() {
-      const chips = ['¿Quién es Matías?', '¿De qué trata el curso?', '¿Qué actividades hay en la Semana 01?', '¿Qué casa es cada unidad?'];
-      return '<div style="display:flex;flex-wrap:wrap;gap:5px;margin-top:6px;">' + chips.map(c => `<button type="button" onclick="askCrow('${esc(c)}')" style="border:1px solid var(--border);background:var(--dark2);color:var(--gold2);font:600 .65rem 'Cinzel',serif;padding:5px 9px;cursor:pointer;">${esc(c)}</button>`).join('') + '</div>';
-    }
 
     document.getElementById('crowChatForm').addEventListener('submit', function(e) {
       e.preventDefault();
