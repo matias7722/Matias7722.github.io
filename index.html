@@ -2904,7 +2904,7 @@ La base de datos contiene tablas; las tablas tienen columnas; cada fila o regist
       if(identified.length)return `Comprender ${identified.map(x=>x.name.toLowerCase()).join(' y ')} y poder ilustrarlo con un ejemplo propio.`;
       return `Explicar con tus palabras el tema «${title}» y reconocer su objetivo en el material original.`;
     }
-    // Cuervo 3.7: elegir el contenido por programa, actividad y evidencia legible.
+    // Cuervo 3.8: elegir el contenido por programa, actividad y evidencia legible.
     // No buscar términos en el OCR completo: infografías con ruido creaban
     // asociaciones falsas entre, por ejemplo, instalación y arquitectura multicapa.
     function crowActivityTopicCards(pages,title,weekHeading,alreadyUsed,weekNum='',ordinal=0){
@@ -2993,7 +2993,7 @@ La base de datos contiene tablas; las tablas tienen columnas; cada fila o regist
             });
           }
           const specific=crowSpecificActivityLesson(weekNum,heading,title,i,ranked);
-          const advanced=!specific?crowActivityAdvancedLesson(weekNum,heading,title,ranked,usedAdvanced):null;
+          const advanced=!specific?crowActivityAdvancedLesson(weekNum,heading,title,ranked,usedAdvanced,i):null;
           const topics=crowActivityTopicCards(pages,title,heading,alreadyUsed,weekNum,i);
           if(specific){
             lines.push(...specific);
@@ -3027,10 +3027,63 @@ La base de datos contiene tablas; las tablas tienen columnas; cada fila o regist
     ];
     // Cuervo 3.4: una restricción sobre el formato («no muestres OCR ilegible»)
     // NO cambia el objetivo académico de la pregunta.
-    // Cuervo 3.7: glosario académico independiente de Qwen 0.5B.
+    // Cuervo 3.8: glosario académico independiente de Qwen 0.5B.
     // Evita confundir una base de datos con una tabla o un modelo de datos.
-    // Cuervo 3.7: conceptos de alta frecuencia sin generación libre ni citas inventadas.
+    // Cuervo 3.8: conceptos de alta frecuencia sin generación libre ni citas inventadas.
     // Clasifica el tema por sus palabras clave aunque el usuario añada "con ejemplo".
+    // 3.8: Las consultas técnicas tienen prioridad sobre palabras genéricas
+    // como «base de datos», que aparecen en casi todas las preguntas.
+    function crowTechnicalAnswer(question) {
+      const q=crowNorm(question);
+      const isSqlServer=/\bsql server\b/.test(q);
+      const load=/(?:pruebas? de carga|rendimiento|latencia|tiempos? de respuesta|consultas? por segundo|throughput|usuarios concurrentes)/.test(q);
+      const asks=/(?:que es|que son|explica|explicame|como|diferencia|ensena|evaluar|evaluacion|medir|medicion|para que|funciona|ejemplo)/.test(q);
+      if(crowRequestedWeek(question))return null;
+      if(load && asks){
+        return `## Pruebas de carga y rendimiento de una base de datos
+
+**Qué son:** consisten en ejecutar consultas o transacciones bajo una carga definida para observar cómo responde la base de datos. Una prueba debe especificar el volumen de datos, el número de usuarios o solicitudes concurrentes y las condiciones del entorno.
+
+### Qué debes medir
+
+- **Tiempo de respuesta:** cuánto tarda cada consulta; conviene revisar promedio y percentiles, como p95.
+- **Rendimiento o throughput:** consultas o transacciones procesadas por segundo.
+- **Concurrencia:** comportamiento cuando varias sesiones trabajan simultáneamente.
+- **CPU, memoria y E/S:** uso de recursos y lecturas lógicas o físicas.
+- **Errores y bloqueos:** consultas fallidas, esperas y contención entre transacciones.
+
+### Procedimiento de laboratorio (ejemplo general)
+
+1. Define una consulta representativa y el criterio de éxito.
+2. Registra características del equipo, volumen de datos e índices existentes.
+3. Realiza una medición inicial con una carga baja.
+4. Repite con distintos niveles de concurrencia, sin modificar otras condiciones.
+5. Compara tiempos, throughput, recursos y errores; revisa el plan de ejecución si una consulta se degrada.
+6. Documenta resultados reales y conclusiones. **No afirmes mejoras sin mediciones.**
+
+**Ejemplo ilustrativo:** medir una consulta de búsqueda de estudiantes con 1, 5 y 20 sesiones simultáneas, comparando tiempo p95 y consultas por segundo. Son cantidades de ejemplo, no resultados de tus documentos.
+
+**Comprueba lo aprendido:** ¿por qué no basta con observar solamente el tiempo promedio?
+
+*Explicación técnica general, no transcripción de un PDF ni resultado medido.*`;
+      }
+      if(isSqlServer && asks && /(?:que es|define|definicion|explicame que|para que sirve|que hace)/.test(q)
+         && !/(?:instalar|instalacion|crear|creacion|conect|ssms|azure|diferencia|prueba de carga|rendimiento)/.test(q)){
+        return `## ¿Qué es Microsoft SQL Server?
+
+**Microsoft SQL Server** es un **sistema gestor de bases de datos relacionales (DBMS)** desarrollado por Microsoft. Permite crear y administrar bases de datos, consultar información mediante T-SQL, gestionar transacciones, controlar permisos y mantener la integridad de los datos.
+
+**Ejemplo ilustrativo:** en un laboratorio se instala SQL Server, se crea una base de datos de Grados y Títulos y se definen tablas relacionadas para registrar información académica.
+
+**No debe confundirse con otros gestores:** MySQL y PostgreSQL son productos diferentes, no componentes internos de SQL Server. **SSMS** es una herramienta cliente de administración; tampoco es el motor SQL Server.
+
+**Comprueba lo aprendido:** ¿qué diferencia existe entre SQL Server, SSMS y una base de datos?
+
+*Explicación conceptual general, no atribuida a una página de tus documentos.*`;
+      }
+      return null;
+    }
+
     function crowConceptDefinition(question){
       const q=crowNorm(question);
       const isDefinition=/(?:^| )(?:que es|que son|que significa|define|definir|definicion|explica|explicame|dime|para que sirve)(?: |$)/.test(q);
@@ -3052,7 +3105,7 @@ La base de datos contiene tablas; las tablas tienen columnas; cada fila o regist
 
 *Explicación conceptual general. No es una transcripción del PDF.*`;
       }
-      if(isDefinition && isDatabase && !isSqlServer && !/\b(?:tabla|columna|registro|clave primaria|clave foranea)\b/.test(q)){
+      if(isDefinition && isDatabase && !isSqlServer && !/\b(?:tabla|columna|registro|clave primaria|clave foranea)\b/.test(q) && !/(?:pruebas? de carga|rendimiento|latencia|medir|evaluar|consulta masiva|usuarios concurrentes)/.test(q)){
         return `## ¿Qué es una base de datos?
 
 Una **base de datos** es un conjunto organizado de datos que permite almacenar, consultar, actualizar y administrar información.
@@ -3080,7 +3133,7 @@ Un **sistema gestor de bases de datos (DBMS)** es un programa que permite crear,
       }
       return null;
     }
-    // Cuervo 3.7: respuestas sobre la identidad del asistente, sin bibliografía ficticia.
+    // Cuervo 3.8: respuestas sobre la identidad del asistente, sin bibliografía ficticia.
     function crowSelfAnswer(question) {
       const q=crowNorm(question);
       const self=/(?:\b(?:tu|tus|eres|puedes|sirves|funcion|proposito|ayudas|haces|capacidades|limitaciones)\b)/.test(q);
@@ -3113,25 +3166,40 @@ Un **sistema gestor de bases de datos (DBMS)** es un programa que permite crear,
       if(!matches.length)return null;
       return `## Explicación académica\n\n${matches.map(x=>`### ${x.title}\n\n**Qué es:** ${x.meaning}\n\n**Ejemplo ilustrativo:** ${x.example}\n\n**Practica:** ${x.practice}\n\n**Comprueba lo aprendido:** ${x.verify}`).join('\n\n')}\n\n*Estas explicaciones son conocimiento general; para atribuir una afirmación a tus archivos hay que cotejar la página original.*`;
     }
-    function crowActivityAdvancedLesson(weekNum,heading,title,ranked,alreadyUsed){
-      // Solo usar texto OCR que pasó el filtro y el tema exacto del catálogo.
+    function crowActivityAdvancedLesson(weekNum,heading,title,ranked,alreadyUsed,ordinal=0){
       const cleanEvidence=ranked.map(x=>x.excerpt).filter(Boolean).join(' ');
-      const titleClean=crowNorm(title), headingClean=crowNorm(heading);
-      // Semana 08: indexados, con vocabulario académico específico sobre índices y esquemas.
+      const headingClean=crowNorm(heading);
       const isWeek08=weekNum==='08' && /sustentacion|pruebas de carga|almacenamiento/.test(headingClean);
-      let matches=crowAdvancedTopicMatches(`${title} ${cleanEvidence}`,2);
-      if(isWeek08 && !matches.length){
-        matches=crowAdvancedLessons.filter(x=>['schema','index','load'].includes(x.id)).slice(0,2);
+      let matches=[];
+      if(isWeek08){
+        // La correspondencia por actividad se basa en lo recuperado, no en
+        // asociaciones accidentales dentro de un OCR corrupto.
+        const sourceTopic=crowNorm(`${title} ${cleanEvidence}`);
+        if(ordinal===0){
+          matches=crowAdvancedLessons.filter(x=>['schema','index'].includes(x.id));
+        } else {
+          matches=crowAdvancedLessons.filter(x=>['permissions','index'].includes(x.id));
+        }
+        // Las lecciones se rotulan como conocimiento general; el PDF citado
+        // solo respalda sus fragmentos expresamente recuperados más arriba.
+      } else {
+        matches=crowAdvancedTopicMatches(`${title} ${cleanEvidence}`,2);
       }
-      // Cada actividad debe recibir su propia explicación, aunque comparta un tema con otra.
       if(!matches.length)return null;
-      return [
-        `**Objetivo de aprendizaje propuesto:** comprender ${matches.map(x=>x.title.toLowerCase()).join(' y ')}, aplicarlo a una situación de laboratorio y comprobar resultados.`,
-        '**Explicación del profesor (conocimiento general, no cita del PDF):**',
+      const goal=matches.map(x=>x.title.toLowerCase()).join(' y ');
+      const lesson=[
+        `**Objetivo de aprendizaje propuesto:** comprender ${goal} y distinguir los conceptos con un ejemplo práctico.`,
+        '**Explicación complementaria (conocimiento general; no es transcripción de los PDF):**',
         ...matches.map(x=>`**${x.title}:** ${x.meaning}\n\n**Ejemplo ilustrativo:** ${x.example}`),
-        `**Actividad práctica propuesta:** ${matches.map(x=>x.practice).join(' ')}`,
+        '**Procedimiento de aprendizaje:**',
+        '1. Identifica en los fragmentos verificables los conceptos presentes.\n2. Abre el PDF y contrasta los pasos o diagramas originales.\n3. Realiza las prácticas propuestas en un entorno de prueba.\n4. Documenta evidencias y explica qué resultado observaste.',
+        `**Ejercicio práctico propuesto:** ${matches.map(x=>x.practice).join(' ')}`,
         `**Comprueba lo aprendido:** ${matches[0].verify}`
       ];
+      if(isWeek08 && ordinal===1){
+        lesson.push('**Nota:** esta segunda actividad se explica por separado. Los ejemplos de permisos e índices son complementarios y deben cotejarse con las páginas 3 y 4 del documento cuando estén disponibles.');
+      }
+      return lesson;
     }
     function crowIntent(question) {
       const q=crowNorm(question);
@@ -3145,6 +3213,7 @@ Un **sistema gestor de bases de datos (DBMS)** es un programa que permite crear,
       if(/(?:hazme|preguntame|realiza|inicia|comienza|tomame|evalua|evaluame).{0,65}(?:preguntas|examen|evaluacion|quiz|una por una)|(?:examen|quiz|evaluacion|prueba de conocimientos)/.test(q)
         && !/(?:evalua|evaluacion)\s+(?:la\s+)?calidad\s+(?:del\s+)?ocr/.test(q))return 'quiz';
       if(crowSelfAnswer(question))return 'self';
+      if(crowTechnicalAnswer(question))return 'technical';
       if(crowConceptDefinition(question))return 'basic_definition';
       if(crowAdvancedConceptAnswer(question))return 'advanced_concept';
       if(week && teaching && !/(?:conect|ssms|management studio|cuenta de azure|crear base de datos en azure|codigo sql|script sql|sentencias? create table|create table|sql original|clave primaria|clave foranea)/.test(q))return 'week_guide';
@@ -3256,6 +3325,8 @@ Un **sistema gestor de bases de datos (DBMS)** es un programa que permite crear,
           answer=crowQuizStart();
         } else if (intent==='self') {
           answer=crowSelfAnswer(question);
+        } else if (intent==='technical') {
+          answer=crowTechnicalAnswer(question);
         } else if (intent==='advanced_concept') {
           answer=crowAdvancedConceptAnswer(question);
         } else if (intent==='ocr_audit') {
