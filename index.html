@@ -986,6 +986,54 @@ body.mp-modal-open { overflow: hidden !important; }
  .html-modal-actions { max-width:100%; flex-wrap:wrap; justify-content:flex-end; }
 }
 
+  
+/* === Medieval Premium 4.6: visores anclados al viewport, contenido centrado === */
+body > #pdfModalOverlay, body > #htmlModalOverlay, body > #editModalOverlay {
+  position:fixed !important; inset:0 !important;
+  width:100vw !important; height:100dvh !important;
+  margin:0 !important; padding:clamp(8px,1.5vh,18px) !important;
+  display:grid !important; place-items:center !important;
+  transform:none !important;
+  z-index:9999 !important;
+}
+body > #editModalOverlay { z-index:10001 !important; }
+body > #htmlModalOverlay { z-index:10000 !important; }
+body > #pdfModalOverlay { z-index:9999 !important; }
+#pdfModalOverlay .pdf-modal,
+#htmlModalOverlay .html-modal,
+#editModalOverlay .edit-modal { justify-self:center !important; align-self:center !important; }
+#pdfModalOverlay .pdf-modal-body { position:relative; display:block; min-height:0; overflow:hidden; }
+#pdfModalOverlay .pdf-viewer-area { width:100%; height:100%; min-width:0; min-height:0; }
+#pdfModalOverlay .pdf-sidebar {
+  position:absolute; top:0; bottom:0; left:0; z-index:2;
+  width:145px; max-width:145px; background:#101b2b;
+  border-right:1px solid var(--border);
+}
+#pdfModalOverlay .pdf-canvas-area {
+  width:100%; min-width:0; min-height:0;
+  padding:20px max(160px, calc((100% - 900px)/2));
+  align-items:center;
+  scrollbar-gutter:stable both-edges;
+  overscroll-behavior:contain;
+}
+#pdfModalOverlay .pdf-page-container { width:100%; align-items:center; }
+#pdfModalOverlay .pdf-page-container canvas { max-width:100%; height:auto; }
+#pdfModalOverlay .pdf-page-input { appearance:textfield; -moz-appearance:textfield; }
+#pdfModalOverlay .pdf-page-input::-webkit-inner-spin-button,
+#pdfModalOverlay .pdf-page-input::-webkit-outer-spin-button { -webkit-appearance:none; margin:0; }
+#htmlModalOverlay .html-modal { max-height:calc(100dvh - 16px); }
+#htmlModalOverlay .html-frame-wrap { min-height:0; flex:1; width:100%; }
+#htmlModalOverlay .html-frame-wrap iframe { width:100%; height:100%; display:block; border:0; }
+@media (max-width:950px) {
+  #pdfModalOverlay .pdf-sidebar { display:none; }
+  #pdfModalOverlay .pdf-canvas-area { padding:16px; }
+}
+@media (max-width:700px) {
+  #pdfModalOverlay .pdf-modal, #htmlModalOverlay .html-modal { width:100% !important; height:100% !important; }
+  #pdfModalOverlay .pdf-modal-footer { flex-wrap:wrap; padding:8px; }
+  #pdfModalOverlay .pdf-toolbar { gap:6px; padding:8px; }
+}
+
   </style>
 </head>
 <body data-role="" data-editmode="0">
@@ -1220,6 +1268,15 @@ body.mp-modal-open { overflow: hidden !important; }
 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
   <script>
+    // Medieval Premium 4.6: los modales deben ser hijos directos de BODY.
+    // #app-screen conserva un transform por la animación de entrada (forwards),
+    // que convierte a los modales fixed en elementos relativos a dicho contenedor.
+    // El portal evita desplazamientos al hacer scroll y conserva todos sus IDs/eventos.
+    for (const modalId of ['pdfModalOverlay', 'htmlModalOverlay', 'editModalOverlay']) {
+      const modalEl = document.getElementById(modalId);
+      if (modalEl && modalEl.parentElement !== document.body) document.body.appendChild(modalEl);
+    }
+
     // ================= VISOR PDF CON SCROLL CONTINUO =================
     if (typeof pdfjsLib !== 'undefined') {
       pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
@@ -1796,6 +1853,7 @@ body.mp-modal-open { overflow: hidden !important; }
         appEl.classList.add('entrance-guest');
         crowSay('Bienvenido, viajero. Explora las unidades y descubre los secretos de las bases de datos. Si necesitas ayuda, aquí estaré.');
       }
+      setTimeout(() => appEl.classList.remove('entrance-admin', 'entrance-guest'), 1250);
       setTimeout(() => {
         crowChatMessages.innerHTML = '';
         initCrowChat();
