@@ -2353,6 +2353,10 @@
     let crowLocalEngine = null;
     let crowLocalLoading = false;
     let crowLocalHistory = [];
+    // Sesión de clase: solo existe si el usuario ha solicitado aprender una semana.
+    let crowTeachingSession = null;
+    let crowLastRoute = 'documental';
+
 
     const crowLocalStatus = document.getElementById('crowLocalStatus');
     const crowLoadButton = document.getElementById('crowLoadLocalAI');
@@ -2904,7 +2908,7 @@ La base de datos contiene tablas; las tablas tienen columnas; cada fila o regist
       if(identified.length)return `Comprender ${identified.map(x=>x.name.toLowerCase()).join(' y ')} y poder ilustrarlo con un ejemplo propio.`;
       return `Explicar con tus palabras el tema «${title}» y reconocer su objetivo en el material original.`;
     }
-    // Cuervo 3.8: elegir el contenido por programa, actividad y evidencia legible.
+    // Cuervo 3.9: elegir el contenido por programa, actividad y evidencia legible.
     // No buscar términos en el OCR completo: infografías con ruido creaban
     // asociaciones falsas entre, por ejemplo, instalación y arquitectura multicapa.
     function crowActivityTopicCards(pages,title,weekHeading,alreadyUsed,weekNum='',ordinal=0){
@@ -3027,9 +3031,9 @@ La base de datos contiene tablas; las tablas tienen columnas; cada fila o regist
     ];
     // Cuervo 3.4: una restricción sobre el formato («no muestres OCR ilegible»)
     // NO cambia el objetivo académico de la pregunta.
-    // Cuervo 3.8: glosario académico independiente de Qwen 0.5B.
+    // Cuervo 3.9: glosario académico independiente de Qwen 0.5B.
     // Evita confundir una base de datos con una tabla o un modelo de datos.
-    // Cuervo 3.8: conceptos de alta frecuencia sin generación libre ni citas inventadas.
+    // Cuervo 3.9: conceptos de alta frecuencia sin generación libre ni citas inventadas.
     // Clasifica el tema por sus palabras clave aunque el usuario añada "con ejemplo".
     // 3.8: Las consultas técnicas tienen prioridad sobre palabras genéricas
     // como «base de datos», que aparecen en casi todas las preguntas.
@@ -3133,7 +3137,7 @@ Un **sistema gestor de bases de datos (DBMS)** es un programa que permite crear,
       }
       return null;
     }
-    // Cuervo 3.8: respuestas sobre la identidad del asistente, sin bibliografía ficticia.
+    // Cuervo 3.9: respuestas sobre la identidad del asistente, sin bibliografía ficticia.
     function crowSelfAnswer(question) {
       const q=crowNorm(question);
       const self=/(?:\b(?:tu|tus|eres|puedes|sirves|funcion|proposito|ayudas|haces|capacidades|limitaciones)\b)/.test(q);
@@ -3304,6 +3308,102 @@ Un **sistema gestor de bases de datos (DBMS)** es un programa que permite crear,
       const name=activity?.title||'Código SQL Grados y Títulos';
       return `## ${name}\n\nLa actividad está registrada en el catálogo de la Semana 05, pero **no encuentro texto OCR indexado asociado a ese archivo**. No puedo afirmar qué contiene ni transcribirlo.\n\nHay sentencias SQL legibles en el *Manual Creación de BD Grados y Títulos*, pág. 14; pertenecen a otro documento y no deben confundirse con el archivo faltante.`;
     }
+    // Cuervo 3.9: una clase por actividad, no una enumeración de cinco PDF.
+    function crowLessonRequest(q) {
+      const n=crowNorm(q);
+      return !!crowRequestedWeek(q) && /(?:explic|ensena|aprender|estudi|paso a paso|desarroll|clase|profesor)/.test(n);
+    }
+    function crowLessonNext(q) {
+      const n=crowNorm(q);
+      return /^(?:continuar|continua|siguiente|siguiente actividad|vamos a la siguiente|adelante|otra actividad|pasemos a la siguiente)$/.test(n);
+    }
+    function crowLessonStop(q) {
+      return /^(?:salir de clase|terminar clase|cancelar clase|detener clase)$/i.test(String(q||'').trim());
+    }
+    function crowLessonActivities(weekNum) {
+      const result=[];
+      for (const {k,unit,week} of crowWeekRows(weekNum)) {
+        for(const activity of (week.activities||[])) {
+          result.push({k,unit,week,activity,title:activity.title||activity.dispFilename||activity.filename||'Actividad sin título'});
+        }
+      }
+      return result;
+    }
+    function crowLessonSources(item) {
+      const pages=crowAllWeekEvidence(item.k,item.week).filter(p=>p.aid===item.activity.id);
+      const terms=crowNorm(`${item.week.title||''} ${item.title}`).split(/\s+/).filter(t=>t.length>4);
+      const scored=pages.filter(p=>Number(p.page)>=3).map(p=>{
+        const excerpt=crowExtractStudyExcerpt(p,terms);
+        const score=excerpt ? terms.filter(t=>crowNorm(excerpt).includes(t)).length : -1;
+        return {p,excerpt,score};
+      }).filter(v=>v.excerpt && v.excerpt.length>75)
+        .sort((a,b)=>b.score-a.score||Number(a.p.page)-Number(b.p.page)).slice(0,3);
+      return scored.map(({p,excerpt})=>({...p,text:excerpt}));
+    }
+    async function crowLessonOne(question, isNew=false) {
+      const session=crowTeachingSession;
+      if(!session)return {answer:'No hay una clase activa. Solicita «Explícame la Semana 08» para empezar.',sources:[]};
+      const item=session.activities[session.index];
+      if(!item){crowTeachingSession=null;return {answer:'Terminamos las actividades registradas. Puedes pedirme un repaso, una evaluación o empezar otra semana.',sources:[]};}
+      const evidence=crowLessonSources(item);
+      const catalogTitle=`${item.unit.nombre} · Semana ${session.weekNum}: ${item.week.title}`;
+      const preface=`## Clase ${session.index+1}/${session.activities.length}: ${item.title}\n\n**Tema:** ${catalogTitle}\n\n`;
+      const docSources=evidence.map(e=>({k:e.k,wid:e.wid,aid:e.aid,week:e.week,title:e.title,page:e.page,text:''}));
+      if(!evidence.length){
+        return {answer:preface+'No encuentro párrafos OCR suficientemente claros de esta actividad para dar una explicación fiel de su procedimiento. **No voy a inventarlo.** Abre el documento original para revisar sus imágenes.\n\n**Orientación:** describe qué problema resuelve la actividad, qué recursos utiliza y qué resultado debes comprobar.\n\nEscribe **continuar** para pasar a la siguiente actividad.',sources:[],mode:'documental'};
+      }
+      let body=''; let mode='documental';
+      if(crowLocalEngine){
+        try{
+          const instruction=`Actúa como docente interactivo. Vas a enseñar SOLO la actividad «${item.title}» de ${catalogTitle}. No enumeres otras actividades ni describas simplemente los archivos. Explica: 1) qué aprenderá el estudiante; 2) qué significan los conceptos del fragmento; 3) procedimiento paso a paso SOLO si se acredita en el fragmento; 4) un ejemplo ilustrativo identificado como general; 5) UNA pregunta para el estudiante. Cita título y página cuando hables del PDF. No inventes interfaces, comandos, cifras ni pasos no incluidos en la evidencia. Evita copiar párrafos extensos. Si el OCR no permite explicar un paso, reconócelo. La respuesta debe estar en español claro y tener 170-260 palabras.`;
+          body=await crowAskLocalModel(instruction,evidence,false);
+          mode='IA local + OCR';
+        }catch(err){
+          console.warn('Clase IA local: se usará orientación documental',err);
+          crowSetLocalStatus('Profesor IA cargado; generación fallida en esta consulta',false);
+        }
+      }
+      if(!body){
+        const lines=evidence.map(e=>`**${e.title}, página ${e.page}:** ${e.text.slice(0,390)}`);
+        body=`**Fragmentos comprobables del documento:**\n\n${lines.join('\n\n')}\n\n**Cómo estudiarlo:** identifica el concepto principal de esos fragmentos, explícalo con tus palabras y verifica el procedimiento completo en el PDF.\n\n**Pregunta de comprensión:** ¿qué resultado debería mostrar esta actividad?`;
+      }
+      return {answer:preface+body+`\n\n---\n**Modo de respuesta:** ${mode==='IA local + OCR'?'generación del modelo local basada en fragmentos OCR (verifica las fuentes)':'orientación documental sin generación de IA'}.\n\nPuedes hacer una pregunta sobre esta actividad. Escribe **continuar** para pasar a la siguiente.`,sources:docSources,mode};
+    }
+    async function crowStartLesson(question, weekNum) {
+      const items=crowLessonActivities(weekNum);
+      if(!items.length)return {answer:`La Semana ${weekNum} no tiene actividades accesibles para iniciar una clase.`,sources:[]};
+      crowTeachingSession={weekNum,activities:items,index:0};
+      return await crowLessonOne(question,true);
+    }
+    async function crowLessonFollowUp(question) {
+      const session=crowTeachingSession;
+      if(!session)return null;
+      if(crowLessonStop(question)){
+        crowTeachingSession=null;
+        return {answer:'Clase finalizada. Puedes iniciar otra semana cuando quieras.',sources:[]};
+      }
+      if(crowLessonNext(question)){
+        session.index++;
+        return await crowLessonOne(question);
+      }
+      // No secuestrar otras solicitudes completas: una semana diferente cambia de clase.
+      const other=crowRequestedWeek(question);
+      if(other && other!==session.weekNum)return null;
+      if(/(?:pregunta|explica|no entiendo|por que|para que|como|ejemplo|ayuda|repite|diferencia)/.test(crowNorm(question)) && !other){
+        const item=session.activities[session.index];
+        if(!item)return {answer:'Todas las actividades han terminado. Puedes iniciar otra semana.',sources:[]};
+        const evidence=crowLessonSources(item);
+        if(!crowLocalEngine)return {answer:'Para responder preguntas de seguimiento con generación adaptativa, activa primero **Profesor IA local**. Mientras tanto puedes revisar las fuentes de la clase o escribir **continuar**.',sources:[]};
+        if(!evidence.length)return {answer:'No tengo texto legible de esta actividad para fundamentar una respuesta. Revisa el PDF original y no atribuiré contenido que no haya podido leer.',sources:[]};
+        try{
+          const prompt=`Seguimos en la clase de «${item.title}» (Semana ${session.weekNum}). El alumno pregunta: ${question}. Contesta directamente con una explicación concreta, sencilla, y un ejemplo si ayuda; evita repetir toda la clase. Atribuye al PDF solo lo visible en los extractos, citando página. No inventes datos. Termina preguntando si quiere continuar.`;
+          const answer=await crowAskLocalModel(prompt,evidence,false);
+          return {answer:`${answer}\n\n*Respuesta generada por la IA local con evidencia de esta actividad; contrasta las citas con el PDF.*`,sources:evidence.map(e=>({k:e.k,wid:e.wid,aid:e.aid,week:e.week,title:e.title,page:e.page,text:''})),mode:'IA local + OCR'};
+        }catch(error){console.warn('Seguimiento IA:',error);return {answer:'La IA local no pudo completar esta explicación. Prueba reformulando brevemente la pregunta o consulta el PDF indicado.',sources:[]};}
+      }
+      return null;
+    }
+
     async function askCrow(text) {
       const question = String(text || '').trim();
       if (!question) return;
@@ -3317,9 +3417,14 @@ Un **sistema gestor de bases de datos (DBMS)** es un programa que permite crear,
         let answer = null;
         let sources = [];
 
-        // Las respuestas de alta precisión tienen prioridad sobre la generación libre.
+        // Las consultas docentes con semana forman una sesión. El modelo participa
+        // únicamente si el usuario lo ha cargado, nunca se simula que está activo.
         const intent=crowIntent(question);
-        if (crowQuiz) {
+        let lessonResult=null;
+        if(!crowQuiz && crowTeachingSession)lessonResult=await crowLessonFollowUp(question);
+        if(!crowQuiz && !lessonResult && crowLessonRequest(question))lessonResult=await crowStartLesson(question,weekNum);
+        if(lessonResult){answer=lessonResult.answer;sources=lessonResult.sources||[];crowLastRoute=lessonResult.mode||'documental';}
+        else if (crowQuiz) {
           answer=crowQuizReply(question);
         } else if (intent==='quiz') {
           answer=crowQuizStart();
@@ -3414,6 +3519,10 @@ Un **sistema gestor de bases de datos (DBMS)** es un programa que permite crear,
           .replace(/&#x20;|&#32;|&nbsp;/gi, ' ')
           .replace(/\\(?=\n)/g, '')
           .replace(/\n\s*\n\s*\n/g, '\n\n');
+        const lessonActive=Boolean(lessonResult);
+        if(!lessonActive && intent==='week_guide' && !crowLocalEngine && crowLessonRequest(question)){
+          answer += '\n\n*El profesor IA no está activo: esta respuesta utiliza únicamente el catálogo y el índice.*';
+        }
         pending.innerHTML = crowRenderMarkdown(answer || 'No encontré suficiente información verificable en el catálogo o en los documentos indexados.');
         if (sources.length) {
           const box = document.createElement('div');
@@ -3488,6 +3597,7 @@ Un **sistema gestor de bases de datos (DBMS)** es un programa que permite crear,
     crowClearButton?.addEventListener('click', () => {
       crowLocalHistory = [];
       crowQuiz = null;
+      crowTeachingSession = null;
       crowChatMessages.innerHTML = '';
       crowSafeMessage('Conversación limpiada. Los documentos y el índice permanecen intactos.', 'bot');
     });
