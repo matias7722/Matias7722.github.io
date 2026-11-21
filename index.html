@@ -2520,7 +2520,7 @@
 
     function crowRenderMarkdown(value) {
       const esc = s => String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
-      const blocks = String(value || '').replace(/\r/g,'').replace(/\\([*_.#-])/g,'$1').trim().split(/```/);
+      const blocks = String(value || '').replace(/\r/g,'').replace(/&#x20;|&#32;|&nbsp;/gi,' ').replace(/\\([*_.#-])/g,'$1').trim().split(/```/);
       return blocks.map((block,i) => {
         if (i % 2) {
           const lines=block.split('\n');
@@ -2528,6 +2528,7 @@
           return `<pre class="crow-code"><code${lang ? ` class="language-${esc(lang)}"` : ''}>${esc(lines.join('\n').trim())}</code></pre>`;
         }
         let t=esc(block).replace(/`([^`]+)`/g,'<code>$1</code>').replace(/\*\*(.+?)\*\*/g,'<strong>$1</strong>');
+        t=t.replace(/^&gt; (.+)$/gm,'<blockquote>$1</blockquote>');
         t=t.replace(/^### (.+)$/gm,'<h4>$1</h4>').replace(/^## (.+)$/gm,'<h3>$1</h3>').replace(/^# (.+)$/gm,'<h3>$1</h3>');
         t=t.replace(/^\s*[-•] (.+)$/gm,'<li>$1</li>');
         t=t.replace(/(?:<li>.*<\/li>\s*)+/gs,m=>`<ul>${m}</ul>`);
@@ -2535,7 +2536,7 @@
         t=t.replace(/(?:<li>.*<\/li>\s*)+/gs,m=>`<ol>${m}</ol>`);
         return t.split(/\n{2,}/).map(part=>{
           const q=part.trim(); if(!q)return '';
-          if(/^<(h[3-4]|ul|ol)\b/.test(q))return q;
+          if(/^<(h[3-4]|ul|ol|blockquote)\b/.test(q))return q;
           return `<p>${q.replace(/\n/g,'<br>')}</p>`;
         }).join('');
       }).join('');
@@ -2753,87 +2754,110 @@ La base de datos contiene tablas; las tablas tienen columnas; cada fila o regist
         /(mis documentos|documentos|original|grados|titulos|semana)/.test(n);
     }
 
-    function crowExtractStudyExcerpt(page, terms = []) {
-      const text = crowCleanOcr(page?.text || '');
-      if (!text || text.length < 90) return '';
-      // Skip cover pages and table-of-contents filler; prioritise coherent body text.
-      const sentences = text.replace(/\s+/g, ' ').split(/(?<=[.!?;])\s+(?=[A-ZÁÉÍÓÚÑ0-9])/);
-      const normTerms = terms.map(crowNorm).filter(x => x.length > 3);
-      const scored = sentences.map((s, i) => {
+    // No mostrar OCR de capturas con caracteres corruptos como si fuese texto legible.
+    function crowReadableOcrScore(text) {
+      const s=String(text||'').replace(/\s+/g,' ').trim();
+      if (s.length < 65) return -100;
+      const words=s.match(/[A-Za-zÁÉÍÓÚÜÑáéíóúüñ]{2,}/g)||[];
+      const long=words.filter(w=>w.length>=3);
+      const bad=(s.match(/[|—=><€\[\]{}]/g)||[]).length;
+      const common=(s.match(/\b(?:de|del|la|las|el|los|en|para|que|con|por|una|un|se|como|desde|mediante|este|esta|servidor|base|datos|tabla|azure|sql|creaci[oó]n|configuraci[oó]n|conexi[oó]n)\b/gi)||[]).length;
+      const vowel=long.filter(w=>/[aeiouáéíóú]/i.test(w)).length;
+      const junk=/(?:[—=_|>]{3,}|\b(?:Figura|Captura|Pantalla)\s+\d+\b)/i.test(s)?2:0;
+      if (long.length<10||common/Math.max(1,words.length)<0.105||vowel/Math.max(1,long.length)<0.83) return -100;
+      if (bad/s.length>0.035) return -100;
+      return common/words.length*10 + Math.min(words.length/45,1) - junk;
+    }
+
+    function crowExtractStudyExcerpt(page, terms=[]) {
+      const text=crowCleanOcr(page?.text||'').replace(/&#x20;|&nbsp;/gi,' ').replace(/\\\s*(?=\n)/g,' ');
+      if (!text||text.length<95) return '';
+      const sentences=text.replace(/\s+/g,' ').split(/(?<=[.!?;])\s+(?=[A-ZÁÉÍÓÚÑ0-9])/);
+      const normTerms=terms.map(crowNorm).filter(t=>t.length>3);
+      return sentences.map((s,i)=>{
         const v=s.trim();
-        if (v.length < 65 || v.length > 440) return {v, score:-99};
-        if (/\.{7,}|UNIVERSIDAD PERUANA LOS ANDES|ESTUDIANTE\s*:|CURSO\s*:|Página\s*\d+\s*Índice/i.test(v)) return {v,score:-99};
-        const nv=crowNorm(v);
-        const relevance=normTerms.reduce((n,t)=>n+(nv.includes(t)?2:0),0);
-        const explanation=/(consiste|permite|utiliza|se crea|se configura|procedimiento|objetivo|paso|consulta|servidor|esquema|tabla|clave|base de datos|conexi[oó]n)/i.test(v)?2:0;
-        return {v,score:relevance+explanation+(i>0?0.2:0)};
-      }).filter(x=>x.score>0).sort((a,b)=>b.score-a.score);
-      return scored.slice(0,2).map(x=>x.v).join(' ').slice(0,440);
+        if(v.length<80||v.length>520||/\.\s*\.\s*\.|UNIVERSIDAD PERUANA LOS ANDES|ESTUDIANTE\s*:|Índice/i.test(v)) return null;
+        const quality=crowReadableOcrScore(v);
+        if(quality<0)return null;
+        const norm=crowNorm(v);
+        const relevance=normTerms.reduce((n,t)=>n+(norm.includes(t)?2:0),0);
+        const teaching=/(permite|consiste|se crea|se configura|se utiliza|procedimiento|objetivo|requisito|se debe|seleccion|ingresa|ejecut|servidor|esquema|tabla|clave|base de datos|conexi[oó]n)/i.test(v)?2:0;
+        return {v,score:quality+relevance+teaching};
+      }).filter(Boolean).sort((x,y)=>y.score-x.score).slice(0,2).map(x=>x.v).join(' ').slice(0,660);
     }
 
     function crowOriginalSqlReview(question) {
-      const wk=crowRequestedWeek(question) || '05';
+      const wk=crowRequestedWeek(question)||'05';
       const matches=crowWeekRows(wk);
-      if (!matches.length) return {answer:`La Semana ${wk} todavía no está registrada. No puedo atribuirle código SQL.`,sources:[]};
+      if(!matches.length)return {answer:`La Semana ${wk} no figura en el catálogo.`,sources:[]};
       const pages=matches.flatMap(({k,week})=>crowAllWeekEvidence(k,week))
-        .filter(p=>Number(p.page)>=3 && String(p.text||'').trim().length>80);
-      // Strictly locate statements; do not generate any SQL.
-      const candidates=pages.map(p=>{
-        const raw=String(p.text||'');
-        const match=/\bCREATE\s+TABLE\b/i.exec(raw);
-        if (!match) return null;
-        let excerpt=raw.slice(match.index,match.index+900)
-          .replace(/\s+/g,' ').trim();
-        // This is visibly OCR text, not a guaranteed executable statement.
-        return {...p,excerpt};
-      }).filter(Boolean).slice(0,5);
-      const sources=candidates.map(p=>({k:p.k,wid:p.wid,aid:p.aid,week:p.week,title:p.title,page:p.page,text:''}));
-      if(!candidates.length){
-        return {answer:`## Código original de la Semana ${wk}\n\nNo encontré una sentencia \`CREATE TABLE\` legible en el texto OCR de las páginas de desarrollo. La actividad «Código SQL Grados y Títulos» tampoco tiene texto indexado.\n\nEsto no significa que el código no exista: podría estar incrustado como imagen. Abre el PDF original para revisarlo; no inventaré tablas, columnas ni scripts.`,sources:[]};
+        .filter(p=>Number(p.page)>=3&&String(p.text||'').length>70);
+      const found=[];const refs=[];let unverified=0;
+      for(const page of pages){
+        const raw=String(page.text||'');
+        if(!/\bCREATE\s+TABLE\b/i.test(raw))continue;
+        const all=[...raw.matchAll(/\bCREATE\s+TABLE\b/gi)];
+        for(const m of all.slice(0,3)){
+          const tail=raw.slice(m.index,m.index+2400);
+          // Require balanced parentheses and a terminated SQL statement.
+          const start=tail.indexOf('(');if(start<0||start>130){unverified++;continue;}
+          let depth=0,stop=-1;
+          for(let i=start;i<tail.length;i++){
+            if(tail[i]==='(')depth++;
+            else if(tail[i]===')'){depth--;if(depth===0){stop=i;break;}}
+          }
+          if(stop<0){unverified++;continue;}
+          const code=tail.slice(0,stop+1).trim();
+          const header=code.slice(0,start);
+          const sqlTerms=/\b(?:INT|NVARCHAR|VARCHAR|CHAR|DATE|DATETIME|IDENTITY|PRIMARY\s+KEY|FOREIGN\s+KEY|NOT\s+NULL|REFERENCES)\b/gi;
+          const termCount=(code.match(sqlTerms)||[]).length;
+          const weird=(code.match(/[€|¿¡»«]/g)||[]).length;
+          if(!/^CREATE\s+TABLE\s+(?:\[?[a-z_][\w]*\]?\.)?\[?[a-z_][\w]*\]?\s*\(/i.test(header+'(')||termCount<3||weird>0||code.length>1500){unverified++;continue;}
+          found.push({...page,code});
+          refs.push({k:page.k,wid:page.wid,aid:page.aid,week:page.week,title:page.title,page:page.page,text:''});
+          if(found.length>=4)break;
+        }
+        if(found.length>=4)break;
       }
-      const sections=candidates.map((p,i)=>
-        `### ${i+1}. ${p.title} — página ${p.page}\n\n**Transcripción OCR parcial, por verificar contra el PDF:**\n\n> ${p.excerpt.replace(/\n/g,' ').slice(0,460)}${p.excerpt.length>460?'…':''}\n\nEste extracto muestra una posible sentencia de creación de tabla. Antes de ejecutarla, verifica en el PDF el nombre de tabla, las columnas, tipos, claves y el cierre de la sentencia.`
-      );
-      return {answer:`## Sentencias localizadas en la Semana ${wk}\n\nEncontré ${candidates.length} página(s) con la expresión \`CREATE TABLE\` en el OCR.\n\n${sections.join('\n\n')}\n\n**Importante:** son extractos OCR, no código SQL íntegro ni verificado para ejecución. No he añadido ninguna tabla, columna ni valor inventado.`,sources};
+      const intro=`## SQL de la Semana ${wk}\n\nLos fragmentos siguientes proceden del OCR indexado: **deben cotejarse con el PDF antes de ejecutarlos**, porque el reconocimiento de caracteres puede modificar símbolos.`;
+      if(!found.length)return {answer:`${intro}\n\nNo encontré una sentencia CREATE TABLE completa y suficientemente legible. ${unverified} coincidencia(s) fueron descartadas por estar incompletas o presentar errores OCR.\n\nLa actividad «Código SQL Grados y Títulos» sigue sin texto indexado. Para enseñar el código exacto necesitamos incorporar su contenido original al índice.`,sources:[]};
+      const sections=found.map((p,i)=>`### ${i+1}. ${p.title}, página ${p.page}\n\n\`\`\`sql\n${p.code}\n\`\`\`\n\n**Cómo leerlo:** \`CREATE TABLE\` declara una tabla; dentro de los paréntesis aparecen columnas, tipos de datos y restricciones. Comprueba su significado concreto en el PDF.`);
+      return {answer:`${intro}\n\n${sections.join('\n\n')}\n\nSe omitieron ${unverified} coincidencia(s) que no superaron el filtro de legibilidad.`,sources:refs};
     }
 
-    function crowWeekStudyGuide(question, weekNum) {
+    function crowWeekStudyGuide(question,weekNum) {
       const matches=crowWeekRows(weekNum);
-      if(!matches.length) return {answer:`La Semana ${weekNum} todavía no está registrada en el catálogo accesible.`,sources:[]};
-      const sections=[];const refs=[];
+      if(!matches.length)return {answer:`La Semana ${weekNum} no figura en el catálogo.`,sources:[]};
+      const sections=[],refs=[];
       for(const {k,unit,week} of matches){
         sections.push(`## ${unit.nombre} · ${week.num}\n${week.title}`);
-        if(week.desc) sections.push(`**Propósito del catálogo:** ${String(week.desc).replace(/\s+/g,' ').trim()}`);
-        const activities=week.activities||[];
-        if(!activities.length) sections.push('Todavía no hay actividades registradas.');
-        for(let i=0;i<activities.length;i++){
-          const a=activities[i];
-          const title=a.title||a.dispFilename||a.filename||a.label||'Actividad sin título';
+        if(week.desc)sections.push(`**Propósito del catálogo:** ${String(week.desc).replace(/\s+/g,' ').trim()}`);
+        const acts=week.activities||[];
+        for(let i=0;i<acts.length;i++){
+          const a=acts[i],title=a.title||a.filename||'Actividad sin título';
           const pages=crowAllWeekEvidence(k,week).filter(p=>p.aid===a.id);
-          const body=pages.filter(p=>Number(p.page)>=3 && String(p.text||'').length>130);
-          const terms=crowNorm(title).split(' ').filter(x=>x.length>4);
-          const ranked=body.map(p=>{
+          const terms=crowNorm(title).split(' ').filter(t=>t.length>4);
+          const ranked=pages.filter(p=>Number(p.page)>=3).map(p=>{
             const excerpt=crowExtractStudyExcerpt(p,terms);
-            const score=excerpt?terms.filter(x=>crowNorm(excerpt).includes(x)).length+1:0;
+            const score=excerpt?terms.filter(t=>crowNorm(excerpt).includes(t)).length+1:0;
             return {p,excerpt,score};
-          }).filter(x=>x.excerpt).sort((x,y)=>y.score-x.score||x.p.page-y.p.page);
-          const chosen=ranked.slice(0,2);
+          }).filter(x=>x.excerpt).sort((x,y)=>y.score-x.score||x.p.page-y.p.page).slice(0,2);
           if(!pages.length){
-            sections.push(`### ${i+1}. ${title}\n\n**Pendiente de lectura:** no encuentro texto OCR indexado de esta actividad. Revisa su archivo original; no afirmaré qué contiene.`);
-          }else if(!chosen.length){
-            sections.push(`### ${i+1}. ${title}\n\n**Material disponible:** ${pages.length} páginas indexadas, pero no hay fragmentos explicativos suficientemente claros para elaborar una explicación fiel.`);
+            sections.push(`### ${i+1}. ${title}\n\nNo hay texto indexado de esta actividad. Su contenido debe consultarse en el archivo original; no puedo desarrollar sus pasos fielmente todavía.`);
+          }else if(!ranked.length){
+            sections.push(`### ${i+1}. ${title}\n\nHay ${pages.length} página(s) indexadas, pero los fragmentos disponibles no superan el filtro de legibilidad. Se omite texto dañado en lugar de enseñarlo como si fuera válido.`);
           }else{
-            const cited=chosen.map(({p,excerpt})=>{
+            const paragraphs=ranked.map(({p,excerpt})=>{
               refs.push({k:p.k,wid:p.wid,aid:p.aid,week:p.week,title:p.title,page:p.page,text:''});
-              return `**Según el documento, pág. ${p.page}:**\n\n> ${excerpt}`;
-            }).join('\n\n');
-            sections.push(`### ${i+1}. ${title}\n\n${cited}\n\n**Qué estudiar:** revisa estas páginas, identifica los conceptos y pasos que aparecen allí y contrástalos con el procedimiento completo del PDF. Los extractos no sustituyen la lectura de todas las páginas.`);
+              return `**Contenido documentado (pág. ${p.page}):** ${excerpt}`;
+            });
+            const steps=ranked.map(({p},j)=>`${j+1}. Abre la página ${p.page} y localiza la explicación citada. Comprueba en el manual los requisitos, acciones y resultados.`).join('\n');
+            sections.push(`### ${i+1}. ${title}\n\n${paragraphs.join('\n\n')}\n\n**Qué debes aprender:** comprender el contenido que describe el documento y poder explicar su propósito sin memorizar únicamente capturas.\n\n**Cómo estudiarlo:**\n${steps}`);
           }
         }
       }
-      const uniqueRefs=[...new Map(refs.map(p=>[`${p.k}/${p.wid}/${p.aid}/${p.page}`,p])).values()];
-      sections.push('### Alcance\n\nEsta explicación utiliza fragmentos del texto OCR de tus documentos. No inventa procedimientos y no se presenta como una lectura completa. Los archivos no indexados permanecen pendientes.');
-      return {answer:sections.join('\n\n'),sources:uniqueRefs};
+      sections.push('### Limitaciones\n\nEsta guía utiliza únicamente pasajes OCR legibles; no reconstruye procedimientos omitidos ni sustituye una revisión íntegra de los PDF. Los pasos de estudio son orientaciones, no instrucciones técnicas atribuidas al documento.');
+      return {answer:sections.join('\n\n'),sources:[...new Map(refs.map(p=>[`${p.k}/${p.wid}/${p.aid}/${p.page}`,p])).values()]};
     }
 
     async function askCrow(text) {
