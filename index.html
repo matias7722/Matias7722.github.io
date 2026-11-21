@@ -2529,8 +2529,8 @@
         t=t.replace(/^### (.+)$/gm,'<h4>$1</h4>').replace(/^## (.+)$/gm,'<h3>$1</h3>').replace(/^# (.+)$/gm,'<h3>$1</h3>');
         t=t.replace(/^\s*[-•] (.+)$/gm,'<li>$1</li>');
         t=t.replace(/(?:<li>.*<\/li>\s*)+/gs,m=>`<ul>${m}</ul>`);
-        t=t.replace(/^\\s*\\d+[.)]\\s+(.+)$/gm,'<li>$1</li>');
-        t=t.replace(/(?:<li>.*<\\/li>\\s*)+/gs,m=>`<ol>${m}</ol>`);
+        t=t.replace(/^\s*\d+[.)]\s+(.+)$/gm,'<li>$1</li>');
+        t=t.replace(/(?:<li>.*<\/li>\s*)+/gs,m=>`<ol>${m}</ol>`);
         return t.split(/\n{2,}/).map(part=>{
           const q=part.trim(); if(!q)return '';
           if(/^<(h[3-4]|ul|ol)\b/.test(q))return q;
