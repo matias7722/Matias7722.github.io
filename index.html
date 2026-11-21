@@ -2789,7 +2789,7 @@ La base de datos contiene tablas; las tablas tienen columnas; cada fila o regist
       return ratio*10 + technical + Math.min(words.length/55,1);
     }
 
-    // Cuervo 3.3: analiza oraciones, no páginas enteras. Una diapositiva puede
+    // Cuervo 3.4: analiza oraciones, no páginas enteras. Una diapositiva puede
     // contener una definición legible rodeada de texto de ilustraciones corrupto.
     function crowOcrSentenceCandidates(value) {
       const raw=String(value||'').replace(/&#x20;|&#32;|&nbsp;/gi,' ')
@@ -2984,7 +2984,7 @@ La base de datos contiene tablas; las tablas tienen columnas; cada fila o regist
       return {answer:sections.join('\n\n'),sources:[...new Map(refs.map(p=>[`${p.k}/${p.wid}/${p.aid}/${p.page}`,p])).values()]};
     }
 
-        // ===== Cuervo 3.3 · clasificador explícito y tutor determinista =====
+        // ===== Cuervo 3.4 · clasificador explícito y tutor determinista =====
     let crowQuiz = null;
     const crowQuizBank = [
       {ask:'¿Para qué necesitas una cuenta y una suscripción de Microsoft Azure antes de crear recursos?', keys:['cuenta','suscripcion','recurso'], hint:'Permiten acceder al portal y administrar los recursos en la nube.',doc:'Manual Creación de cuenta en Azure'},
@@ -2993,11 +2993,21 @@ La base de datos contiene tablas; las tablas tienen columnas; cada fila o regist
       {ask:'¿Cómo se relacionan Facultad y Escuela mediante una clave foránea?',keys:['facultad','escuela','id_facultad'],hint:'Escuela.id_facultad hace referencia a Facultad.id_facultad.',doc:'Manual Creación de BD Grados y Títulos'},
       {ask:'¿Por qué hay que configurar el firewall antes de conectar SSMS con Azure SQL?',keys:['ip','acceso','conex'],hint:'Debes autorizar la IP cliente para que el servidor acepte conexiones.',doc:'Manual Para Entrar a Azure desde SSMS'}
     ];
+    // Cuervo 3.4: una restricción sobre el formato («no muestres OCR ilegible»)
+    // NO cambia el objetivo académico de la pregunta.
     function crowIntent(question) {
       const q=crowNorm(question);
-      // Prioridad de intenciones: no confundir «SQL Server» con «código SQL».
-      if(/(?:examen|evalua|evaluame|hazme|preguntame|preguntas).*(?:pregunta|corrig|una por una|semana|conocimiento)|actua como mi profesor/.test(q))return 'quiz';
-      if(/(?:ocr|ilegible|corrupt|danad|calidad de texto|errores de lectura)/.test(q))return 'ocr_audit';
+      const week=crowRequestedWeek(question);
+      const teaching=/(?:explic|desarroll|ensena|estudi|resume|sintesis|guia|objetiv|ejempl|paso a paso|aprend)/.test(q);
+      const explicitAudit=/(?:audita|auditoria|diagnostic|detecta|identifica|evalua|analiza|revisa|lista|muestra|cuales|que paginas|cuantas paginas|porcentaje|calidad)/.test(q)
+        && /(?:ocr|texto ilegible|texto corrupto|paginas ilegibles|errores de lectura|calidad de texto)/.test(q);
+      const auditOnly= /(?:ocr|ilegible|corrupt|danad|calidad de texto|errores de lectura)/.test(q)
+        && explicitAudit && !(teaching && week && !/(?:audita|auditoria|diagnostic|detecta|identifica que paginas|calidad del ocr)/.test(q));
+      // «Actúa como profesor» es una instrucción de estilo; solo preguntar/evaluar activa examen.
+      if(/(?:hazme|preguntame|realiza|inicia|comienza|tomame|evalua|evaluame).{0,65}(?:preguntas|examen|evaluacion|quiz|una por una)|(?:examen|quiz|evaluacion|prueba de conocimientos)/.test(q)
+        && !/(?:evalua|evaluacion)\s+(?:la\s+)?calidad\s+(?:del\s+)?ocr/.test(q))return 'quiz';
+      if(week && teaching && !/(?:conect|ssms|management studio|cuenta de azure|crear base de datos en azure|codigo sql|script sql|sentencias? create table|create table|sql original|clave primaria|clave foranea)/.test(q))return 'week_guide';
+      if(auditOnly)return 'ocr_audit';
       if(/(?:ssms|management studio)/.test(q)&&/(?:conect|configur|acced|entrar|firewall)/.test(q))return 'ssms';
       if(/(?:clave primaria|primary key|clave foranea|foreign key)/.test(q)&&/(?:diferencia|explic|relacion|que es|que hacen|como funciona)/.test(q))return 'keys';
       if(/(?:cuenta|suscripcion)/.test(q)&&/azure/.test(q)&&/(?:crea|crear|registro|manual|explic|paso|requisito)/.test(q))return 'azure_account';
@@ -3005,8 +3015,7 @@ La base de datos contiene tablas; las tablas tienen columnas; cada fila o regist
       if(/(?:que contiene|contenido|que hay)/.test(q)&&/(?:actividad codigo sql|codigo sql grados)/.test(q))return 'unindexed_sql';
       if(/(?:codigo sql|script sql|sentencias? create table|create table|sql original)/.test(q)&&/(?:busca|localiza|muestra|codigo|tabla|script|reproduc|original)/.test(q))return 'original_sql';
       if(/(?:base de datos)/.test(q)&&/(?:tabla|columna|registro|fila)/.test(q)&&/(?:diferencia|compar|que es|explica)/.test(q))return 'concepts';
-      if(/(?:contenido|que contiene)/.test(q)&&/(?:codigo sql grados|actividad codigo sql)/.test(q))return 'unindexed_sql';
-      if(crowRequestedWeek(question)&&/(?:explic|resume|sintesis|desarrolla|estudiar)/.test(q))return 'week_guide';
+      if(week&&teaching)return 'week_guide';
       return 'other';
     }
     function crowQuizStart() {
