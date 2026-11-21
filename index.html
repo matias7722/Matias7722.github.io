@@ -2904,7 +2904,7 @@ La base de datos contiene tablas; las tablas tienen columnas; cada fila o regist
       if(identified.length)return `Comprender ${identified.map(x=>x.name.toLowerCase()).join(' y ')} y poder ilustrarlo con un ejemplo propio.`;
       return `Explicar con tus palabras el tema «${title}» y reconocer su objetivo en el material original.`;
     }
-    // Cuervo 3.6: elegir el contenido por programa, actividad y evidencia legible.
+    // Cuervo 3.7: elegir el contenido por programa, actividad y evidencia legible.
     // No buscar términos en el OCR completo: infografías con ruido creaban
     // asociaciones falsas entre, por ejemplo, instalación y arquitectura multicapa.
     function crowActivityTopicCards(pages,title,weekHeading,alreadyUsed,weekNum='',ordinal=0){
@@ -2969,7 +2969,7 @@ La base de datos contiene tablas; las tablas tienen columnas; cada fila o regist
         const heading=String(week.title||'').replace(/&#x20;|&nbsp;/gi,' ').trim();
         sections.push(`## ${unit.nombre} · Semana ${weekNum}\n\n**Tema:** ${heading}`);
         if(week.desc)sections.push(`**Propósito del catálogo:** ${String(week.desc).replace(/\\\s*\n/g,' ').replace(/\s+/g,' ').trim()}`);
-        const activities=week.activities||[],alreadyUsed=new Set();
+        const activities=week.activities||[],alreadyUsed=new Set(),usedAdvanced=new Set();
         if(!activities.length)sections.push('Esta semana no tiene actividades registradas.');
         const allPages=crowAllWeekEvidence(k,week);
         for(let i=0;i<activities.length;i++){
@@ -2993,9 +2993,12 @@ La base de datos contiene tablas; las tablas tienen columnas; cada fila o regist
             });
           }
           const specific=crowSpecificActivityLesson(weekNum,heading,title,i,ranked);
+          const advanced=!specific?crowActivityAdvancedLesson(weekNum,heading,title,ranked,usedAdvanced):null;
           const topics=crowActivityTopicCards(pages,title,heading,alreadyUsed,weekNum,i);
           if(specific){
             lines.push(...specific);
+          } else if(advanced){
+            lines.push(...advanced);
           } else if(topics.length){
             lines.push(`**Objetivo de aprendizaje propuesto:** comprender ${topics.map(t=>t.name.toLowerCase()).join(' y ')} y comparar sus usos. El objetivo específico debe contrastarse con el material de la actividad.`);
             lines.push('**Explicación complementaria del profesor (conocimiento general, no transcripción del PDF):**');
@@ -3024,9 +3027,9 @@ La base de datos contiene tablas; las tablas tienen columnas; cada fila o regist
     ];
     // Cuervo 3.4: una restricción sobre el formato («no muestres OCR ilegible»)
     // NO cambia el objetivo académico de la pregunta.
-    // Cuervo 3.6: glosario académico independiente de Qwen 0.5B.
+    // Cuervo 3.7: glosario académico independiente de Qwen 0.5B.
     // Evita confundir una base de datos con una tabla o un modelo de datos.
-    // Cuervo 3.6: conceptos de alta frecuencia sin generación libre ni citas inventadas.
+    // Cuervo 3.7: conceptos de alta frecuencia sin generación libre ni citas inventadas.
     // Clasifica el tema por sus palabras clave aunque el usuario añada "con ejemplo".
     function crowConceptDefinition(question){
       const q=crowNorm(question);
@@ -3077,6 +3080,59 @@ Un **sistema gestor de bases de datos (DBMS)** es un programa que permite crear,
       }
       return null;
     }
+    // Cuervo 3.7: respuestas sobre la identidad del asistente, sin bibliografía ficticia.
+    function crowSelfAnswer(question) {
+      const q=crowNorm(question);
+      const self=/(?:\b(?:tu|tus|eres|puedes|sirves|funcion|proposito|ayudas|haces|capacidades|limitaciones)\b)/.test(q);
+      const asksIdentity=/\b(?:quien eres|que eres|como te llamas|cual es tu nombre|cual es tu funcion|que funcion tienes|para que sirves|que puedes hacer|como me puedes ayudar|que haces|cuales son tus funciones|tus funciones|cual es tu proposito|que sabes hacer|que no puedes hacer|cuales son tus limitaciones|como funcionas)\b/.test(q);
+      if(!self||!asksIdentity)return null;
+      const limitations=/\b(?:limitaciones|no puedes|como funcionas)\b/.test(q);
+      if(limitations)return `## Acerca del Cuervo de Tres Ojos\n\nSoy el guía y profesor virtual de este portafolio de **Base de Datos II**. Trabajo con el catálogo, los documentos y el índice de texto disponibles en esta página; opcionalmente utilizo un modelo de IA local en tu navegador.\n\n**Mis límites:** no puedo garantizar que el OCR lea diagramas o capturas correctamente. A veces un archivo no está indexado. Mis explicaciones complementarias son conocimiento general y deben distinguirse del contenido comprobado de los PDF. No ejecuto SQL ni modifico tus bases de datos por responder una pregunta.\n\nPuedes pedirme una semana, una actividad, una explicación conceptual, código localizado o un examen interactivo.`;
+      return `## ⚜ Soy el Cuervo de Tres Ojos\n\nSoy tu **guía académico y profesor virtual de Base de Datos II** dentro de este portafolio.\n\nPuedo ayudarte a **localizar actividades y documentos por semana**, explicar conceptos, desarrollar rutas de aprendizaje, buscar fragmentos SQL indexados y hacer preguntas de práctica una por una. Cuando recupero contenido documental, intento indicar el PDF y la página.\n\n**Cómo trabajo:** distingo entre material del portafolio y explicaciones generales. Si el texto OCR es ilegible o falta una actividad, debo indicártelo en lugar de inventar información.\n\n**Ejemplo:** puedes preguntarme «Explícame la Semana 08 y enséñame la diferencia entre esquemas e índices».`;
+    }
+
+    // Glosario transversal: explica temas reconocidos de cualquier semana sin inventar citas.
+    const crowAdvancedLessons = [
+      {id:'schema',test:/\besquema(?:s)?\b|\bschema\b/,title:'Esquemas de base de datos',meaning:'Un esquema es un espacio de nombres que organiza objetos como tablas y vistas dentro de una base de datos. Puede facilitar la administración y los permisos.',example:'Una base universitaria puede agrupar tablas por módulos, por ejemplo Academico.Estudiante y Tramite.Solicitud (nombres ilustrativos).',practice:'Identifica dos grupos funcionales del proyecto y propón qué tablas ubicarías en cada esquema.',verify:'¿En qué se diferencia un esquema de una tabla?'},
+      {id:'index',test:/\bindice(?:s)?\b|\bindex(?:es)?\b|\bindexacion\b|\bclustered\b|\bnonclustered\b/,title:'Índices en SQL Server',meaning:'Un índice es una estructura que facilita ciertos accesos a los datos. Puede acelerar búsquedas o uniones, pero ocupa espacio y tiene costos de mantenimiento cuando cambian las filas.',example:'Si las búsquedas por codigo de estudiante son frecuentes, un índice sobre esa columna podría ayudar; su beneficio debe verificarse con el plan de ejecución.',practice:'Compara una consulta antes y después de crear un índice en un entorno de prueba, revisando el plan de ejecución y lecturas lógicas.',verify:'¿Por qué un índice puede mejorar una consulta y a la vez afectar las inserciones?'},
+      {id:'load',test:/\bpruebas? de carga\b|\brendimiento\b|\bconsulta masiva\b|\btiempo de respuesta\b|\blatencia\b/,title:'Pruebas de carga y rendimiento',meaning:'Una prueba de carga ejecuta consultas o transacciones bajo condiciones definidas para observar tiempos de respuesta, uso de recursos y estabilidad.',example:'Ejecutar la misma consulta con distintos volúmenes de datos y comparar sus tiempos y lecturas; no afirmar resultados sin mediciones.',practice:'Anota entorno, consulta, cantidad de filas, repeticiones, tiempos y observaciones antes de sacar conclusiones.',verify:'¿Por qué debemos medir con las mismas condiciones antes de comparar resultados?'},
+      {id:'permissions',test:/\bpermisos?\b|\bprivilegio\b|\broles?\b|\bseguridad\b/,title:'Permisos y mínimo privilegio',meaning:'Los permisos controlan las operaciones que un usuario o rol puede realizar. El principio de mínimo privilegio consiste en otorgar solamente los accesos necesarios.',example:'Una cuenta destinada a consultar reportes puede recibir permiso de lectura sin permisos para borrar tablas.',practice:'Propón un rol de consulta y otro de administración y explica qué acciones requiere cada uno.',verify:'¿Por qué no conviene utilizar siempre una cuenta administradora?'},
+      {id:'foreign',test:/\bclave foranea\b|\bforeign key\b/,title:'Clave foránea',meaning:'Una clave foránea establece una referencia entre filas de tablas relacionadas y ayuda a preservar la integridad referencial.',example:'Escuela.id_facultad puede referenciar Facultad.id_facultad; este ejemplo aparece en el OCR del manual de la Semana 05 y debe cotejarse con su PDF.',practice:'Identifica qué columna debe existir en la tabla relacionada para que una referencia sea válida.',verify:'¿Qué error evitaría una clave foránea al registrar una escuela?'},
+      {id:'primary',test:/\bclave primaria\b|\bprimary key\b/,title:'Clave primaria',meaning:'Una clave primaria identifica de manera única cada fila de una tabla y no admite valores NULL.',example:'id_facultad identifica cada facultad; el ejemplo debe verificarse con el SQL del manual.',practice:'Explica por qué dos estudiantes no deberían tener el mismo identificador primario.',verify:'¿Una clave primaria puede repetirse en dos filas de la misma tabla?'}
+    ];
+    function crowAdvancedTopicMatches(value,limit=3){
+      const n=crowNorm(value);
+      return crowAdvancedLessons.filter(card=>card.test.test(n)).slice(0,limit);
+    }
+    function crowAdvancedConceptAnswer(question){
+      const q=crowNorm(question);
+      // Requiere pregunta conceptual explícita; las solicitudes de semanas tienen ruta propia.
+      if(crowRequestedWeek(question))return null;
+      if(!/(?:que es|que son|para que sirve|explica|explicame|diferencia|compar|ensename|como funciona)/.test(q))return null;
+      const matches=crowAdvancedTopicMatches(question,3);
+      if(!matches.length)return null;
+      return `## Explicación académica\n\n${matches.map(x=>`### ${x.title}\n\n**Qué es:** ${x.meaning}\n\n**Ejemplo ilustrativo:** ${x.example}\n\n**Practica:** ${x.practice}\n\n**Comprueba lo aprendido:** ${x.verify}`).join('\n\n')}\n\n*Estas explicaciones son conocimiento general; para atribuir una afirmación a tus archivos hay que cotejar la página original.*`;
+    }
+    function crowActivityAdvancedLesson(weekNum,heading,title,ranked,alreadyUsed){
+      // Solo usar texto OCR que pasó el filtro y el tema exacto del catálogo.
+      const cleanEvidence=ranked.map(x=>x.excerpt).filter(Boolean).join(' ');
+      const titleClean=crowNorm(title), headingClean=crowNorm(heading);
+      // Semana 08: indexados, con vocabulario académico específico sobre índices y esquemas.
+      const isWeek08=weekNum==='08' && /sustentacion|pruebas de carga|almacenamiento/.test(headingClean);
+      let matches=crowAdvancedTopicMatches(`${title} ${cleanEvidence}`,2);
+      if(isWeek08 && !matches.length){
+        matches=crowAdvancedLessons.filter(x=>['schema','index','load'].includes(x.id)).slice(0,2);
+      }
+      // Cada actividad debe recibir su propia explicación, aunque comparta un tema con otra.
+      if(!matches.length)return null;
+      return [
+        `**Objetivo de aprendizaje propuesto:** comprender ${matches.map(x=>x.title.toLowerCase()).join(' y ')}, aplicarlo a una situación de laboratorio y comprobar resultados.`,
+        '**Explicación del profesor (conocimiento general, no cita del PDF):**',
+        ...matches.map(x=>`**${x.title}:** ${x.meaning}\n\n**Ejemplo ilustrativo:** ${x.example}`),
+        `**Actividad práctica propuesta:** ${matches.map(x=>x.practice).join(' ')}`,
+        `**Comprueba lo aprendido:** ${matches[0].verify}`
+      ];
+    }
     function crowIntent(question) {
       const q=crowNorm(question);
       const week=crowRequestedWeek(question);
@@ -3088,7 +3144,9 @@ Un **sistema gestor de bases de datos (DBMS)** es un programa que permite crear,
       // «Actúa como profesor» es una instrucción de estilo; solo preguntar/evaluar activa examen.
       if(/(?:hazme|preguntame|realiza|inicia|comienza|tomame|evalua|evaluame).{0,65}(?:preguntas|examen|evaluacion|quiz|una por una)|(?:examen|quiz|evaluacion|prueba de conocimientos)/.test(q)
         && !/(?:evalua|evaluacion)\s+(?:la\s+)?calidad\s+(?:del\s+)?ocr/.test(q))return 'quiz';
+      if(crowSelfAnswer(question))return 'self';
       if(crowConceptDefinition(question))return 'basic_definition';
+      if(crowAdvancedConceptAnswer(question))return 'advanced_concept';
       if(week && teaching && !/(?:conect|ssms|management studio|cuenta de azure|crear base de datos en azure|codigo sql|script sql|sentencias? create table|create table|sql original|clave primaria|clave foranea)/.test(q))return 'week_guide';
       if(auditOnly)return 'ocr_audit';
       if(/(?:ssms|management studio)/.test(q)&&/(?:conect|configur|acced|entrar|firewall)/.test(q))return 'ssms';
@@ -3196,6 +3254,10 @@ Un **sistema gestor de bases de datos (DBMS)** es un programa que permite crear,
           answer=crowQuizReply(question);
         } else if (intent==='quiz') {
           answer=crowQuizStart();
+        } else if (intent==='self') {
+          answer=crowSelfAnswer(question);
+        } else if (intent==='advanced_concept') {
+          answer=crowAdvancedConceptAnswer(question);
         } else if (intent==='ocr_audit') {
           const audit=crowAuditOcr(question); answer=audit.answer;sources=audit.sources;
         } else if (intent==='ssms'||intent==='azure_account'||intent==='azure_database') {
