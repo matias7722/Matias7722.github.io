@@ -2483,36 +2483,38 @@
 
     // Selecciona páginas de todos los documentos de la semana, no solo las
     // primeras páginas del índice. Mantiene trazabilidad para abrir el PDF.
-    function crowSelectWeekEvidence(matches, maxPages = 10) {
+    function crowSelectWeekEvidence(matches, maxPages = 6, question = '') {
       const docs = [];
+      const qTerms = [...new Set(tokens(question).map(stem).filter(t => t.length >= 3))];
       matches.forEach(({k, week}) => {
         const byDoc = new Map();
         crowAllWeekEvidence(k, week).forEach(page => {
           const key = page.aid || page.title || 'documento';
           if (!byDoc.has(key)) byDoc.set(key, []);
           const text = crowCleanOcr(page.text);
-          if (text.length > 70) byDoc.get(key).push({...page, text});
+          if (text.length > 100) {
+            const words = tokens(text).map(stem);
+            const overlap = qTerms.filter(t => words.some(w => w === t || (w.length > 4 && (w.startsWith(t) || t.startsWith(w))))).length;
+            const pageNo = Number(page.page || 0);
+            const procedural = /paso|procedimiento|ejecut|consulta|script|create table|primary key|foreign key|objetivo|requisito|configur/i.test(text) ? 2 : 0;
+            const coverPenalty = pageNo <= 2 ? 3 : 0;
+            const score = overlap * 2 + procedural + Math.min(text.length / 500, 2) - coverPenalty;
+            byDoc.get(key).push({...page, text, _selectionScore:score});
+          }
         });
         byDoc.forEach(pages => {
-          pages.sort((a,b) => Number(a.page || 0) - Number(b.page || 0));
+          pages.sort((a,b) => b._selectionScore-a._selectionScore || Number(a.page||0)-Number(b.page||0));
           if (pages.length) docs.push(pages);
         });
       });
-      const selected = [];
-      // Reparto por documento: primero una página de cada uno y luego páginas adicionales.
-      for (let round = 0; selected.length < maxPages; round++) {
-        let added = false;
-        for (const pages of docs) {
-          if (pages[round] && selected.length < maxPages) {
-            selected.push(pages[round]);
-            added = true;
-          }
-        }
-        if (!added) break;
-      }
+      const selected=[];
+      // Primero una página útil por documento; después páginas adicionales por relevancia.
+      docs.forEach(pages => { if (selected.length < maxPages) selected.push(pages[0]); });
+      const extras=docs.flatMap(pages => pages.slice(1)).sort((a,b)=>b._selectionScore-a._selectionScore);
+      for (const page of extras) { if (selected.length >= maxPages) break; selected.push(page); }
       return selected.map(c => ({
-        k:c.k, wid:c.wid, aid:c.aid, week:c.week, title:c.title,
-        page:c.page, text:c.text.slice(0, 760)
+        k:c.k,wid:c.wid,aid:c.aid,week:c.week,title:c.title,page:c.page,
+        text:c.text.slice(0,560)
       }));
     }
 
@@ -2650,68 +2652,68 @@
 
     async function crowAskLocalModel(question, evidence, fullWeek = false) {
       if (!crowLocalEngine) return null;
-
       const weekNum = crowRequestedWeek(question);
       const weekRows = weekNum ? crowWeekRows(weekNum) : [];
-      const weekCatalog = weekRows.map(({unit, week}) => {
-        const activities = (week.activities || []).map(a =>
-          `${a.label || 'Actividad'}: ${a.title || a.dispFilename || a.filename || 'Sin título'}`
-        ).join('; ');
-        return `${unit.nombre} · ${week.num} — ${week.title}. Actividades registradas: ${activities || 'ninguna'}`;
-      }).join('\n');
+      const weekCatalog = weekRows.map(({unit,week}) => {
+        const activities=(week.activities||[]).map(a=>`${a.label||'Actividad'}: ${a.title||a.dispFilename||a.filename||'Sin título'}`).join('; ');
+        return `${unit.nombre} · ${week.num} — ${week.title}. Actividades: ${activities||'ninguna'}`;
+      }).join('\n').slice(0,900);
 
-      const system = `Eres el Cuervo de Tres Ojos, profesor universitario y guía de navegación del portafolio. Responde en español claro y enseña con rigor.
+      const system = `Eres el Cuervo de Tres Ojos, profesor universitario y guía del portafolio. Enseña en español claro, con rigor y sin inventar.
+REGLAS:
+- Los extractos son la única evidencia de lo que dicen los PDF. El catálogo solo acredita actividades registradas.
+- No inventes procedimientos, botones, nombres de tablas, columnas, cifras ni código SQL.
+- Distingue “Según el documento” de “Explicación general”.
+- Si falta evidencia, dilo y especifica qué dato o página falta.
+- Cita documento y página en cada explicación documental.
+- Para una semana completa, sintetiza lo recuperado por documento y aclara qué no se pudo revisar; no conviertas títulos en instrucciones.
+- Para SQL, reproduce solo código íntegro visible. Si está incompleto, no lo reconstruyas.
+MÉTODO:
+Responde directamente. Define términos técnicos. Ordena el procedimiento en pasos breves cuando la fuente los respalde. Usa ejemplos didácticos solo etiquetados como ilustrativos. Termina con una síntesis breve. Evita repeticiones y relleno.`;
 
-REGLAS OBLIGATORIAS:
-1. Usa los EXTRACTOS como única fuente para afirmar qué dice un documento. El catálogo solo prueba qué actividades están registradas.
-2. Nunca inventes botones, nombres de menús, pasos, valores, costos, resultados ni contenido de páginas que no aparecen en los extractos.
-3. Si falta un dato, dilo explícitamente. No completes huecos con suposiciones.
-4. No confundas "costo cero" con ausencia de trabajo, ni deduzcas que una tarea no se puede realizar por ese dato.
-5. No copies OCR defectuoso. Corrige solo errores obvios de formato; conserva exactamente nombres, cifras, códigos, tablas y términos técnicos.
-6. No repitas palabras, frases, pasos ni instrucciones. Si no puedes explicar un paso con evidencia, dilo expresamente.
-7. Distingue "Según el documento" de "Explicación general". Puedes usar conocimiento general correcto para aclarar conceptos, pero nunca atribuirlo al PDF si no aparece allí.
-8. Para código SQL, reproduce únicamente código visible en los extractos. No inventes nombres de bases de datos, tablas, columnas, tipos de datos ni scripts. Si el OCR no contiene el código completo, explica qué falta y cita el documento/página.
-9. Cita cada afirmación documental con su documento y página. No cites páginas que no hayas recibido.
-
-MÉTODO DOCENTE:
-- Comienza respondiendo directamente qué es o qué se necesita.
-- Para una explicación paso a paso, enumera pasos cortos, explica para qué sirve cada uno y no inventes interfaces.
-- Define los términos técnicos la primera vez que aparezcan.
-- Usa un ejemplo práctico únicamente si puedes separarlo claramente del contenido documental.
-- Termina con una síntesis breve.
-- Si la consulta pide una semana completa, no describas procedimientos basándote solo en títulos de actividades. Explica únicamente lo que muestran las páginas recuperadas y señala qué documentos/páginas no fueron recuperados.
-- Si se pregunta por una diferencia conceptual, define cada término y compáralos claramente.
-- Si se pide un procedimiento, no conviertas nombres de actividades en instrucciones. Para SQL, no inventes scripts INSERT/CREATE ni nombres de tablas/campos ausentes de las fuentes. Nunca uses código de otra semana como si fuera de la semana solicitada. Separa cualquier explicación general.
-- Si los extractos son parciales, declara el alcance real de la revisión.
-
-FORMATO:
-Usa encabezados breves y listas numeradas. Evita introducciones genéricas, relleno, preguntas sugeridas y repeticiones.`;
-
-      const compactEvidence = (evidence || []).slice(0, fullWeek ? 18 : 7).map((e,i) =>
-        `[FUENTE ${i+1}] Documento: ${e.title || 'Sin título'} | Semana: ${e.week || weekNum || 'no identificada'} | Página: ${e.page || 'no indicada'}\n${crowCleanOcr(e.text).slice(0, 760)}`
-      ).join('\n\n');
-      const evidenceText = compactEvidence ||
-        'No hay extractos OCR recuperados. No expliques el contenido de documentos como si los hubieras leído.';
-      const context = `CATÁLOGO REGISTRADO:\n${weekCatalog || crowCatalogText() || 'No hay datos de catálogo.'}\n\nEXTRACTOS DOCUMENTALES RECUPERADOS:\n${evidenceText}`;
-
-      // No se reutiliza la respuesta anterior como contexto: evita que un error
-      // repetitivo del modelo contamine las consultas siguientes.
-      const messages = [
-        { role: 'system', content: system + '\n\n' + context },
-        { role: 'user', content: question }
-      ];
-      const result = await crowLocalEngine.chat.completions.create({
-        messages,
-        temperature: 0.15,
-        top_p: 0.85,
-        frequency_penalty: 0.35,
-        presence_penalty: 0.1,
-        max_tokens: fullWeek ? 760 : 620
-      });
-      const answer = crowCleanGeneratedAnswer(result.choices?.[0]?.message?.content || '');
-      if (!answer || answer.length < 35) {
-        throw new Error('La IA local no generó una explicación suficiente. La búsqueda documental sigue disponible.');
+      const cleanEvidence=(evidence||[]).slice(0, fullWeek ? 5 : 5).map((e,i)=>({
+        label:`[${i+1}] ${e.title||'Documento'} · ${e.week||weekNum||'Semana no identificada'} · pág. ${e.page||'?'}`,
+        text:crowCleanOcr(e.text||'')
+      }));
+      const maxPromptChars=5600; // margen conservador para el contexto de 4096 tokens de Qwen.
+      const questionText=String(question||'').slice(0,500);
+      const catalogBlock=weekCatalog ? `CATÁLOGO:\n${weekCatalog}` : '';
+      const fixedChars=system.length+catalogBlock.length+questionText.length+420;
+      let remaining=Math.max(500,maxPromptChars-fixedChars);
+      const evidenceBlocks=[];
+      for (const item of cleanEvidence) {
+        if (remaining < 180) break;
+        const allowance=Math.min(fullWeek?520:560,remaining-80);
+        const text=item.text.slice(0,Math.max(120,allowance));
+        const block=`${item.label}\n${text}`;
+        if (block.length <= remaining) {
+          evidenceBlocks.push(block);
+          remaining-=block.length+12;
+        }
       }
+      const evidenceBlock=evidenceBlocks.length ? `EXTRACTOS DOCUMENTALES:\n${evidenceBlocks.join('\n\n')}` : 'No hay extractos OCR recuperados. No atribuyas contenido a los PDF.';
+      const userContent=[catalogBlock,evidenceBlock,`PREGUNTA DEL ESTUDIANTE:\n${questionText}`].filter(Boolean).join('\n\n');
+      let messages=[
+        {role:'system',content:system},
+        {role:'user',content:userContent}
+      ];
+      const request={messages,temperature:0.15,top_p:0.85,frequency_penalty:0.25,max_tokens:fullWeek?480:420};
+      let result;
+      try {
+        result=await crowLocalEngine.chat.completions.create(request);
+      } catch (error) {
+        const message=String(error?.message||error);
+        if (!/context|token|length|window/i.test(message)) throw error;
+        // Reintento de emergencia: una sola fuente breve, sin catálogo.
+        const first=cleanEvidence[0];
+        const retryUser=`${first?first.label+'\n'+first.text.slice(0,260):'No hay extractos documentales.'}\n\nPregunta: ${questionText.slice(0,220)}\nResponde brevemente y no inventes datos.`;
+        result=await crowLocalEngine.chat.completions.create({
+          messages:[{role:'system',content:'Eres un profesor. Responde en español con rigor. Usa solo la evidencia entregada para hablar de los documentos. Si falta información, dilo. No inventes SQL.'},{role:'user',content:retryUser}],
+          temperature:0.1,max_tokens:260
+        });
+      }
+      const answer=crowCleanGeneratedAnswer(result.choices?.[0]?.message?.content||'');
+      if(!answer||answer.length<25) throw new Error('El modelo local no produjo una respuesta suficiente. La búsqueda documental permanece disponible.');
       return answer;
     }
 
@@ -2751,7 +2753,7 @@ Usa encabezados breves y listas numeradas. Evita introducciones genéricas, rell
           const matches = crowWeekRows(weekNum);
           // Recuperación equilibrada: una muestra de cada documento y páginas adicionales
           // solo después de cubrir todos los documentos de la semana.
-          sources = crowSelectWeekEvidence(matches, 18);
+          sources = crowSelectWeekEvidence(matches, 5, question);
           if (crowLocalEngine) {
             try {
               answer = await crowAskLocalModel(
@@ -2761,12 +2763,12 @@ Usa encabezados breves y listas numeradas. Evita introducciones genéricas, rell
               );
             } catch (e) {
               console.warn('IA local no disponible para resumen:',e);
-              crowSetLocalStatus('Falló la generación local · abre F12 → Consola para ver el error', false);
+              crowSetLocalStatus(/context|token|length|window/i.test(String(e?.message||e)) ? 'Contexto reducido; consulta documental disponible' : 'Falló la generación local · consulta documental disponible', false);
             }
           }
           if (!answer) {
             answer = sources.length
-              ? crowDeterministicWeekSummary(matches) + '\n\nLa IA local no generó una explicación en esta consulta; lo anterior es únicamente un inventario de extractos.'
+              ? crowDeterministicWeekSummary(matches) + '\n\nLa generación del profesor IA no se completó. Lo anterior es una vista previa de los extractos OCR, no una clase completa ni una revisión íntegra de los PDF.'
               : `La Semana ${weekNum} está registrada en el catálogo, pero todavía no hay páginas OCR indexadas para que pueda resumir sus documentos. Puedo orientarte sobre el propósito y las actividades registradas, pero no atribuir contenido a PDF que aún no he podido leer.`;
           }
         }
@@ -2778,7 +2780,7 @@ Usa encabezados breves y listas numeradas. Evita introducciones genéricas, rell
             try { answer = await crowAskLocalModel(question, evidence); }
             catch (e) {
               console.warn('IA local no disponible:',e);
-              crowSetLocalStatus('Falló la generación local · abre F12 → Consola para ver el error', false);
+              crowSetLocalStatus(/context|token|length|window/i.test(String(e?.message||e)) ? 'Contexto reducido; consulta documental disponible' : 'Falló la generación local · consulta documental disponible', false);
             }
           }
           if (!answer) {
