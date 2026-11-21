@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <html lang="es">
-<!-- Cuervo 2.5: recuperación temática estricta, respuesta fundamentada, SQL sin invenciones y Markdown seguro. -->
+<!-- Cuervo 2.6: cobertura semanal ampliada, selección por semana dominante, SQL controlado y Markdown corregido. -->
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -2435,6 +2435,18 @@
           return {...hit, matched:matched.length, coverage:matched.length/terms.length};
         }).filter(hit => hit.score >= 0.75 && hit.matched >= Math.min(2,terms.length) &&
           (hit.coverage >= 0.30 || terms.length === 1));
+        if (!weekOnly && hits.length) {
+          const totals = new Map();
+          hits.forEach(hit => {
+            const wk = crowWeekNumber(hit.c.week) || 'sin-semana';
+            totals.set(wk, (totals.get(wk) || 0) + hit.score * Math.max(0.25, hit.coverage));
+          });
+          const rankedWeeks = [...totals.entries()].sort((a,b) => b[1] - a[1]);
+          if (rankedWeeks.length > 1 && rankedWeeks[0][1] >= rankedWeeks[1][1] * 1.18) {
+            const dominant = rankedWeeks[0][0];
+            hits = hits.filter(hit => (crowWeekNumber(hit.c.week) || 'sin-semana') === dominant);
+          }
+        }
         return hits.slice(0,limit).map(({c,pos,score,coverage}) => {
           const start = Math.max(0,pos-360);
           return {k:c.k,wid:c.wid,aid:c.aid,unit:c.k,week:c.week,title:c.title,page:c.page,
@@ -2506,7 +2518,7 @@
 
     function crowRenderMarkdown(value) {
       const esc = s => String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
-      const blocks = String(value || '').replace(/\r/g,'').trim().split(/```/);
+      const blocks = String(value || '').replace(/\r/g,'').replace(/\\([*_.#-])/g,'$1').trim().split(/```/);
       return blocks.map((block,i) => {
         if (i % 2) {
           const lines=block.split('\n');
@@ -2517,6 +2529,8 @@
         t=t.replace(/^### (.+)$/gm,'<h4>$1</h4>').replace(/^## (.+)$/gm,'<h3>$1</h3>').replace(/^# (.+)$/gm,'<h3>$1</h3>');
         t=t.replace(/^\s*[-•] (.+)$/gm,'<li>$1</li>');
         t=t.replace(/(?:<li>.*<\/li>\s*)+/gs,m=>`<ul>${m}</ul>`);
+        t=t.replace(/^\\s*\\d+[.)]\\s+(.+)$/gm,'<li>$1</li>');
+        t=t.replace(/(?:<li>.*<\\/li>\\s*)+/gs,m=>`<ol>${m}</ol>`);
         return t.split(/\n{2,}/).map(part=>{
           const q=part.trim(); if(!q)return '';
           if(/^<(h[3-4]|ul|ol)\b/.test(q))return q;
@@ -2526,7 +2540,7 @@
     }
 
     function crowCleanGeneratedAnswer(value) {
-      let answer = String(value || '').replace(/\r/g, '').trim();
+      let answer = String(value || '').replace(/\r/g, '').replace(/\\([*_.#-])/g, '$1').trim();
       // Elimina líneas repetidas y palabras repetidas consecutivamente (fallo típico de modelos pequeños).
       const lines = answer.split('\n');
       const seen = new Set();
@@ -2665,15 +2679,15 @@ MÉTODO DOCENTE:
 - Define los términos técnicos la primera vez que aparezcan.
 - Usa un ejemplo práctico únicamente si puedes separarlo claramente del contenido documental.
 - Termina con una síntesis breve.
-- Si la consulta pide una semana completa, presenta cada actividad y desarrolla el procedimiento que realmente aparezca en sus manuales; no conviertas el título de una actividad en un objetivo inventado.
+- Si la consulta pide una semana completa, no describas procedimientos basándote solo en títulos de actividades. Explica únicamente lo que muestran las páginas recuperadas y señala qué documentos/páginas no fueron recuperados.
 - Si se pregunta por una diferencia conceptual, define cada término y compáralos claramente.
-- Si se pide un procedimiento, entrega pasos ejecutables solo cuando estén respaldados por el texto recibido. Separa cualquier explicación general.
+- Si se pide un procedimiento, no conviertas nombres de actividades en instrucciones. Para SQL, no inventes scripts INSERT/CREATE ni nombres de tablas/campos ausentes de las fuentes. Nunca uses código de otra semana como si fuera de la semana solicitada. Separa cualquier explicación general.
 - Si los extractos son parciales, declara el alcance real de la revisión.
 
 FORMATO:
 Usa encabezados breves y listas numeradas. Evita introducciones genéricas, relleno, preguntas sugeridas y repeticiones.`;
 
-      const compactEvidence = (evidence || []).slice(0, fullWeek ? 10 : 7).map((e,i) =>
+      const compactEvidence = (evidence || []).slice(0, fullWeek ? 18 : 7).map((e,i) =>
         `[FUENTE ${i+1}] Documento: ${e.title || 'Sin título'} | Semana: ${e.week || weekNum || 'no identificada'} | Página: ${e.page || 'no indicada'}\n${crowCleanOcr(e.text).slice(0, 760)}`
       ).join('\n\n');
       const evidenceText = compactEvidence ||
@@ -2737,7 +2751,7 @@ Usa encabezados breves y listas numeradas. Evita introducciones genéricas, rell
           const matches = crowWeekRows(weekNum);
           // Recuperación equilibrada: una muestra de cada documento y páginas adicionales
           // solo después de cubrir todos los documentos de la semana.
-          sources = crowSelectWeekEvidence(matches, 10);
+          sources = crowSelectWeekEvidence(matches, 18);
           if (crowLocalEngine) {
             try {
               answer = await crowAskLocalModel(
