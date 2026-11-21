@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <html lang="es">
-<!-- Cuervo 2.6: cobertura semanal ampliada, selección por semana dominante, SQL controlado y Markdown corregido. -->
+<!-- Medieval Premium UI: capa de presentación sobre Cuervo 4.3, sin modificar su lógica -->
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -8,6 +8,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700;900&family=Cormorant+Garamond:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
   <style>
     /* ========== ESTILOS BASE ========== */
     :root {
@@ -701,6 +702,220 @@
 
     /* Parallax brasas */
     .hero-embers { will-change: transform; transition: transform 0.12s ease-out; }
+  
+/* ==============================================================
+   MEDIEVAL PREMIUM · Interfaz visual, independiente de Cuervo 4.3
+   Solo presentación: NO modifica la lógica ni los datos.
+   ============================================================== */
+:root {
+  --gold: #C8A96B;
+  --gold2: #EBD5A5;
+  --blood: #2B3B55;
+  --iron: #334156;
+  --dark: #0C111B;
+  --dark2: #111A29;
+  --panel: #172235;
+  --panel2: #1D2B3F;
+  --border: rgba(200,169,107,.26);
+  --text: #EFE9DB;
+  --muted: #B3B7C4;
+  --danger: #933E49;
+  --premium-gold: #C8A96B;
+  --premium-ink: #0C111B;
+  --premium-blue: #19263A;
+  color-scheme: dark;
+}
+html { scroll-padding-top: 90px; }
+body {
+  background: #0C111B;
+  color: var(--text);
+  font-family: 'Inter', 'Segoe UI', system-ui, sans-serif;
+  font-size: 1rem;
+  line-height: 1.66;
+}
+body::before {
+  background:
+    radial-gradient(ellipse at 12% 0%,rgba(46,69,105,.22),transparent 55%),
+    radial-gradient(ellipse at 90% 80%,rgba(166,132,71,.075),transparent 50%),
+    linear-gradient(180deg,rgba(7,12,21,.85),rgba(8,14,24,.94)),
+    url('fondo-trono.jpg') center center/cover no-repeat;
+}
+::selection { background: rgba(200,169,107,.34); color: white; }
+body, button, input, select, textarea, .crow-chat-panel, .msg, .capacity, .week-card p, .question-card p {
+  font-family: 'Inter','Segoe UI',system-ui,sans-serif;
+}
+button, a, input, textarea, select { -webkit-tap-highlight-color: transparent; }
+a, button { transition: color .2s ease, border-color .2s ease, background .2s ease, box-shadow .2s ease, transform .2s ease; }
+a:focus-visible,button:focus-visible,input:focus-visible,textarea:focus-visible { outline: 2px solid #EBD5A5; outline-offset:3px; }
+/* Navegación */
+#app-screen > nav {
+  min-height: 80px;
+  background: rgba(10,17,28,.91);
+  border-bottom:1px solid rgba(200,169,107,.3);
+  box-shadow: 0 10px 44px rgba(0,0,0,.23);
+  -webkit-backdrop-filter: blur(18px);
+  backdrop-filter:blur(18px);
+}
+.nav-brand { max-width: 290px; font-size: .73rem; color: #E9D9B4; letter-spacing:.095em; }
+.nav-links { gap: clamp(8px,1.15vw,19px); }
+.nav-links a { font:600 .68rem 'Inter',system-ui,sans-serif; color:#B7C0D1; letter-spacing:.07em; padding:10px 0; }
+.nav-links a:hover,.nav-links a:focus-visible { color:#EBD5A5; }
+.nav-links a[href="#unidades"] { color:#E9D9B4; }
+.logout,.nav-toggle,.lock-toggle { border-radius:8px; }
+.logout { font:600 .65rem 'Inter',system-ui,sans-serif; background:rgba(200,169,107,.06); }
+.role-badge { border-radius:100px; font-family:'Inter',system-ui,sans-serif; font-size:.58rem; }
+.premium-nav-crow { border:1px solid rgba(200,169,107,.5); border-radius:100px; padding:9px 13px; background:rgba(200,169,107,.12); color:#EBD5A5; font:600 .68rem 'Inter',sans-serif; white-space:nowrap; }
+.premium-nav-crow:hover { background:rgba(200,169,107,.22); transform: translateY(-1px); }
+/* Portada */
+.hero {
+  min-height:min(810px,calc(100svh - 80px));
+  background:
+    linear-gradient(90deg,rgba(8,15,26,.88) 2%,rgba(13,21,34,.63) 47%,rgba(8,14,25,.84) 100%),
+    linear-gradient(180deg,rgba(10,17,28,.15),rgba(10,17,28,.95) 92%),
+    url('fondo-trono.jpg') center 38%/cover no-repeat;
+  border-bottom:1px solid rgba(200,169,107,.23);
+  padding:clamp(65px,9vh,105px) 22px 70px;
+}
+.hero::after {
+  content:''; pointer-events:none; position:absolute; inset:12px;
+  border:1px solid rgba(200,169,107,.13); border-radius:14px;
+}
+.hero-inner { width:100%; max-width:940px; }
+.hero .eyebrow { color:#E8D4A5; border-radius:100px; background:rgba(16,26,41,.74); font:600 .69rem 'Inter',system-ui,sans-serif; padding:10px 20px; letter-spacing:.2em; }
+.hero-name { font-size:clamp(2.3rem,6.3vw,5.4rem); line-height:1.16; letter-spacing:.005em; margin:25px auto 18px; max-width:1000px; text-wrap:balance; }
+.hero-name span { background:linear-gradient(120deg,#B99A60,#F1DFB8,#CEAF74); background-clip:text; -webkit-background-clip:text; }
+.hero-desc { font-size:clamp(.94rem,1.6vw,1.12rem); line-height:1.85; color:#D1D0D0; max-width:725px; }
+.premium-hero-actions { display:flex; gap:12px; justify-content:center; flex-wrap:wrap; margin:28px auto 4px; position:relative; z-index:3; }
+.premium-btn { display:inline-flex; align-items:center; justify-content:center; gap:9px; border:1px solid rgba(200,169,107,.65); border-radius:10px; min-height:44px; padding:12px 20px; text-decoration:none; font:650 .77rem 'Inter',sans-serif; letter-spacing:.02em; cursor:pointer; }
+.premium-btn-primary { background:linear-gradient(135deg,#DFCA9D,#AF8D55); color:#172134; box-shadow:0 10px 30px rgba(0,0,0,.24); }
+.premium-btn-primary:hover { background:linear-gradient(135deg,#F0DFB9,#C7A66C); color:#101723; transform:translateY(-2px); }
+.premium-btn-ghost { background:rgba(15,25,41,.73); color:#EBD5A5; }
+.premium-btn-ghost:hover { background:rgba(48,64,88,.85); color:white; transform:translateY(-2px); }
+.profile-grid { border-radius:12px; overflow:hidden; background:rgba(200,169,107,.2); }
+.stats-bar { gap:8px; border-radius:12px; }
+.stats-bar > * { border-radius:9px; }
+/* Secciones principales */
+main > section { scroll-margin-top:90px; }
+#sobre-mi,#grimorio,#unidades { position:relative; }
+#sobre-mi { --gold:#C8A96B;--gold2:#EBD5A5;--blood:#263A53;--panel:#162237;--panel2:#1B293D;--dark2:#111B2C;--border:rgba(200,169,107,.27);--text:#EFE9DB;--muted:#B8C2CF; }
+#sobre-mi .section-title { color:#EBD5A5; }
+#sobre-mi .ab-card { background:linear-gradient(155deg,#1A293D,#142134);box-shadow:0 24px 60px rgba(0,0,0,.3); }
+#sobre-mi .ab-photo { background:radial-gradient(circle at 50% 20%,#334B64,#132035); }
+#sobre-mi .ab-goal { border-left-color:#C8A96B; background:rgba(9,17,28,.6); }
+#sobre-mi .ab-tags span { border:1px solid rgba(200,169,107,.23); background:rgba(200,169,107,.1); color:#E8D9BB; border-radius:100px; }
+.section-label,.eyebrow { font-family:'Inter',sans-serif; }
+.section-label { color:#C8A96B; font-size:.72rem; letter-spacing:.19em; }
+.section-title { color:#EBD5A5; font-size:clamp(1.65rem,3vw,2.65rem); text-wrap:balance; }
+.section-title::before { opacity:.7; }
+#grimorio { background:radial-gradient(ellipse at 100% 0%,rgba(56,77,110,.13),transparent 55%); }
+.codex-grid,.weeks-grid { gap:18px; }
+.codex-card,.week-card,.question-card,.ab-card {
+  border-radius:15px;
+  border:1px solid rgba(200,169,107,.23);
+  background:linear-gradient(155deg,rgba(28,42,61,.95),rgba(18,29,45,.98));
+  box-shadow:0 18px 46px rgba(0,0,0,.21),inset 0 1px 0 rgba(255,255,255,.035);
+  overflow:hidden;
+}
+.codex-card,.week-card,.question-card { border-top:1px solid rgba(200,169,107,.36); padding:25px; }
+.codex-card::before { border-radius:15px; }
+.codex-card:hover,.week-card:hover,.question-card:hover { transform:translateY(-4px); border-color:rgba(211,177,110,.62); box-shadow:0 26px 65px rgba(0,0,0,.33),0 0 0 1px rgba(200,169,107,.07); }
+.codex-emblem { border-radius:13px; background:linear-gradient(135deg,#303C51,#1D2B42); border-color:rgba(200,169,107,.42); }
+.codex-card h3,.week-card h3 { color:#F0E3C7; }
+.codex-card p,.week-card p,.question-card p { color:#BFC6D1; }
+#unidades { background:linear-gradient(180deg,#101928,#131E2E); border-block:1px solid rgba(200,169,107,.2); }
+.unit-tabs { gap:12px; margin:20px 0 30px; }
+.unit-tab,.unit-tab[data-house],.unit-tab.active[data-house] {
+  --gold:#C8A96B;--gold2:#EBD5A5;--blood:#263A53;--panel:#172235;--panel2:#1D2B3F;--dark2:#111A29;--border:rgba(200,169,107,.29);--text:#EFE9DB;--muted:#B8C2CF;
+  border-radius:11px; background:#19273B; color:#D0C5AD; border:1px solid rgba(200,169,107,.25);
+  box-shadow:none; padding:15px 18px;
+}
+.unit-tab:hover:not(.active) { background:#233651; transform:translateY(-2px); }
+.unit-tab.active,.unit-tab.active[data-house] { background:linear-gradient(135deg,#34465F,#26364C); border-color:#C8A96B; color:#F6E8C9; box-shadow:0 12px 28px rgba(0,0,0,.25); }
+.unit-tab .ut-house { color:#D0AD70; }
+.unit-panel,.unit-panel [data-house],.weeks-grid [data-house],.week-card[data-house],#activity-screen [data-house] { --gold:#C8A96B;--gold2:#EBD5A5;--blood:#263A53;--panel:#172235;--panel2:#1D2B3F;--dark2:#111A29;--border:rgba(200,169,107,.27);--text:#EFE9DB;--muted:#B8C2CF; }
+.capacity { border-radius:10px; box-shadow:none; background:rgba(31,46,66,.95); border-left:3px solid #C8A96B; font-style:normal; }
+.week-num { font-size:.71rem; color:#C8A96B; }
+.week-card h3 { font-size:1.1rem; line-height:1.48; text-shadow:none; text-transform:none; }
+.week-card h3::before { opacity:.45; }
+.progress { background:#101827; }
+.progress i { background:linear-gradient(90deg,#9F8152,#E1C38D); }
+/* Actividades, archivos y visor */
+#activity-screen { --gold:#C8A96B;--gold2:#EBD5A5;--blood:#263A53;--panel:#172235;--panel2:#1D2B3F;--dark2:#111A29;--border:rgba(200,169,107,.27);--text:#EFE9DB;--muted:#B8C2CF; background:linear-gradient(160deg,#0B1321,#162237 65%,#0B1422); }
+.act-top { background:rgba(12,20,33,.94); border-bottom:1px solid rgba(200,169,107,.25); }
+.act-top-r { color:#EBD5A5; }
+.act-hero h1 { color:#F1E9DB; }
+.act-hero h1 span { color:#EBD5A5; }
+.act-grid .activity-block,.activity-block { border-radius:13px; border:1px solid rgba(200,169,107,.26); background:linear-gradient(145deg,#1D2B41,#152236); box-shadow:0 15px 35px rgba(0,0,0,.2); }
+.act-grid .activity-block:hover,.activity-block:hover { box-shadow:0 22px 45px rgba(0,0,0,.32); border-color:rgba(200,169,107,.6); }
+.card-pdf-thumb { background:linear-gradient(140deg,#152235,#25364C); border-radius:8px; }
+.preview-btn,.questions-btn,.dragon-eye-btn,.btn-save,.btn-download-modal,.btn-fullscreen,.pdf-zoom-btn,.pdf-nav-btn,.btn-download { border-radius:8px; }
+.pdf-modal-overlay { background:rgba(3,8,17,.9); }
+.pdf-modal { background:#111B2B; border:1px solid rgba(200,169,107,.55); border-radius:16px; box-shadow:0 32px 100px rgba(0,0,0,.65); overflow:hidden; }
+.pdf-modal-header,.pdf-modal-footer { background:#17253A; border-color:rgba(200,169,107,.25); }
+.pdf-modal-body,.pdf-viewer-area,.pdf-canvas-area { background:#0F1929; }
+.pdf-sidebar { background:#152237; border-right-color:rgba(200,169,107,.19); }
+.pdf-toolbar { background:#1B2A40; border-color:rgba(200,169,107,.18); }
+.pdf-filename { color:#F0E0BF; }
+/* Cuervo 4.3: solo apariencia. Eventos y motor quedan intactos. */
+.crow-chat-panel { background:#101A2A; border:1px solid rgba(200,169,107,.62); border-radius:16px; box-shadow:0 30px 90px rgba(0,0,0,.65); width:min(440px,calc(100vw - 30px)); max-height:min(680px,82svh); overflow:hidden; }
+.crow-chat-head { background:linear-gradient(110deg,#233650,#152238); border-bottom:1px solid rgba(200,169,107,.38); color:#F2E5C9; padding:15px 18px; }
+.crow-chat-head span { font-family:'Cinzel',serif; font-size:.9rem; }
+.crow-local-status { background:#152339; color:#B8C4D0; }
+.crow-chat-messages { background:linear-gradient(145deg,#111B2C,#162237); }
+.msg { border-radius:12px; max-width:97%; line-height:1.6; }
+.msg.bot { background:#1D2B40; border:1px solid rgba(200,169,107,.2); color:#E9E5DC; }
+.msg.user { background:#3D3D46; color:#F6F1E9; border:1px solid rgba(200,169,107,.22); }
+.msg.bot h3,.msg.bot h4 { color:#E7CE9B; }
+.msg.bot code { color:#EFD7A6; background:rgba(9,16,28,.68); }
+.msg.bot pre.crow-code { background:#0E1827; }
+.crow-local-actions { background:#132035; border-color:rgba(200,169,107,.2); }
+.crow-local-actions button { border-radius:8px; color:#E9D5AB; background:#1B2B42; }
+.crow-chat-form { background:#18263C; border-top:1px solid rgba(200,169,107,.25); }
+.crow-chat-form input { background:#101C2D; border-radius:8px; color:#F0E9DC; font-family:'Inter',sans-serif; }
+.crow-chat-form button { border-radius:9px; background:#C8A96B; color:#121B2A; }
+.crow-answer-sources { color:#BBC4CF; border-color:rgba(200,169,107,.22); }
+.guide-avatar { filter:drop-shadow(0 9px 22px rgba(0,0,0,.5)); }
+.guide-bubble { background:#1E2C41; border-color:rgba(200,169,107,.34); border-radius:10px; }
+/* Modal administrador y acceso */
+.access-overlay { background:rgba(4,9,17,.86); backdrop-filter:blur(12px); }
+.access-card,.edit-modal,.html-modal { background:linear-gradient(150deg,#1B2940,#101B2C); border:1px solid rgba(200,169,107,.5); border-radius:15px; box-shadow:0 30px 85px rgba(0,0,0,.5); }
+.access-btn,.login-submit,.btn-save { border-radius:9px; }
+.access-btn.primary,.login-submit { background:linear-gradient(145deg,#D8BB86,#AA8854); color:#101A28; box-shadow:0 9px 26px rgba(0,0,0,.28); }
+.access-btn.primary:hover,.login-submit:hover { filter:brightness(1.08); }
+input,textarea,select { color:var(--text); }
+input::placeholder,textarea::placeholder { color:#9DAABE; }
+footer { border-top:1px solid rgba(200,169,107,.24); background:#0D1725; color:#AEB8C6; }
+/* Compactar detalles para móviles */
+@media (max-width: 1000px) {
+  #app-screen > nav { padding-left:20px; padding-right:20px; }
+  .nav-links { gap:10px; }
+  .premium-nav-crow { font-size:.64rem; }
+}
+@media (max-width: 800px) {
+  #app-screen > nav { min-height:69px; }
+  .nav-links { background:rgba(13,22,36,.99); padding:20px; border:1px solid rgba(200,169,107,.28); border-radius:0 0 12px 12px; box-shadow:0 25px 50px rgba(0,0,0,.35); }
+  .nav-links li,.nav-links button:not(.lock-toggle) { max-width:100%; }
+  .premium-hero-actions { margin-top:22px; }
+  .hero { background-attachment:scroll; min-height:620px; }
+  .pdf-modal { border-radius:12px; }
+  .codex-grid,.weeks-grid { gap:12px; }
+}
+@media (max-width: 560px) {
+  .hero { min-height:auto; padding:90px 18px 44px; }
+  .hero-name { font-size:clamp(2rem,9vw,3.25rem); }
+  .hero::after { inset:8px; }
+  .premium-btn { width:100%; }
+  .premium-hero-actions { flex-direction:column; align-items:stretch; max-width:360px; }
+  .codex-card,.week-card,.question-card { padding:19px; }
+  .crow-chat-panel { left:10px; right:10px; width:auto; bottom:85px; max-height:76svh; }
+  .pdf-modal { width:100vw; height:100svh; border-radius:0; }
+  .nav-brand { max-width:200px; }
+  .access-card { padding:24px 20px; }
+}
+@media (prefers-reduced-motion:reduce) {
+  *,*::before,*::after { animation-duration:.01ms !important; animation-iteration-count:1 !important; transition-duration:.01ms !important; scroll-behavior:auto !important; }
+}
+
   </style>
 </head>
 <body data-role="" data-editmode="0">
@@ -793,6 +1008,7 @@
         <li><a href="#sobre-mi">Sobre mí</a></li>
         <li><a href="#grimorio">Grimorio</a></li>
         <li><a href="#unidades">Unidades</a></li>
+<li><button class="premium-nav-crow" type="button" onclick="openCrowChat()">✦ Cuervo</button></li>
         <li class="admin-flag"><button type="button" class="logout" id="editModeBtn">✎ Modo edición</button></li>
         <li class="admin-flag"><button type="button" class="logout" onclick="ghPublish()">☁ Publicar</button></li>
         <li class="admin-flag"><button type="button" class="logout" onclick="ghConfig()">⚙ GitHub</button></li>
@@ -808,6 +1024,7 @@
         <p class="eyebrow" id="heroEyebrow"></p>
         <h1 class="hero-name" id="heroName"></h1>
         <p class="hero-desc" id="heroDesc"></p>
+<div class="premium-hero-actions" aria-label="Accesos principales del portafolio"><a class="premium-btn premium-btn-primary" href="#unidades">⚜ Explorar unidades</a><button class="premium-btn premium-btn-ghost" type="button" onclick="openCrowChat()">✦ Consultar al Cuervo</button></div>
         <div class="profile-grid" id="profileGrid"></div>
         <div class="stats-bar" id="statsBar"></div>
         <div id="profileEditBtnWrap"></div>
