@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="es">
+<!-- Cuervo 2.4: recuperación OCR equilibrada, limpieza conservadora y respuestas locales con control de repetición. -->
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -1722,7 +1723,7 @@
         </button>
         <div class="progress"><i style="width:0%" data-progress="${w.progress}"></i></div>
         <small>${Number(w.progress).toFixed(2)}% de avance acumulado</small>
-        ${w.questionsBtn ? `<button type="button" class="questions-btn" onclick="toggleQuestions()">📝 Ver las 32 preguntas</button>` : ''}
+
       </article>`;
     }
 
@@ -2431,6 +2432,77 @@
       return pdfIndex.filter(c => c.k === k && c.wid === week.id)
         .sort((a,b) => String(a.title).localeCompare(String(b.title)) || a.page-b.page);
     }
+
+    // Limpieza conservadora del OCR: quita duplicados y ruido evidente,
+    // pero conserva nombres, cifras, códigos SQL y términos técnicos.
+    function crowCleanOcr(value) {
+      const raw = String(value || '').replace(/\u0000/g, ' ');
+      const lines = raw.split(/\r?\n/).map(x => x.replace(/\s+/g, ' ').trim()).filter(Boolean);
+      const seen = new Set();
+      const clean = [];
+      for (const line of lines) {
+        const key = line.toLocaleLowerCase('es').replace(/[^\p{L}\p{N}]+/gu, ' ').trim();
+        if (!key || key.length < 3 || seen.has(key)) continue;
+        seen.add(key);
+        // Descarta secuencias largas de una sola palabra que suelen ser ruido OCR.
+        if (/^(\S+)(\s+\1){3,}$/i.test(line)) continue;
+        clean.push(line);
+      }
+      return clean.join('\n').replace(/\b(\w+)(\s+\1){2,}\b/gi, '$1').slice(0, 14000);
+    }
+
+    // Selecciona páginas de todos los documentos de la semana, no solo las
+    // primeras páginas del índice. Mantiene trazabilidad para abrir el PDF.
+    function crowSelectWeekEvidence(matches, maxPages = 10) {
+      const docs = [];
+      matches.forEach(({k, week}) => {
+        const byDoc = new Map();
+        crowAllWeekEvidence(k, week).forEach(page => {
+          const key = page.aid || page.title || 'documento';
+          if (!byDoc.has(key)) byDoc.set(key, []);
+          const text = crowCleanOcr(page.text);
+          if (text.length > 70) byDoc.get(key).push({...page, text});
+        });
+        byDoc.forEach(pages => {
+          pages.sort((a,b) => Number(a.page || 0) - Number(b.page || 0));
+          if (pages.length) docs.push(pages);
+        });
+      });
+      const selected = [];
+      // Reparto por documento: primero una página de cada uno y luego páginas adicionales.
+      for (let round = 0; selected.length < maxPages; round++) {
+        let added = false;
+        for (const pages of docs) {
+          if (pages[round] && selected.length < maxPages) {
+            selected.push(pages[round]);
+            added = true;
+          }
+        }
+        if (!added) break;
+      }
+      return selected.map(c => ({
+        k:c.k, wid:c.wid, aid:c.aid, week:c.week, title:c.title,
+        page:c.page, text:c.text.slice(0, 760)
+      }));
+    }
+
+    function crowCleanGeneratedAnswer(value) {
+      let answer = String(value || '').replace(/\r/g, '').trim();
+      // Elimina líneas repetidas y palabras repetidas consecutivamente (fallo típico de modelos pequeños).
+      const lines = answer.split('\n');
+      const seen = new Set();
+      const kept = [];
+      for (let line of lines) {
+        line = line.replace(/\b(\S+)(\s+\1){2,}\b/gi, '$1').trimEnd();
+        const key = line.toLocaleLowerCase('es').replace(/\s+/g, ' ').trim();
+        if (key && seen.has(key)) continue;
+        if (key) seen.add(key);
+        kept.push(line);
+      }
+      answer = kept.join('\n').replace(/(?:\b([\p{L}ÁÉÍÓÚÜÑáéíóúüñ]{3,})\b(?:[.,;:]?\s+)){4,}\1\b/giu, '$1');
+      // No mostrar respuestas interminables ni bucles de una misma instrucción.
+      return answer.slice(0, 8500).trim();
+    }
     function crowIsActivityQuestion(q) {
       return /actividades?|archivos?|documentos?|pdfs?|que hay|que contiene|que tiene/.test(crowNorm(q));
     }
@@ -2526,41 +2598,64 @@
     async function crowAskLocalModel(question, evidence, fullWeek = false) {
       if (!crowLocalEngine) return null;
 
-      // WebLLM ejecuta el modelo en la memoria del navegador. Se limita el contexto
-      // para evitar exceder la ventana disponible en equipos con memoria/GPU modesta.
       const weekNum = crowRequestedWeek(question);
       const weekRows = weekNum ? crowWeekRows(weekNum) : [];
       const weekCatalog = weekRows.map(({unit, week}) => {
         const activities = (week.activities || []).map(a =>
           `${a.label || 'Actividad'}: ${a.title || a.dispFilename || a.filename || 'Sin título'}`
         ).join('; ');
-        return `${unit.nombre} · ${week.num} — ${week.title}. Actividades: ${activities || 'Sin actividades registradas'}`;
+        return `${unit.nombre} · ${week.num} — ${week.title}. Actividades registradas: ${activities || 'ninguna'}`;
       }).join('\n');
 
-      const system = `Eres el Cuervo de Tres Ojos, profesor virtual y guía académico del portafolio. Enseña en español claro, con paciencia y orden.
-REGLAS DE FUENTES: Prioriza el catálogo y los extractos OCR proporcionados. No inventes datos ni atribuyas al PDF información que no aparece en los extractos. Distingue claramente el contenido documental de la explicación general y de los ejemplos hipotéticos. Si solo recibes algunas páginas, indica que el resumen es parcial. Cita documento y página cuando estén disponibles.
-MÉTODO: Para enseñar, explica primero la idea sencilla, luego los pasos, define términos técnicos, ofrece un ejemplo práctico y termina con una síntesis. Para una semana, explica los documentos recibidos por separado y relaciona sus contenidos; identifica los documentos registrados sin OCR como pendientes de lectura, no como inexistentes. Para navegación, indica la ruta exacta.
-ESTILO: Encabezados breves y listas. No repitas el OCR literalmente. No generes preguntas sugeridas ni botones. Mantén la respuesta concreta para que pueda ejecutarse en un navegador.`;
+      const system = `Eres el Cuervo de Tres Ojos, profesor universitario y guía de navegación del portafolio. Responde en español claro y enseña con rigor.
 
-      // Máximo 8 fragmentos breves por consulta; se prioriza cubrir distintos documentos.
-      const compactEvidence = (evidence || []).slice(0, fullWeek ? 8 : 6).map((e,i) =>
-        `[${i+1}] ${e.title || 'Documento'} · ${e.week || ''} · pág. ${e.page || '?'}: ${String(e.text || '').slice(0, 520)}`
+REGLAS OBLIGATORIAS:
+1. Usa los EXTRACTOS como única fuente para afirmar qué dice un documento. El catálogo solo prueba qué actividades están registradas.
+2. Nunca inventes botones, nombres de menús, pasos, valores, costos, resultados ni contenido de páginas que no aparecen en los extractos.
+3. Si falta un dato, dilo explícitamente. No completes huecos con suposiciones.
+4. No confundas "costo cero" con ausencia de trabajo, ni deduzcas que una tarea no se puede realizar por ese dato.
+5. No copies OCR defectuoso. Corrige solo errores obvios de formato; conserva exactamente nombres, cifras, códigos, tablas y términos técnicos.
+6. No repitas palabras, frases, pasos ni instrucciones. Si no puedes explicar un paso con evidencia, márcalo como "No especificado en los fragmentos recuperados".
+7. Distingue: "Según el documento" (evidencia), "Explicación" (aclaración didáctica) y "Ejemplo ilustrativo" (ejemplo creado para enseñar).
+8. Cita al final de cada apartado el documento y página disponibles, por ejemplo: (Manual X, pág. 4).
+
+MÉTODO DOCENTE:
+- Comienza respondiendo directamente qué es o qué se necesita.
+- Para una explicación paso a paso, enumera pasos cortos, explica para qué sirve cada uno y no inventes interfaces.
+- Define los términos técnicos la primera vez que aparezcan.
+- Usa un ejemplo práctico únicamente si puedes separarlo claramente del contenido documental.
+- Termina con una síntesis breve.
+- Si la consulta pide una semana completa, explica cada documento por separado y luego cómo se relacionan.
+- Si los extractos son parciales, declara el alcance real de la revisión.
+
+FORMATO:
+Usa encabezados breves y listas numeradas. Evita introducciones genéricas, relleno, preguntas sugeridas y repeticiones.`;
+
+      const compactEvidence = (evidence || []).slice(0, fullWeek ? 10 : 7).map((e,i) =>
+        `[FUENTE ${i+1}] Documento: ${e.title || 'Sin título'} | Semana: ${e.week || weekNum || 'no identificada'} | Página: ${e.page || 'no indicada'}\n${crowCleanOcr(e.text).slice(0, 760)}`
       ).join('\n\n');
-      const evidenceText = compactEvidence || 'No hay extractos OCR disponibles. Puedes orientar con el catálogo, pero no afirmar que has leído los documentos.';
-      const context = `CATÁLOGO DE LA SEMANA CONSULTADA:\n${weekCatalog || 'No se identificó una semana concreta.'}\n\nEXTRACTOS OCR DISPONIBLES:\n${evidenceText}`;
+      const evidenceText = compactEvidence ||
+        'No hay extractos OCR recuperados. No expliques el contenido de documentos como si los hubieras leído.';
+      const context = `CATÁLOGO REGISTRADO:\n${weekCatalog || crowCatalogText() || 'No hay datos de catálogo.'}\n\nEXTRACTOS DOCUMENTALES RECUPERADOS:\n${evidenceText}`;
 
+      // No se reutiliza la respuesta anterior como contexto: evita que un error
+      // repetitivo del modelo contamine las consultas siguientes.
       const messages = [
         { role: 'system', content: system + '\n\n' + context },
-        ...crowLocalHistory.slice(-2),
         { role: 'user', content: question }
       ];
       const result = await crowLocalEngine.chat.completions.create({
         messages,
-        temperature: 0.2,
-        max_tokens: fullWeek ? 700 : 550
+        temperature: 0.15,
+        top_p: 0.85,
+        frequency_penalty: 0.35,
+        presence_penalty: 0.1,
+        max_tokens: fullWeek ? 760 : 620
       });
-      const answer = result.choices?.[0]?.message?.content?.trim();
-      if (!answer) throw new Error('El modelo terminó sin devolver texto. Prueba con una consulta más concreta.');
+      const answer = crowCleanGeneratedAnswer(result.choices?.[0]?.message?.content || '');
+      if (!answer || answer.length < 35) {
+        throw new Error('La IA local no generó una explicación suficiente. La búsqueda documental sigue disponible.');
+      }
       return answer;
     }
 
@@ -2598,12 +2693,9 @@ ESTILO: Encabezados breves y listas. No repitas el OCR literalmente. No generes 
         // 3. Explicación/resumen de semana: agrupa todos los documentos de esa semana.
         else if (weekNum && crowIsSummaryQuestion(question)) {
           const matches = crowWeekRows(weekNum);
-          const weekEvidence = matches.flatMap(({k, week}) => crowAllWeekEvidence(k, week));
-          // El modelo también debe recibir la consulta cuando no hay OCR:
-          // así puede explicar el catálogo y declarar qué documentos no pudo leer.
-          sources = weekEvidence.slice(0, 24).map(c => ({
-            k:c.k,wid:c.wid,aid:c.aid,week:c.week,title:c.title,page:c.page,text:c.text.slice(0,900)
-          }));
+          // Recuperación equilibrada: una muestra de cada documento y páginas adicionales
+          // solo después de cubrir todos los documentos de la semana.
+          sources = crowSelectWeekEvidence(matches, 10);
           if (crowLocalEngine) {
             try {
               answer = await crowAskLocalModel(
@@ -2641,6 +2733,7 @@ ESTILO: Encabezados breves y listas. No repitas el OCR literalmente. No generes 
         }
 
         pending.classList.remove('crow-thinking');
+        answer = crowCleanGeneratedAnswer(answer || '');
         pending.textContent = answer || 'No encontré suficiente información verificable en el catálogo o en los documentos indexados.';
         if (sources.length) {
           const box = document.createElement('div');
