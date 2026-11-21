@@ -2908,7 +2908,7 @@ La base de datos contiene tablas; las tablas tienen columnas; cada fila o regist
       if(identified.length)return `Comprender ${identified.map(x=>x.name.toLowerCase()).join(' y ')} y poder ilustrarlo con un ejemplo propio.`;
       return `Explicar con tus palabras el tema «${title}» y reconocer su objetivo en el material original.`;
     }
-    // Cuervo 4.1: elegir el contenido por programa, actividad y evidencia legible.
+    // Cuervo 4.2: elegir el contenido por programa, actividad y evidencia legible.
     // No buscar términos en el OCR completo: infografías con ruido creaban
     // asociaciones falsas entre, por ejemplo, instalación y arquitectura multicapa.
     function crowActivityTopicCards(pages,title,weekHeading,alreadyUsed,weekNum='',ordinal=0){
@@ -3031,9 +3031,9 @@ La base de datos contiene tablas; las tablas tienen columnas; cada fila o regist
     ];
     // Cuervo 3.4: una restricción sobre el formato («no muestres OCR ilegible»)
     // NO cambia el objetivo académico de la pregunta.
-    // Cuervo 4.1: glosario académico independiente de Qwen 0.5B.
+    // Cuervo 4.2: glosario académico independiente de Qwen 0.5B.
     // Evita confundir una base de datos con una tabla o un modelo de datos.
-    // Cuervo 4.1: conceptos de alta frecuencia sin generación libre ni citas inventadas.
+    // Cuervo 4.2: conceptos de alta frecuencia sin generación libre ni citas inventadas.
     // Clasifica el tema por sus palabras clave aunque el usuario añada "con ejemplo".
     // 3.8: Las consultas técnicas tienen prioridad sobre palabras genéricas
     // como «base de datos», que aparecen en casi todas las preguntas.
@@ -3137,7 +3137,7 @@ Un **sistema gestor de bases de datos (DBMS)** es un programa que permite crear,
       }
       return null;
     }
-    // Cuervo 4.1: respuestas sobre la identidad del asistente, sin bibliografía ficticia.
+    // Cuervo 4.2: respuestas sobre la identidad del asistente, sin bibliografía ficticia.
     function crowSelfAnswer(question) {
       const q=crowNorm(question);
       const self=/(?:\b(?:tu|tus|eres|puedes|sirves|funcion|proposito|ayudas|haces|capacidades|limitaciones)\b)/.test(q);
@@ -3308,7 +3308,7 @@ Un **sistema gestor de bases de datos (DBMS)** es un programa que permite crear,
       const name=activity?.title||'Código SQL Grados y Títulos';
       return `## ${name}\n\nLa actividad está registrada en el catálogo de la Semana 05, pero **no encuentro texto OCR indexado asociado a ese archivo**. No puedo afirmar qué contiene ni transcribirlo.\n\nHay sentencias SQL legibles en el *Manual Creación de BD Grados y Títulos*, pág. 14; pertenecen a otro documento y no deben confundirse con el archivo faltante.`;
     }
-    // Cuervo 4.1: una clase por actividad, no una enumeración de cinco PDF.
+    // Cuervo 4.2: una clase por actividad, no una enumeración de cinco PDF.
     function crowLessonRequest(q) {
       const n=crowNorm(q);
       return !!crowRequestedWeek(q) && /(?:explic|ensena|aprender|estudi|paso a paso|desarroll|clase|profesor)/.test(n);
@@ -3329,7 +3329,7 @@ Un **sistema gestor de bases de datos (DBMS)** es un programa que permite crear,
       }
       return result;
     }
-    // Cuervo 4.1: los enlaces a los documentos dependen del catálogo, NO del OCR.
+    // Cuervo 4.2: los enlaces a los documentos dependen del catálogo, NO del OCR.
     function crowLessonFileRefs(item, pageRefs=[]) {
       const actual=pageRefs.slice(0,3).map(e=>({k:item.k,wid:item.week.id,aid:item.activity.id,week:item.week.num,title:item.title,page:e.page}));
       return actual.length?actual:[{k:item.k,wid:item.week.id,aid:item.activity.id,week:item.week.num,title:item.title,page:null}];
@@ -3465,6 +3465,50 @@ Un **sistema gestor de bases de datos (DBMS)** es un programa que permite crear,
       }catch(e){return null;}
     }
 
+    // 4.2: A question about a new general concept must not be swallowed by the active class.
+    function crow42IndependentQuestion(question){
+      const q=crowNorm(question);
+      if(/^(?:que es|que son|define|definicion|explicame que es|explica que es|cual es la diferencia)/.test(q)){
+        // Questions that explicitly refer back to this activity remain contextual.
+        if(/\b(?:esta actividad|este archivo|este documento|lo anterior|esa tabla|ese codigo|ese indice|este tema)\b/.test(q)) return false;
+        if(/\b(?:una base de datos|base de datos|sql server|dbms|tabla|columna|registro|clave primaria|clave foranea)\b/.test(q))return true;
+      }
+      return false;
+    }
+    async function crow42SqlActivityExplanation(item){
+      const preview=await crow41SqlPreview(item);
+      if(!preview)return null;
+      const commands=preview.commands||[];
+      if(!commands.length) return `### Análisis del archivo SQL
+
+Leí ${preview.count} líneas del archivo original, pero no encontré instrucciones de los tipos reconocidos en la primera exploración. Puedes abrirlo abajo para revisarlo. No inventaré su contenido.`;
+      const examples=commands.map(line=>{
+        const m=/^(\d+):\s*(.*)$/.exec(line);if(!m)return '- '+line;
+        const sql=m[2],lineNo=m[1];
+        const explain=/^CREATE\s+TABLE\b/i.test(sql)?'define una nueva tabla con sus columnas y restricciones':
+          /^ALTER\s+TABLE\b/i.test(sql)?'modifica la definición de una tabla existente':
+          /^INSERT\s+INTO\b/i.test(sql)?'inserta filas de datos':
+          /^SELECT\b/i.test(sql)?'consulta información':
+          /^CREATE\s+(?:UNIQUE\s+)?INDEX\b/i.test(sql)?'crea una estructura para facilitar ciertos accesos':
+          /^CREATE\s+SCHEMA\b/i.test(sql)?'crea un esquema para organizar objetos':'es una instrucción del script';
+        return `- **Línea ${lineNo}:** \`${sql.replace(/`/g,'')}\` — ${explain}.`;
+      });
+      return `### Vamos a entender tu archivo SQL
+
+He leído directamente **${preview.count} líneas** del archivo \`${String(item.activity?.filename||'').replace(/`/g,'')}\`, sin utilizar OCR.
+
+**Instrucciones identificadas:**
+
+${examples.join('\n')}
+
+### ¿Cómo se relaciona con el modelamiento físico?
+
+Las sentencias \`CREATE TABLE\` convierten entidades del modelo en tablas concretas. Para comprender cada una, hay que revisar también las columnas, tipos de datos, claves y relaciones que aparezcan debajo de la línea inicial.
+
+**Ejercicio:** abre el archivo original y busca la primera tabla indicada; identifica sus columnas y explica cuáles son claves primarias o foráneas. No ejecutaré ni completaré código que no se haya verificado.
+
+*Análisis orientativo del texto SQL real, no generación de IA.*`;
+    }
     function crowLessonTeaching(item,evidence){
       const topic=crowLessonTopic(item,evidence);
       const subjects={
@@ -3615,6 +3659,8 @@ Abre el SQL original para verificar el procedimiento completo antes de ejecutarl
       if(!session)return null;
       if(crowLessonStop(question)){crowTeachingSession=null;return {answer:'Clase finalizada. Puedes iniciar otra semana cuando quieras.',sources:[]};}
       if(crowLessonNext(question)){session.index++;return await crowLessonOne(question);}
+      // 4.2: permita cambiar de tema sin salir de la clase.
+      if(crow42IndependentQuestion(question))return null;
       const other=crowRequestedWeek(question);
       if(other && other!==session.weekNum)return null;
       if(other && crowLessonRequest(question))return await crowStartLesson(question,other);
@@ -3623,6 +3669,13 @@ Abre el SQL original para verificar el procedimiento completo antes de ejecutarl
       if(!/(?:pregunta|explica|no entiendo|no entendi|por que|para que|como|ejemplo|ayuda|repite|diferencia|que es|que son|que significa|practica|ejercicio)/.test(crowNorm(question)))return null;
       const ev=crowLessonSources(item);
       const refs=crowLessonFileRefs(item,ev);
+      // 4.2: preguntas sobre el archivo SQL real tienen prioridad sobre glosarios genéricos.
+      if(/\.sql$/i.test(String(item.activity?.filename||'')) &&
+          /(?:archivo|script|codigo|sentencia|instruccion|tabla)/.test(crowNorm(question)) &&
+          /(?:explic|que contiene|que hace|analiza|describe|instrucciones|muestra)/.test(crowNorm(question))){
+        const realSql=await crow42SqlActivityExplanation(item);
+        if(realSql)return {answer:realSql,sources:refs,mode:'SQL original leído directamente'};
+      }
       const fallback=crowLessonGroundedBody(item,ev);
       const grounded=crow41FollowUp(question,item,ev);
       if(grounded){return {answer:`**Seguimos con «${item.title}».**
@@ -3660,7 +3713,12 @@ ${grounded}
         // únicamente si el usuario lo ha cargado, nunca se simula que está activo.
         const intent=crowIntent(question);
         let lessonResult=null;
-        if(!crowQuiz && crowTeachingSession)lessonResult=await crowLessonFollowUp(question);
+        const aiStatusQuestion=/(?:^(?:esta|estas|funciona|se usa|usas)\s+(?:(?:funcionando|usando|activa|activo)\s+)?(?:la\s+)?(?:ia|inteligencia artificial|profesor ia|modelo local|webllm)|^(?:que modelo usas|la ia esta activa|funciona la ia|estas usando ia|como se si la ia funciona)|^esta funcionando la ia)/.test(crowNorm(question));
+        if(aiStatusQuestion){
+          const active=Boolean(crowLocalEngine);
+          lessonResult={answer:active?'**Profesor IA local cargado.** El modelo WebLLM está disponible, pero las explicaciones verificadas del portafolio pueden contestarse automáticamente sin llamarlo. Para una pregunta abierta fuera de la clase se intentará usar el modelo; esto no garantiza precisión académica.':'**Profesor IA local no está cargado.** Las respuestas actuales proceden del catálogo, los documentos indexados y las explicaciones verificadas. Utiliza el control «Profesor IA local» para intentar cargar WebLLM en un navegador compatible con WebGPU.',sources:[],mode:'Estado real del motor'};
+        }
+        if(!crowQuiz && !lessonResult && crowTeachingSession)lessonResult=await crowLessonFollowUp(question);
         if(!crowQuiz && !lessonResult && crowLessonRequest(question))lessonResult=await crowStartLesson(question,weekNum);
         if(lessonResult){answer=lessonResult.answer;sources=lessonResult.sources||[];crowLastRoute=lessonResult.mode||'documental';}
         else if (crowQuiz) {
@@ -3763,6 +3821,12 @@ ${grounded}
           answer += '\n\n*El profesor IA no está activo: esta respuesta utiliza únicamente el catálogo y el índice.*';
         }
         pending.innerHTML = crowRenderMarkdown(answer || 'No encontré suficiente información verificable en el catálogo o en los documentos indexados.');
+        if(lessonResult?.mode){
+          const origin=document.createElement('div');
+          origin.style.cssText='font-size:11px;opacity:.75;margin-top:8px';
+          origin.textContent='Origen de la respuesta: '+lessonResult.mode;
+          pending.appendChild(origin);
+        }
         if (sources.length) {
           const box = document.createElement('div');
           box.className = 'crow-answer-sources';
