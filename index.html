@@ -2904,7 +2904,7 @@ La base de datos contiene tablas; las tablas tienen columnas; cada fila o regist
       if(identified.length)return `Comprender ${identified.map(x=>x.name.toLowerCase()).join(' y ')} y poder ilustrarlo con un ejemplo propio.`;
       return `Explicar con tus palabras el tema «${title}» y reconocer su objetivo en el material original.`;
     }
-    // Cuervo 3.5: elegir el contenido por programa, actividad y evidencia legible.
+    // Cuervo 3.6: elegir el contenido por programa, actividad y evidencia legible.
     // No buscar términos en el OCR completo: infografías con ruido creaban
     // asociaciones falsas entre, por ejemplo, instalación y arquitectura multicapa.
     function crowActivityTopicCards(pages,title,weekHeading,alreadyUsed,weekNum='',ordinal=0){
@@ -3024,16 +3024,56 @@ La base de datos contiene tablas; las tablas tienen columnas; cada fila o regist
     ];
     // Cuervo 3.4: una restricción sobre el formato («no muestres OCR ilegible»)
     // NO cambia el objetivo académico de la pregunta.
-    // Cuervo 3.5: glosario académico independiente de Qwen 0.5B.
+    // Cuervo 3.6: glosario académico independiente de Qwen 0.5B.
     // Evita confundir una base de datos con una tabla o un modelo de datos.
+    // Cuervo 3.6: conceptos de alta frecuencia sin generación libre ni citas inventadas.
+    // Clasifica el tema por sus palabras clave aunque el usuario añada "con ejemplo".
     function crowConceptDefinition(question){
       const q=crowNorm(question);
-      if(/^(?:que es|que significa|definicion de|explicame que es|puedes explicar que es|que son)\s+(?:una?\s+|las?\s+)?base(?:s)? de datos\??$/.test(q)
-        || /\b(?:define|definir)\s+(?:una?\s+)?base de datos\b/.test(q)){
-        return `## ¿Qué es una base de datos?\n\nUna **base de datos** es un conjunto organizado de datos que permite almacenar, consultar, actualizar y administrar información.\n\n**Ejemplo ilustrativo:** una universidad puede tener una base de datos «Grados y Títulos» que reúna información sobre estudiantes, facultades, escuelas y diplomas.\n\n**No es lo mismo que una tabla:** la base de datos puede contener muchas tablas; cada tabla organiza registros de un tema concreto.\n\n**Tampoco es un modelo de datos:** el modelo describe cómo se organizan y relacionan los datos.\n\n**Comprueba lo aprendido:** ¿por qué una tabla Estudiante no representa por sí sola toda la base de datos de una universidad?\n\n*Explicación general; no es una cita de tus PDF.*`;
+      const isDefinition=/(?:^| )(?:que es|que son|que significa|define|definir|definicion|explica|explicame|dime|para que sirve)(?: |$)/.test(q);
+      const isCompare=/(?:diferencia|compar|distincion|no es lo mismo)/.test(q);
+      const isInstall=/\b(?:instalar|instalacion|instalo|instala)\b/.test(q);
+      const isCreate=/\b(?:crear|creacion|creo|crea)\b/.test(q);
+      const isSqlServer=/\bsql server\b/.test(q);
+      const isDatabase=/\bbase(?:s)? de datos\b/.test(q);
+      if(isCompare && isInstall && isCreate && isSqlServer && isDatabase){
+        return `## Instalar SQL Server y crear una base de datos no son lo mismo
+
+**Instalar SQL Server** significa instalar y configurar el sistema gestor de bases de datos (DBMS), que administra conexiones, seguridad y almacenamiento. Se elige una edición, se configura una instancia y se comprueba que el servicio funciona.
+
+**Crear una base de datos** significa crear, dentro de una instancia de SQL Server ya disponible, un espacio lógico donde se organizan tablas y otros objetos. No requiere reinstalar SQL Server.
+
+**Ejemplo ilustrativo:** primero instalas SQL Server Developer en el equipo de laboratorio y te conectas a su instancia con SSMS. Después creas la base de datos \`GradosYTítulos\` dentro de esa instancia y, finalmente, defines sus tablas. El nombre del ejemplo no se atribuye a tus documentos.
+
+**Diferencia clave:** SQL Server es el gestor; la base de datos es uno de los recursos administrados por ese gestor.
+
+*Explicación conceptual general. No es una transcripción del PDF.*`;
       }
-      if(/\b(?:que es|define|explica|diferencia)\b/.test(q) && /\b(?:dbms|sistema gestor de bases de datos)\b/.test(q)){
-        return `## ¿Qué es un DBMS?\n\nUn **sistema gestor de bases de datos (DBMS)** es un programa que permite crear, consultar, modificar y administrar bases de datos, gestionando además acceso, seguridad y otras funciones.\n\n**Ejemplo ilustrativo:** SQL Server es un DBMS; «Grados y Títulos» puede ser una base de datos administrada por ese sistema.\n\n**Comprueba lo aprendido:** ¿en qué se diferencia el programa SQL Server de una base de datos creada dentro de él?\n\n*Explicación general, no transcripción documental.*`;
+      if(isDefinition && isDatabase && !isSqlServer && !/\b(?:tabla|columna|registro|clave primaria|clave foranea)\b/.test(q)){
+        return `## ¿Qué es una base de datos?
+
+Una **base de datos** es un conjunto organizado de datos que permite almacenar, consultar, actualizar y administrar información.
+
+**Ejemplo ilustrativo:** una universidad puede tener la base de datos «Grados y Títulos» con información sobre estudiantes, facultades, escuelas y diplomas. Dentro de ella pueden existir diferentes tablas relacionadas.
+
+**Base de datos ≠ tabla:** una tabla almacena registros sobre un tema; una base de datos puede contener varias tablas y otros objetos.
+
+**Base de datos ≠ DBMS:** SQL Server es un gestor de bases de datos, no una base de datos en sí.
+
+**Comprueba lo aprendido:** ¿por qué la tabla Estudiante no representa por sí sola toda la información universitaria?
+
+*Explicación general. No se presenta como contenido extraído de un PDF.*`;
+      }
+      if(isDefinition && /\b(?:dbms|sistema gestor de bases de datos)\b/.test(q)){
+        return `## ¿Qué es un DBMS?
+
+Un **sistema gestor de bases de datos (DBMS)** es un programa que permite crear, consultar, modificar y administrar bases de datos y gestionar sus conexiones, acceso y seguridad.
+
+**Ejemplo ilustrativo:** SQL Server es un DBMS; una base de datos de Grados y Títulos puede ser administrada por ese sistema.
+
+**Comprueba lo aprendido:** ¿qué diferencia hay entre instalar el gestor SQL Server y crear una base de datos dentro de él?
+
+*Explicación general; no se presenta como cita documental.*`;
       }
       return null;
     }
