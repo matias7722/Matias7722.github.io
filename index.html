@@ -3308,7 +3308,7 @@ Un **sistema gestor de bases de datos (DBMS)** es un programa que permite crear,
       const name=activity?.title||'Código SQL Grados y Títulos';
       return `## ${name}\n\nLa actividad está registrada en el catálogo de la Semana 05, pero **no encuentro texto OCR indexado asociado a ese archivo**. No puedo afirmar qué contiene ni transcribirlo.\n\nHay sentencias SQL legibles en el *Manual Creación de BD Grados y Títulos*, pág. 14; pertenecen a otro documento y no deben confundirse con el archivo faltante.`;
     }
-    // Cuervo 4.2: una clase por actividad, no una enumeración de cinco PDF.
+    // Cuervo 4.3: una clase por actividad, no una enumeración de cinco PDF.
     function crowLessonRequest(q) {
       const n=crowNorm(q);
       return !!crowRequestedWeek(q) && /(?:explic|ensena|aprender|estudi|paso a paso|desarroll|clase|profesor)/.test(n);
@@ -3466,13 +3466,22 @@ Un **sistema gestor de bases de datos (DBMS)** es un programa que permite crear,
     }
 
     // 4.2: A question about a new general concept must not be swallowed by the active class.
+    // 4.3: detect a new standalone subject before treating text as a lesson follow-up.
+    // Introductory expressions ("dime", "por favor", "explícame") are not the topic.
+    function crow43StandaloneQuery(question){
+      let q=crowNorm(question);
+      q=q.replace(/^(?:(?:por favor|oye|cuervo|dime|puedes|podrias|me puedes|me podrias|quiero saber|quisiera saber|explicame|explica|hablame)\s+){1,5}/g,'').trim();
+      return q;
+    }
     function crow42IndependentQuestion(question){
-      const q=crowNorm(question);
-      if(/^(?:que es|que son|define|definicion|explicame que es|explica que es|cual es la diferencia)/.test(q)){
-        // Questions that explicitly refer back to this activity remain contextual.
-        if(/\b(?:esta actividad|este archivo|este documento|lo anterior|esa tabla|ese codigo|ese indice|este tema)\b/.test(q)) return false;
-        if(/\b(?:una base de datos|base de datos|sql server|dbms|tabla|columna|registro|clave primaria|clave foranea)\b/.test(q))return true;
-      }
+      const q=crow43StandaloneQuery(question);
+      // Explicit reference to the ongoing lesson keeps the question contextual.
+      if(/\b(?:esta actividad|este archivo|este documento|lo anterior|esa tabla|ese codigo|ese indice|este tema|aqui|en esta clase)\b/.test(q))return false;
+      // New definitions are independent even if a lesson is active.
+      if(/^(?:que es|que son|que significa|define|definicion|cual es la diferencia|para que sirve)\b/.test(q) &&
+         /\b(?:base de datos|sql server|dbms|tabla|columna|registro|clave primaria|clave foranea|modelo relacional|normalizacion)\b/.test(q))return true;
+      // Questions comparing two topics not contained in the current activity.
+      if(/^(?:diferencia entre|compara|comparacion entre)\b/.test(q) && /\b(?:sql server|base de datos|dbms)\b/.test(q))return true;
       return false;
     }
     async function crow42SqlActivityExplanation(item){
@@ -3591,7 +3600,7 @@ Las sentencias \`CREATE TABLE\` convierten entidades del modelo en tablas concre
     function crowLessonGroundedBody(item,evidence){
       const card=crowLessonTeaching(item,evidence);
       const docs=evidence.length?evidence.map(e=>`- **${e.title}, pág. ${e.page}:** ${e.text.slice(0,220)}`).join('\n'):
-        'El archivo está registrado, pero no dispongo de párrafos OCR suficientemente fiables de esta actividad. **Puedes abrir el PDF original desde el enlace inferior**, aunque no esté indexado.';
+        `El archivo está registrado, pero no dispongo de párrafos OCR suficientemente fiables de esta actividad. **Puedes abrir el ${/\.sql$/i.test(String(item.activity?.filename||''))?'archivo SQL':'documento'} original desde el enlace inferior**, aunque no esté indexado.`;
       if(card){return `### Antes de empezar\n\n${card.goal}\n\n### Lo que sabemos del material\n\n${docs}\n\n### Ahora sí, aprendamos\n\n${card.teach}\n\n### Ejemplo para entenderlo\n\n${card.example}\n\n### Practiquemos\n\n${card.practice}\n\n**Te pregunto:** ${card.check}\n\n*La explicación y el ejemplo son conocimientos generales de apoyo; los extractos citados son los únicos atribuibles al documento.*`;
       }
       const k=crow41Knowledge[crow41Topic(item,evidence)]||crow41Knowledge.generic;
