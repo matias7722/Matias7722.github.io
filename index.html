@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <html lang="es">
-<!-- Cuervo 2.4: recuperación OCR equilibrada, limpieza conservadora y respuestas locales con control de repetición. -->
+<!-- Cuervo 2.5: recuperación temática estricta, respuesta fundamentada, SQL sin invenciones y Markdown seguro. -->
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -586,6 +586,13 @@
     .crow-local-actions button { flex:1; padding:7px 6px; border:1px solid var(--border); background:var(--dark2); color:var(--gold2); font-size:.62rem; }
     .crow-local-actions button:disabled { opacity:.5; cursor:not-allowed; }
     .crow-thinking { color:var(--gold2); font-style:italic; opacity:.85; }
+    .msg.bot p { margin:0 0 9px; line-height:1.55; }
+    .msg.bot h3,.msg.bot h4 { margin:12px 0 6px; color:var(--gold2); }
+    .msg.bot ul,.msg.bot ol { margin:6px 0 10px 20px; padding:0; }
+    .msg.bot li { margin:3px 0; }
+    .msg.bot code { padding:2px 5px; border-radius:4px; background:rgba(0,0,0,.24); font-family:Consolas,monospace; }
+    .msg.bot pre.crow-code { margin:9px 0; padding:12px; overflow-x:auto; border:1px solid var(--border); border-radius:7px; background:rgba(0,0,0,.3); white-space:pre; }
+    .msg.bot pre.crow-code code { padding:0; background:transparent; }
     .crow-answer-sources { margin-top:10px; padding-top:8px; border-top:1px solid var(--border); color:var(--muted); font-size:.76rem; }
     .crow-answer-sources strong { display:block; color:var(--gold2); margin-bottom:4px; }
     @media (prefers-reduced-motion: reduce) {
@@ -2415,16 +2422,27 @@
     }
     function crowRelevantEvidence(question, limit = 8, weekOnly = null) {
       try {
-        if (!pdfIdxState.ready) return [];
-        let hits = searchPdf(question, Math.max(limit * 3, 15));
+        if (!pdfIdxState.ready || !pdfIndex.length) return [];
+        const stop = new Set(['que','cual','cuales','como','cuando','donde','para','por','con','sin','del','las','los','una','uno','unos','unas','entre','desde','sobre','este','esta','estos','estas','mis','sus','hay','ser','crear','hacer','utilizar','utilizando','explica','explicame','ensena','paso','pasos','documento','documentos','archivo','archivos']);
+        const terms = [...new Set(tokens(question).map(stem).filter(t => t.length >= 3 && !stop.has(t)))];
+        if (!terms.length) return [];
+        let hits = searchPdf(question, Math.max(limit * 12, 60));
         if (weekOnly) hits = hits.filter(({c}) => crowWeekNumber(c.week) === weekOnly);
-        return hits.filter(x => x.score >= 0.75).slice(0, limit).map(({c, pos, score}) => ({
-          k: c.k, wid: c.wid, aid: c.aid, unit: c.k, week: c.week,
-          title: c.title, page: c.page, score: Number(score.toFixed(2)),
-          text: snippet(c, pos)
-        }));
+        const prefixMatch = (a,b) => a === b || (a.length > 3 && b.length > 3 && (a.startsWith(b) || b.startsWith(a)));
+        hits = hits.map(hit => {
+          const words = hit.c._w || [];
+          const matched = terms.filter(t => words.some(w => prefixMatch(w,t)));
+          return {...hit, matched:matched.length, coverage:matched.length/terms.length};
+        }).filter(hit => hit.score >= 0.75 && hit.matched >= Math.min(2,terms.length) &&
+          (hit.coverage >= 0.30 || terms.length === 1));
+        return hits.slice(0,limit).map(({c,pos,score,coverage}) => {
+          const start = Math.max(0,pos-360);
+          return {k:c.k,wid:c.wid,aid:c.aid,unit:c.k,week:c.week,title:c.title,page:c.page,
+            score:Number(score.toFixed(2)),coverage:Number(coverage.toFixed(2)),
+            text:crowCleanOcr(c.text.slice(start,Math.min(c.text.length,start+1500)))};
+        });
       } catch (e) {
-        console.warn('Cuervo: búsqueda documental local no disponible', e);
+        console.warn('Cuervo: búsqueda documental local no disponible',e);
         return [];
       }
     }
@@ -2484,6 +2502,27 @@
         k:c.k, wid:c.wid, aid:c.aid, week:c.week, title:c.title,
         page:c.page, text:c.text.slice(0, 760)
       }));
+    }
+
+    function crowRenderMarkdown(value) {
+      const esc = s => String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+      const blocks = String(value || '').replace(/\r/g,'').trim().split(/```/);
+      return blocks.map((block,i) => {
+        if (i % 2) {
+          const lines=block.split('\n');
+          const lang=/^[a-z0-9_-]+$/i.test((lines[0]||'').trim()) ? lines.shift().trim() : '';
+          return `<pre class="crow-code"><code${lang ? ` class="language-${esc(lang)}"` : ''}>${esc(lines.join('\n').trim())}</code></pre>`;
+        }
+        let t=esc(block).replace(/`([^`]+)`/g,'<code>$1</code>').replace(/\*\*(.+?)\*\*/g,'<strong>$1</strong>');
+        t=t.replace(/^### (.+)$/gm,'<h4>$1</h4>').replace(/^## (.+)$/gm,'<h3>$1</h3>').replace(/^# (.+)$/gm,'<h3>$1</h3>');
+        t=t.replace(/^\s*[-•] (.+)$/gm,'<li>$1</li>');
+        t=t.replace(/(?:<li>.*<\/li>\s*)+/gs,m=>`<ul>${m}</ul>`);
+        return t.split(/\n{2,}/).map(part=>{
+          const q=part.trim(); if(!q)return '';
+          if(/^<(h[3-4]|ul|ol)\b/.test(q))return q;
+          return `<p>${q.replace(/\n/g,'<br>')}</p>`;
+        }).join('');
+      }).join('');
     }
 
     function crowCleanGeneratedAnswer(value) {
@@ -2615,9 +2654,10 @@ REGLAS OBLIGATORIAS:
 3. Si falta un dato, dilo explícitamente. No completes huecos con suposiciones.
 4. No confundas "costo cero" con ausencia de trabajo, ni deduzcas que una tarea no se puede realizar por ese dato.
 5. No copies OCR defectuoso. Corrige solo errores obvios de formato; conserva exactamente nombres, cifras, códigos, tablas y términos técnicos.
-6. No repitas palabras, frases, pasos ni instrucciones. Si no puedes explicar un paso con evidencia, márcalo como "No especificado en los fragmentos recuperados".
-7. Distingue: "Según el documento" (evidencia), "Explicación" (aclaración didáctica) y "Ejemplo ilustrativo" (ejemplo creado para enseñar).
-8. Cita al final de cada apartado el documento y página disponibles, por ejemplo: (Manual X, pág. 4).
+6. No repitas palabras, frases, pasos ni instrucciones. Si no puedes explicar un paso con evidencia, dilo expresamente.
+7. Distingue "Según el documento" de "Explicación general". Puedes usar conocimiento general correcto para aclarar conceptos, pero nunca atribuirlo al PDF si no aparece allí.
+8. Para código SQL, reproduce únicamente código visible en los extractos. No inventes nombres de bases de datos, tablas, columnas, tipos de datos ni scripts. Si el OCR no contiene el código completo, explica qué falta y cita el documento/página.
+9. Cita cada afirmación documental con su documento y página. No cites páginas que no hayas recibido.
 
 MÉTODO DOCENTE:
 - Comienza respondiendo directamente qué es o qué se necesita.
@@ -2625,7 +2665,9 @@ MÉTODO DOCENTE:
 - Define los términos técnicos la primera vez que aparezcan.
 - Usa un ejemplo práctico únicamente si puedes separarlo claramente del contenido documental.
 - Termina con una síntesis breve.
-- Si la consulta pide una semana completa, explica cada documento por separado y luego cómo se relacionan.
+- Si la consulta pide una semana completa, presenta cada actividad y desarrolla el procedimiento que realmente aparezca en sus manuales; no conviertas el título de una actividad en un objetivo inventado.
+- Si se pregunta por una diferencia conceptual, define cada término y compáralos claramente.
+- Si se pide un procedimiento, entrega pasos ejecutables solo cuando estén respaldados por el texto recibido. Separa cualquier explicación general.
 - Si los extractos son parciales, declara el alcance real de la revisión.
 
 FORMATO:
@@ -2726,15 +2768,15 @@ Usa encabezados breves y listas numeradas. Evita introducciones genéricas, rell
             }
           }
           if (!answer) {
-            const legacy = crowReply(question);
-            const generic = /No encontré una respuesta exacta|Prueba con alguna de estas preguntas/i.test(legacy);
-            answer = evidence.length && generic ? crowEvidenceAnswer(evidence) : legacy.replace(/<br\s*\/?>/gi, '\n').replace(/<[^>]*>/g, '');
+            answer = evidence.length
+              ? crowEvidenceAnswer(evidence)
+              : 'No encontré fragmentos documentales suficientemente relacionados con tu pregunta. Para evitar darte información inventada, no voy a atribuir una respuesta a tus PDF. Prueba indicando la semana, el nombre del manual o el tema exacto. Si deseas una explicación general que no dependa de tus documentos, indícalo.';
           }
         }
 
         pending.classList.remove('crow-thinking');
         answer = crowCleanGeneratedAnswer(answer || '');
-        pending.textContent = answer || 'No encontré suficiente información verificable en el catálogo o en los documentos indexados.';
+        pending.innerHTML = crowRenderMarkdown(answer || 'No encontré suficiente información verificable en el catálogo o en los documentos indexados.');
         if (sources.length) {
           const box = document.createElement('div');
           box.className = 'crow-answer-sources';
