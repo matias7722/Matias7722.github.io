@@ -922,6 +922,70 @@ footer { border-top:1px solid rgba(200,169,107,.24); background:#0D1725; color:#
   *,*::before,*::after { animation-duration:.01ms !important; animation-iteration-count:1 !important; transition-duration:.01ms !important; scroll-behavior:auto !important; }
 }
 
+
+
+.pdf-page-input::-webkit-inner-spin-button,.pdf-page-input::-webkit-outer-spin-button { -webkit-appearance:none; margin:0; }
+.pdf-page-input { appearance:textfield; -moz-appearance:textfield; min-width:46px; }
+
+/* === Medieval Premium 4.5: centrado de visores y edición === */
+html { scrollbar-gutter: stable; }
+body.mp-modal-open { overflow: hidden !important; }
+.edit-modal-overlay {
+  position:fixed !important; inset:0 !important; width:100vw !important; max-width:none !important;
+  height:100vh !important; height:100dvh !important;
+  display:grid !important; place-items:center !important;
+  left:0 !important; right:auto !important;
+  padding:clamp(12px,2.2vh,28px) !important;
+  overflow:hidden !important; overscroll-behavior:contain;
+  transform:none !important;
+}
+.edit-modal {
+  width:min(620px,100%) !important; max-height:calc(100dvh - 28px) !important;
+  margin:0 !important; overflow-y:auto !important; overflow-x:hidden !important;
+  overscroll-behavior:contain; scrollbar-gutter:stable;
+  position:relative; flex:none; justify-self:center; align-self:center;
+}
+.edit-modal-head { position:sticky; top:-26px; background:#19283e; z-index:2; padding:4px 0 11px; }
+.edit-modal-actions { position:sticky; bottom:-26px; z-index:2; padding:14px 0 3px; background:#19283e; }
+.edit-field input,.edit-field textarea { min-width:0; max-width:100%; }
+.pdf-modal-overlay,.html-modal-overlay {
+  position:fixed !important; inset:0 !important; width:100vw !important; max-width:none !important;
+  height:100vh !important; height:100dvh !important;
+  display:grid !important; place-items:center !important;
+  left:0 !important; right:auto !important;
+  padding:clamp(6px,1.5vh,18px) !important; overflow:hidden !important;
+  overscroll-behavior:contain;
+}
+.pdf-modal { width:min(1200px,100%) !important; max-width:100% !important;
+  height:min(94dvh,100%) !important; max-height:100% !important; margin:0 auto !important;
+  min-height:0; min-width:0;
+}
+.pdf-modal-body,.pdf-viewer-area,.pdf-canvas-area,.pdf-sidebar { min-height:0; }
+.pdf-canvas-area { overscroll-behavior:contain; overflow-anchor:none; }
+.pdf-sidebar { overscroll-behavior:contain; overflow-anchor:none; }
+.html-modal { width:min(1500px,100%) !important; max-width:100% !important;
+  height:min(96dvh,100%) !important; max-height:100% !important;
+  margin:0 auto !important; min-width:0; min-height:0;
+}
+.html-frame-wrap { display:flex; align-items:stretch; justify-content:center;
+  width:100%; min-width:0; min-height:0; overflow:hidden;
+  background:#0e1726;
+}
+.html-frame-wrap iframe { position:relative !important; inset:auto !important; display:block;
+  flex:1 1 auto; min-width:0; max-width:100%; width:100%; height:100%;
+  margin:0 auto; border:0;
+}
+/* Evita que el modal se desplace cuando el navegador muestra una barra lateral. */
+@media(max-width:700px) {
+ .edit-modal-overlay { padding:10px !important; }
+ .edit-modal { max-height:calc(100dvh - 20px) !important; padding:19px 18px !important; }
+ .edit-modal-head { top:-19px; }
+ .edit-modal-actions { bottom:-19px; }
+ .html-modal,.pdf-modal { height:100% !important; border-radius:8px !important; }
+ .html-modal-header { flex-wrap:wrap; gap:8px; }
+ .html-modal-actions { max-width:100%; flex-wrap:wrap; justify-content:flex-end; }
+}
+
   </style>
 </head>
 <body data-role="" data-editmode="0">
@@ -1163,6 +1227,16 @@ footer { border-top:1px solid rgba(200,169,107,.24); background:#0D1725; color:#
 
     let pdfDoc = null, currentPage = 1, totalPages = 0, scale = 0.93, currentPdfUrl = '', renderedPages = {}, scrollContainer = null;
 
+    // Locking modals should never modify page scrollTop or modal centering.
+    function mpUpdateModalLock() {
+      const active = ['pdfModalOverlay','htmlModalOverlay','editModalOverlay','accessOverlay']
+        .some(id => document.getElementById(id)?.classList.contains('open'));
+      document.body.classList.toggle('mp-modal-open',active);
+      document.documentElement.classList.toggle('mp-modal-open',active);
+    }
+    function mpModalLockNextFrame() { requestAnimationFrame(mpUpdateModalLock); }
+    document.addEventListener('click',mpModalLockNextFrame,true);
+
     function openPDF(url, filename, title, subtitle) {
       currentPdfUrl = url;
       document.getElementById('modalTitle').textContent = title;
@@ -1172,6 +1246,7 @@ footer { border-top:1px solid rgba(200,169,107,.24); background:#0D1725; color:#
       document.getElementById('footerInfo').textContent = subtitle + ' · ' + filename;
       const overlay = document.getElementById('pdfModalOverlay');
       overlay.classList.add('open');
+      mpUpdateModalLock();
       document.body.style.overflow = 'hidden';
       pdfDoc = null; currentPage = 1; renderedPages = {};
       scrollContainer = document.getElementById('pdfCanvasArea');
@@ -1200,6 +1275,7 @@ footer { border-top:1px solid rgba(200,169,107,.24); background:#0D1725; color:#
 
     function closePDF() {
       document.getElementById('pdfModalOverlay').classList.remove('open');
+      mpUpdateModalLock();
       document.body.style.overflow = '';
       pdfDoc = null; renderedPages = {};
     }
@@ -1277,13 +1353,30 @@ footer { border-top:1px solid rgba(200,169,107,.24); background:#0D1725; color:#
     function highlightThumb(num) {
       document.querySelectorAll('.pdf-thumb-item').forEach(t => t.classList.remove('active'));
       const th = document.getElementById('thumb-' + num);
-      if (th) { th.classList.add('active'); th.scrollIntoView({ block: 'nearest', behavior: 'smooth' }); }
+      const sidebar = document.getElementById('pdfSidebar');
+      if (th) {
+        th.classList.add('active');
+        // No usar scrollIntoView: desplaza también la página exterior.
+        if (sidebar) {
+          const sideRect = sidebar.getBoundingClientRect();
+          const thumbRect = th.getBoundingClientRect();
+          const top = thumbRect.top - sideRect.top + sidebar.scrollTop;
+          if (top < sidebar.scrollTop + 6 || top + thumbRect.height > sidebar.scrollTop + sidebar.clientHeight - 6) {
+            sidebar.scrollTo({top:Math.max(0,top - (sidebar.clientHeight - thumbRect.height)/2),behavior:'auto'});
+          }
+        }
+      }
     }
     function scrollToPage(pageNum) {
-      const container = document.getElementById('page-container-' + pageNum);
-      if (container) {
-        container.scrollIntoView({ behavior: 'smooth', block: 'start' });
-        currentPage = pageNum; document.getElementById('pageInput').value = pageNum; highlightThumb(pageNum);
+      const target = document.getElementById('page-container-' + pageNum);
+      const area = document.getElementById('pdfCanvasArea');
+      if (target && area) {
+        // Solo mover el visor interno, sin alterar el scroll del documento ni el modal.
+        const targetTop = target.getBoundingClientRect().top - area.getBoundingClientRect().top + area.scrollTop;
+        area.scrollTo({top: Math.max(0,targetTop), behavior:'smooth'});
+        currentPage = pageNum;
+        document.getElementById('pageInput').value = pageNum;
+        highlightThumb(pageNum);
       }
     }
     function changePage(delta) { const n = currentPage + delta; if (n >= 1 && n <= totalPages) scrollToPage(n); }
@@ -2014,12 +2107,27 @@ footer { border-top:1px solid rgba(200,169,107,.24); background:#0D1725; color:#
       document.getElementById('htmlModalTitle').textContent = title;
       document.getElementById('htmlModalSub').textContent = subtitle + ' · ' + filename;
       const d = document.getElementById('htmlBtnDownload'); d.href = url; d.download = filename;
-      document.getElementById('htmlFrame').src = url;
+      const frame = document.getElementById('htmlFrame');
+      frame.onload = () => {
+        try {
+          // Same-origin documents only: preserve their layout and restrict horizontal overflow.
+          const doc = frame.contentDocument;
+          if (doc?.head && !doc.getElementById('mp-iframe-overflow-fix')) {
+            const sheet = doc.createElement('style');
+            sheet.id = 'mp-iframe-overflow-fix';
+            sheet.textContent = 'html,body{max-width:100%;overflow-x:hidden!important;}';
+            doc.head.appendChild(sheet);
+          }
+        } catch(e) { /* external document: keep original untouched */ }
+      };
+      frame.src = url;
       document.getElementById('htmlModalOverlay').classList.add('open');
+      mpUpdateModalLock();
       document.body.style.overflow = 'hidden';
     }
     function closeHtmlDoc() {
       document.getElementById('htmlModalOverlay').classList.remove('open');
+      mpUpdateModalLock();
       document.getElementById('htmlFrame').src = 'about:blank';
       document.body.style.overflow = '';
     }
@@ -2259,11 +2367,13 @@ footer { border-top:1px solid rgba(200,169,107,.24); background:#0D1725; color:#
       }).join('');
       modalSaveHandler = onSave;
       document.getElementById('editModalOverlay').classList.add('open');
+      mpUpdateModalLock();
       document.body.style.overflow = 'hidden';
-      const first = form.querySelector('input,textarea'); if (first) setTimeout(() => first.focus(), 60);
+      const first = form.querySelector('input,textarea'); if (first) setTimeout(() => first.focus({preventScroll:true}), 60);
     }
     function closeEditModal() {
       document.getElementById('editModalOverlay').classList.remove('open');
+      mpUpdateModalLock();
       document.body.style.overflow = '';
       modalSaveHandler = null;
     }
