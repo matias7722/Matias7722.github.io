@@ -2348,7 +2348,7 @@
       // Se retiró el apartado de preguntas sugeridas. El usuario escribe libremente.
     }
 
-    // ===== CUERVO 2.0 · motor híbrido 100% gratuito =====
+    // ===== CUERVO 3.1 · motor híbrido 100% gratuito =====
     // Nivel 1: catálogo + índice OCR/BM25 local. Nivel 2: modelo WebLLM opcional en el navegador.
     let crowLocalEngine = null;
     let crowLocalLoading = false;
@@ -2520,7 +2520,7 @@
 
     function crowRenderMarkdown(value) {
       const esc = s => String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
-      const blocks = String(value || '').replace(/\r/g,'').replace(/&#x20;|&#32;|&nbsp;/gi,' ').replace(/\\([*_.#-])/g,'$1').trim().split(/```/);
+      const blocks = String(value || '').replace(/\r/g,'').replace(/&#x20;|&#32;|&nbsp;/gi,' ').replace(/\\(?=\n)/g,'').replace(/\\([*_.#-])/g,'$1').trim().split(/```/);
       return blocks.map((block,i) => {
         if (i % 2) {
           const lines=block.split('\n');
@@ -2860,6 +2860,107 @@ La base de datos contiene tablas; las tablas tienen columnas; cada fila o regist
       return {answer:sections.join('\n\n'),sources:[...new Map(refs.map(p=>[`${p.k}/${p.wid}/${p.aid}/${p.page}`,p])).values()]};
     }
 
+    // ===== Cuervo 3.1 · clasificador explícito y tutor determinista =====
+    let crowQuiz = null;
+    const crowQuizBank = [
+      {ask:'¿Para qué necesitas una cuenta y una suscripción de Microsoft Azure antes de crear recursos?', keys:['cuenta','suscripcion','recurso'], hint:'Permiten acceder al portal y administrar los recursos en la nube.',doc:'Manual Creación de cuenta en Azure'},
+      {ask:'¿Qué diferencia hay entre un servidor lógico Azure SQL y una base de datos?',keys:['servidor','base','datos'],hint:'El servidor lógico gestiona el acceso y puede alojar bases de datos.',doc:'Manual Creación de BD Grados y Títulos'},
+      {ask:'¿Para qué sirve una clave primaria (PRIMARY KEY)?',keys:['unico','identific'],hint:'Identifica de forma única cada fila de una tabla.',doc:'Manual Creación de BD Grados y Títulos'},
+      {ask:'¿Cómo se relacionan Facultad y Escuela mediante una clave foránea?',keys:['facultad','escuela','id_facultad'],hint:'Escuela.id_facultad hace referencia a Facultad.id_facultad.',doc:'Manual Creación de BD Grados y Títulos'},
+      {ask:'¿Por qué hay que configurar el firewall antes de conectar SSMS con Azure SQL?',keys:['ip','acceso','conex'],hint:'Debes autorizar la IP cliente para que el servidor acepte conexiones.',doc:'Manual Para Entrar a Azure desde SSMS'}
+    ];
+    function crowIntent(question) {
+      const q=crowNorm(question);
+      // Prioridad de intenciones: no confundir «SQL Server» con «código SQL».
+      if(/(?:examen|evalua|evaluame|hazme|preguntame|preguntas).*(?:pregunta|corrig|una por una|semana|conocimiento)|actua como mi profesor/.test(q))return 'quiz';
+      if(/(?:ocr|ilegible|corrupt|danad|calidad de texto|errores de lectura)/.test(q))return 'ocr_audit';
+      if(/(?:ssms|management studio)/.test(q)&&/(?:conect|configur|acced|entrar|firewall)/.test(q))return 'ssms';
+      if(/(?:clave primaria|primary key|clave foranea|foreign key)/.test(q)&&/(?:diferencia|explic|relacion|que es|que hacen|como funciona)/.test(q))return 'keys';
+      if(/(?:cuenta|suscripcion)/.test(q)&&/azure/.test(q)&&/(?:crea|crear|registro|manual|explic|paso|requisito)/.test(q))return 'azure_account';
+      if(/(?:base de datos|bd)/.test(q)&&/(?:grados|titulos)/.test(q)&&/azure/.test(q)&&/(?:crear|creacion|paso|configura|ensen)/.test(q))return 'azure_database';
+      if(/(?:que contiene|contenido|que hay)/.test(q)&&/(?:actividad codigo sql|codigo sql grados)/.test(q))return 'unindexed_sql';
+      if(/(?:codigo sql|script sql|sentencias? create table|create table|sql original)/.test(q)&&/(?:busca|localiza|muestra|codigo|tabla|script|reproduc|original)/.test(q))return 'original_sql';
+      if(/(?:base de datos)/.test(q)&&/(?:tabla|columna|registro|fila)/.test(q)&&/(?:diferencia|compar|que es|explica)/.test(q))return 'concepts';
+      if(/(?:contenido|que contiene)/.test(q)&&/(?:codigo sql grados|actividad codigo sql)/.test(q))return 'unindexed_sql';
+      if(crowRequestedWeek(question)&&/(?:explic|resume|sintesis|desarrolla|estudiar)/.test(q))return 'week_guide';
+      return 'other';
+    }
+    function crowQuizStart() {
+      crowQuiz={idx:0,score:0};
+      return `## Evaluación de la Semana 05\n\nTe haré **cinco preguntas, una por una**. Esperaré tu respuesta antes de continuar.\n\n**Pregunta 1/5:** ${crowQuizBank[0].ask}\n\nResponde con tus propias palabras. Para salir, escribe **cancelar examen**.`;
+    }
+    function crowQuizReply(question) {
+      if(/^(cancelar|salir|terminar)(?: el)? examen$|^cancelar$/i.test(crowNorm(question))){crowQuiz=null;return 'Evaluación cancelada. Puedes iniciar otra cuando quieras.';}
+      const item=crowQuizBank[crowQuiz.idx];
+      const q=crowNorm(question);
+      const matched=item.keys.filter(k=>q.includes(crowNorm(k)));
+      // Keywords are only guidance, not a definitive semantic grade.
+      const okay=matched.length>=Math.min(2,item.keys.length);
+      if(okay)crowQuiz.score++;
+      const feedback=okay?'**Respuesta parcialmente o suficientemente fundamentada según los conceptos clave.**':'**Respuesta incompleta o no reconocida por la revisión automática.**';
+      const info=`${feedback}\n\n**Idea esencial:** ${item.hint}\n\n*Revisión automática orientativa; no sustituye la evaluación de un docente.*`;
+      crowQuiz.idx++;
+      if(crowQuiz.idx>=crowQuizBank.length){
+        const total=crowQuiz.score;crowQuiz=null;
+        return `${info}\n\n### Evaluación terminada\nResultado orientativo: ${total}/5 respuestas con conceptos clave detectados. Puedes pedirme que expliquemos cualquiera de las preguntas.`;
+      }
+      return `${info}\n\n**Pregunta ${crowQuiz.idx+1}/5:** ${crowQuizBank[crowQuiz.idx].ask}`;
+    }
+    function crowAuditOcr(question) {
+      const wk=crowRequestedWeek(question)||'05';
+      const pages=crowWeekRows(wk).flatMap(({k,week})=>crowAllWeekEvidence(k,week))
+        .filter(p=>String(p.text||'').trim().length>40);
+      if(!pages.length)return {answer:`No existe texto OCR indexado para la Semana ${wk}. No puedo auditar las páginas.`,sources:[]};
+      const issues=pages.map(p=>{
+        const raw=String(p.text||'');
+        const lines=raw.split(/(?<=[.!?])\s+|\n+/).map(x=>x.trim()).filter(x=>x.length>=70);
+        const poor=lines.filter(x=>crowReadableOcrScore(x)<0).length;
+        const total=lines.length;
+        return {p,poor,total,ratio:total?poor/total:0};
+      }).filter(o=>o.total>=2&&o.ratio>=0.35).sort((a,b)=>b.ratio-a.ratio).slice(0,12);
+      const answer=`## Auditoría OCR · Semana ${wk}\n\nRevisé ${pages.length} páginas indexadas. El filtro **estima** problemas de legibilidad; no sustituye una inspección visual del PDF.\n\n${issues.length?issues.map((v,i)=>`${i+1}. **${v.p.title}**, pág. ${v.p.page} — ${v.poor}/${v.total} fragmentos sospechosos (${Math.round(100*v.ratio)} %).`).join('\n'):'No detecté páginas con suficiente proporción de fragmentos sospechosos mediante este criterio. Esto no garantiza OCR perfecto.'}\n\nNo reproduzco los textos dañados. Abre esas páginas del PDF para comprobarlas.`;
+      return {answer,sources:issues.map(({p})=>({k:p.k,wid:p.wid,aid:p.aid,week:p.week,title:p.title,page:p.page,text:''}))};
+    }
+    function crowConceptKeysLesson() {
+      return `## Claves primarias y foráneas — Grados y Títulos\n\n**Base de datos:** reúne varias tablas relacionadas.\n\n**Tabla:** almacena filas que comparten una estructura.\n\n**Clave primaria (PRIMARY KEY):** identifica de forma única cada registro. En el SQL OCR de la pág. 14, \`dbo.Facultad.id_facultad\` es la clave primaria de Facultad.\n\n**Clave foránea (FOREIGN KEY):** columna que referencia una clave de otra tabla. En el mismo extracto, \`dbo.Escuela.id_facultad\` hace referencia a \`dbo.Facultad(id_facultad)\`.\n\n### Ejemplo ilustrativo\nUna facultad puede tener varias escuelas; cada escuela indica a qué facultad pertenece mediante \`id_facultad\`. La restricción ayuda a impedir escuelas vinculadas a facultades inexistentes.\n\n**Fuente para contrastar:** Manual Creación de BD Grados y Títulos, pág. 14 (OCR: verificar contra PDF).` .replace(/\`/g,'`');
+    }
+    function crowDocumentTeaching(intent) {
+      const wk='05';
+      const titles={
+        ssms:'Manual Para Entrar a Azure desde SSMS',
+        azure_account:'Manual Creación de cuenta en Azure',
+        azure_database:'Manual Creación de BD Grados y Títulos'
+      };
+      const title=titles[intent];
+      const rows=crowWeekRows(wk);
+      const hits=rows.flatMap(({k,week})=>crowAllWeekEvidence(k,week))
+        .filter(p=>crowNorm(p.title).includes(crowNorm(title))&&Number(p.page)>=3);
+      const terms={ssms:['firewall','direccion ip','conexión','autenticación','servidor','cifrar'],azure_account:['cuenta','suscripcion','verificacion','registrar','iniciar','grupo de recursos'],azure_database:['servidor','recurso','suscripción','base de datos','firewall','crear']};
+      const ranked=hits.map(p=>{
+        const s=crowExtractStudyExcerpt(p,terms[intent]);
+        const normalized=crowNorm(s);
+        const relevance=terms[intent].reduce((n,t)=>n+(normalized.includes(crowNorm(t))?1:0),0);
+        return {p,s,rank:relevance};
+      }).filter(o=>o.s&&o.rank>0).sort((a,b)=>b.rank-a.rank||a.p.page-b.p.page).slice(0,5).sort((a,b)=>a.p.page-b.p.page);
+      const intros={
+        ssms:'Conectar **SQL Server Management Studio (SSMS)** con **Azure SQL Database** requiere una instancia accesible, permisos y reglas de firewall para la IP cliente. No implica crear tablas nuevas.',
+        azure_account:'Este manual trata del registro inicial en Azure y de la verificación de la cuenta/suscripción. No asumiré precios ni promociones que el documento no confirme.',
+        azure_database:'La secuencia del manual distingue **crear el servidor lógico**, **crear la base de datos**, **configurar accesos** y **conectarse**. Una base de datos no puede seleccionarse antes de haberla creado.'
+      };
+      const goals={
+        ssms:'Comprender los datos de conexión, la autorización de IP por firewall y la autenticación en SSMS.',
+        azure_account:'Identificar requisitos del registro, pasos de verificación y cómo comprobar el acceso al portal.',
+        azure_database:'Identificar los recursos y opciones que el manual utiliza para crear el servidor y la base de datos.'
+      };
+      const body=ranked.length?ranked.map(({p,s},i)=>`**Paso de estudio ${i+1} · pág. ${p.page}:** ${s}\n\n**Comprueba:** abre esa página y verifica visualmente cada acción antes de realizarla.`).join('\n\n'):'No encuentro fragmentos explicativos suficientemente legibles de este manual. Revisa el PDF original.';
+      return {answer:`## ${title}\n\n**Objetivo de aprendizaje:** ${goals[intent]}\n\n${intros[intent]}\n\n### Pasajes documentados para estudiar\n\n${body}\n\n**Límite:** los pasos anteriores son una ruta de lectura de extractos indexados, no una transcripción íntegra del procedimiento. Para ejecutar los pasos, revisa las páginas originales; no se inventan botones, precios ni opciones de configuración.`,sources:ranked.map(({p})=>({k:p.k,wid:p.wid,aid:p.aid,week:p.week,title:p.title,page:p.page,text:''}))};
+    }
+    function crowUnindexedSqlStatus() {
+      const matches=crowWeekRows('05');
+      const activity=matches.flatMap(({week})=>week.activities||[]).find(a=>/codigo sql grados/i.test(crowNorm(a.title||a.filename)));
+      const name=activity?.title||'Código SQL Grados y Títulos';
+      return `## ${name}\n\nLa actividad está registrada en el catálogo de la Semana 05, pero **no encuentro texto OCR indexado asociado a ese archivo**. No puedo afirmar qué contiene ni transcribirlo.\n\nHay sentencias SQL legibles en el *Manual Creación de BD Grados y Títulos*, pág. 14; pertenecen a otro documento y no deben confundirse con el archivo faltante.`;
+    }
     async function askCrow(text) {
       const question = String(text || '').trim();
       if (!question) return;
@@ -2873,15 +2974,29 @@ La base de datos contiene tablas; las tablas tienen columnas; cada fila o regist
         let answer = null;
         let sources = [];
 
-        // 0. Rutas de alta precisión: no permitir que el modelo local invente definiciones o SQL.
-        if (crowIsDatabaseConceptQuestion(question)) {
-          answer = crowConceptLesson();
-        } else if (crowIsOriginalSqlRequest(question)) {
-          const verified = crowOriginalSqlReview(question);
-          answer = verified.answer; sources = verified.sources;
-        } else if (weekNum && crowIsSummaryQuestion(question)) {
-          const guide = crowWeekStudyGuide(question, weekNum);
-          answer = guide.answer; sources = guide.sources;
+        // Las respuestas de alta precisión tienen prioridad sobre la generación libre.
+        const intent=crowIntent(question);
+        if (crowQuiz) {
+          answer=crowQuizReply(question);
+        } else if (intent==='quiz') {
+          answer=crowQuizStart();
+        } else if (intent==='ocr_audit') {
+          const audit=crowAuditOcr(question); answer=audit.answer;sources=audit.sources;
+        } else if (intent==='ssms'||intent==='azure_account'||intent==='azure_database') {
+          const guide=crowDocumentTeaching(intent);answer=guide.answer;sources=guide.sources;
+        } else if (intent==='keys') {
+          answer=crowConceptKeysLesson();
+          const p=crowWeekRows('05').flatMap(({k,week})=>crowAllWeekEvidence(k,week))
+            .find(p=>Number(p.page)===14&&/creacion de bd grados/i.test(crowNorm(p.title)));
+          if(p)sources=[{k:p.k,wid:p.wid,aid:p.aid,week:p.week,title:p.title,page:p.page,text:''}];
+        } else if (intent==='unindexed_sql') {
+          answer=crowUnindexedSqlStatus();
+        } else if (intent==='original_sql') {
+          const verified=crowOriginalSqlReview(question);answer=verified.answer;sources=verified.sources;
+        } else if (intent==='concepts') {
+          answer=crowConceptLesson();
+        } else if (intent==='week_guide') {
+          const guide=crowWeekStudyGuide(question,weekNum);answer=guide.answer;sources=guide.sources;
         }
         // 1. Inventario documental: compara catálogo, archivos y páginas indexadas.
         else if (crowIsMissingInventoryQuestion(question)) {
@@ -3021,6 +3136,7 @@ La base de datos contiene tablas; las tablas tienen columnas; cada fila o regist
     crowLoadButton?.addEventListener('click', crowLoadWebLLM);
     crowClearButton?.addEventListener('click', () => {
       crowLocalHistory = [];
+      crowQuiz = null;
       crowChatMessages.innerHTML = '';
       crowSafeMessage('Conversación limpiada. Los documentos y el índice permanecen intactos.', 'bot');
     });
