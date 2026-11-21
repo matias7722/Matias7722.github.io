@@ -2813,6 +2813,7 @@ La base de datos contiene tablas; las tablas tienen columnas; cada fila o regist
           const end=candidate.search(/[.!?;](?=\s|$)/);
           if(end>=62)candidate=candidate.slice(0,end+1);
           if(candidate.length<70||candidate.length>420)continue;
+          if(/\b(?:las soluciones actuales|cada generacion introduce|bases de datos modernas)\b/i.test(candidate)&&candidate.includes('|'))continue;
           const words=candidate.match(/[\p{L}]{2,}/gu)||[];
           const singles=candidate.match(/(?:^|\s)[A-Za-zÁÉÍÓÚÑ](?=\s|$)/g)||[];
           const symbols=candidate.match(/[|€<>_=—\[\]{}]/g)||[];
@@ -2903,35 +2904,61 @@ La base de datos contiene tablas; las tablas tienen columnas; cada fila o regist
       if(identified.length)return `Comprender ${identified.map(x=>x.name.toLowerCase()).join(' y ')} y poder ilustrarlo con un ejemplo propio.`;
       return `Explicar con tus palabras el tema «${title}» y reconocer su objetivo en el material original.`;
     }
-    function crowActivityTopicCards(pages,title,weekHeading,alreadyUsed) {
-      const raw=crowNorm(pages.filter(p=>Number(p.page)>=3).map(p=>String(p.text||'')).join(' ').slice(0,24000));
-      const normTitle=crowNorm(title);
-      const candidates=crowTopicCards.map((topic,i)=>{
-        const name=crowNorm(topic.name);
-        const stems={
-          'Arquitectura centralizada':['centralizad'],
-          'Arquitectura distribuida':['distribuid','nodos'],
-          'Cliente-servidor':['cliente servidor','cliente-servidor'],
-          'Arquitectura multicapa':['multicapa','capas','presentacion'],
-          'Base de datos en la nube':['nube','cloud'],
-          'Modelo relacional':['relacional'],
-          'Instancia y configuración':['instancia','colacion'],
-          'Azure SQL Database':['azure'],
-          'Tablas y esquemas':['esquemas','tablas']
-        }[topic.name]||[name];
-        const occurrences=stems.reduce((n,term)=>{
-          const needle=crowNorm(term);
-          return n+Math.min(4,raw.split(needle).length-1);
-        },0);
-        const inTitle=stems.some(t=>normTitle.includes(crowNorm(t)))?2:0;
-        const used=alreadyUsed.has(topic.name)?3.5:0;
-        return {topic,score:occurrences+inTitle-used,i};
-      }).filter(o=>o.score>0).sort((a,b)=>b.score-a.score||a.i-b.i);
-      const chosen=candidates.slice(0,2).map(o=>o.topic);
-      chosen.forEach(t=>alreadyUsed.add(t.name));
-      if(chosen.length)return chosen;
-      // Solo como contexto temático general, nunca como contenido del PDF.
-      return crowTopicLessons(`${weekHeading} ${title}`,2).filter(t=>!alreadyUsed.has(t.name));
+    // Cuervo 3.5: elegir el contenido por programa, actividad y evidencia legible.
+    // No buscar términos en el OCR completo: infografías con ruido creaban
+    // asociaciones falsas entre, por ejemplo, instalación y arquitectura multicapa.
+    function crowActivityTopicCards(pages,title,weekHeading,alreadyUsed,weekNum='',ordinal=0){
+      const normalizedTitle=crowNorm(title);
+      const heading=crowNorm(weekHeading);
+      const reliable=pages.filter(p=>Number(p.page)>=3)
+        .map(p=>crowExtractStudyExcerpt(p,[])).filter(Boolean).join(' ');
+      const clean=crowNorm(reliable);
+      const isArchitecture=/arquitectur|seleccion de la arquitectura/.test(heading);
+      const isDbmsInstall=/despliegue|instalacion|motores de datos|dbms/.test(heading);
+      if(isArchitecture && weekNum==='01'){
+        // Ruta pedagógica explícita basada en el propósito de la Semana 01;
+        // no es una afirmación sobre el texto de cada PDF.
+        const indexes=ordinal===0?[0,1]:[2,3];
+        return indexes.map(i=>crowTopicCards[i]);
+      }
+      if(isDbmsInstall){
+        // No asignar tarjetas de nube/multicapa/administración de memoria por
+        // simples apariciones en diapositivas del curso.
+        return [];
+      }
+      const chosen=crowTopicCards.filter(t=>{
+        const term=crowNorm(t.name);
+        const direct=term.includes('arquitectura') ? term.replace('arquitectura ','') : term;
+        return normalizedTitle.includes(direct)&&direct.length>=7 ||
+          (clean.includes(term)&&!alreadyUsed.has(t.name));
+      }).slice(0,2);
+      chosen.forEach(x=>alreadyUsed.add(x.name));
+      return chosen;
+    }
+
+    function crowSpecificActivityLesson(weekNum,heading,title,ordinal,ranked){
+      const titleNorm=crowNorm(title);
+      const wkHeading=crowNorm(heading);
+      if(weekNum==='02'&&/despliegue|configuracion|motores de datos|dbms/.test(wkHeading)){
+        const isInstall=ordinal===0 || /instal|sql server|motor/.test(titleNorm);
+        if(isInstall){
+          return [
+            '**Objetivo de aprendizaje:** instalar y configurar un motor de base de datos y verificar que puede iniciar y aceptar conexiones.',
+            '**Explicación complementaria (conocimiento general):** SQL Server es un gestor de bases de datos. Antes de crear tablas, es necesario disponer de una instancia correctamente instalada y configurada. SQL Server Developer es una edición para desarrollo y pruebas, no para producción.',
+            '**Procedimiento de estudio:** 1) Identifica los requisitos previos en el manual. 2) Revisa la selección de edición y características. 3) Sigue la configuración de la instancia del documento. 4) Comprueba el inicio del servicio y la conexión con una herramienta de administración. No inventaré pantallas ni opciones que no pueda verificar.',
+            '**Ejemplo ilustrativo:** en un equipo de laboratorio se instala SQL Server Developer y luego se comprueba que una herramienta cliente logra conectarse a la instancia.',
+            '**Actividad práctica:** documenta qué edición, instancia y método de conexión utilizaste, adjuntando evidencias del resultado.',
+            '**Comprueba lo aprendido:** ¿qué diferencia hay entre instalar SQL Server y crear una base de datos dentro de él?'
+          ];
+        }
+        return [
+          '**Objetivo de aprendizaje:** identificar el propósito de esta actividad y su relación con el despliegue y la configuración del DBMS.',
+          '**Explicación complementaria (conocimiento general):** instalar el motor, configurar sus servicios y comprobar una conexión son tareas diferentes. El procedimiento exacto de esta actividad requiere leer su documento.',
+          '**Actividad práctica:** revisa la actividad original; identifica requisitos, pasos de configuración y evidencia de funcionamiento. Si el contenido OCR no es legible, consulta las capturas sin atribuirles instrucciones no verificadas.',
+          '**Comprueba lo aprendido:** ¿qué evidencia demostraría que el motor de base de datos está listo para usarse?'
+        ];
+      }
+      return null;
     }
 
     function crowWeekStudyGuide(question,weekNum) {
@@ -2944,47 +2971,49 @@ La base de datos contiene tablas; las tablas tienen columnas; cada fila o regist
         if(week.desc)sections.push(`**Propósito del catálogo:** ${String(week.desc).replace(/\\\s*\n/g,' ').replace(/\s+/g,' ').trim()}`);
         const activities=week.activities||[],alreadyUsed=new Set();
         if(!activities.length)sections.push('Esta semana no tiene actividades registradas.');
+        const allPages=crowAllWeekEvidence(k,week);
         for(let i=0;i<activities.length;i++){
           const a=activities[i],title=a.title||a.dispFilename||a.filename||'Actividad sin título';
-          const pages=crowAllWeekEvidence(k,week).filter(p=>p.aid===a.id);
+          const pages=allPages.filter(p=>p.aid===a.id);
           const terms=crowNorm(`${heading} ${title}`).split(' ').filter(t=>t.length>4);
           const ranked=pages.filter(p=>Number(p.page)>=3).map(p=>{
             const excerpt=crowExtractStudyExcerpt(p,terms);
-            const relevance=excerpt?terms.filter(t=>crowNorm(excerpt).includes(t)).length:0;
-            return {p,excerpt,relevance};
+            return {p,excerpt,relevance:excerpt?terms.filter(t=>crowNorm(excerpt).includes(t)).length:0};
           }).filter(x=>x.excerpt).sort((x,y)=>y.relevance-x.relevance||Number(x.p.page)-Number(y.p.page)).slice(0,2);
           const lines=[`### ${i+1}. ${title}`];
           if(!pages.length){
-            lines.push('**Estado documental:** esta actividad no tiene texto indexado. No puedo afirmar qué contiene el archivo original.');
+            lines.push('**Estado del documento:** no tiene texto OCR indexado. No puedo afirmar qué aparece en su contenido original.');
           }else if(!ranked.length){
-            lines.push(`**Estado documental:** hay ${pages.length} páginas indexadas, pero no encontré oraciones limpias con suficiente confianza. Es posible que el archivo contenga infografías o capturas. No mostraré texto corrupto.`);
+            lines.push(`**Estado del documento:** ${pages.length} páginas indexadas; no hay fragmentos narrativos suficientemente claros. Podría contener infografías o capturas que el OCR no interpreta bien.`);
           }else{
-            lines.push('**Fragmentos del documento recuperados (OCR, verificar en el PDF):**');
+            lines.push('**Lo que puede comprobarse en el documento (OCR, contrastar con el PDF):**');
             ranked.forEach(({p,excerpt})=>{
               lines.push(`**Página ${p.page}:** ${excerpt}`);
               refs.push({k:p.k,wid:p.wid,aid:p.aid,week:p.week,title:p.title,page:p.page,text:''});
             });
           }
-          const topics=crowActivityTopicCards(pages,title,heading,alreadyUsed);
-          if(topics.length){
-            lines.push(`**Objetivo de aprendizaje:** ${topics.map(t=>t.name.toLowerCase()).join(' y ')}: comprender su funcionamiento y explicarlo con un caso práctico.`);
-            lines.push('**Explicación del profesor (conocimiento general, no transcripción del PDF):**');
-            topics.forEach(t=>lines.push(`**${t.name}.** ${t.meaning}\n\n**Ejemplo:** ${t.example}`));
-            lines.push(`**Actividad de aprendizaje:** identifica dónde se almacenan los datos, cómo se comunica cada componente y una ventaja o limitación del modelo. Luego justifica tu respuesta usando un ejemplo propio.`);
+          const specific=crowSpecificActivityLesson(weekNum,heading,title,i,ranked);
+          const topics=crowActivityTopicCards(pages,title,heading,alreadyUsed,weekNum,i);
+          if(specific){
+            lines.push(...specific);
+          } else if(topics.length){
+            lines.push(`**Objetivo de aprendizaje propuesto:** comprender ${topics.map(t=>t.name.toLowerCase()).join(' y ')} y comparar sus usos. El objetivo específico debe contrastarse con el material de la actividad.`);
+            lines.push('**Explicación complementaria del profesor (conocimiento general, no transcripción del PDF):**');
+            topics.forEach(t=>lines.push(`**${t.name}:** ${t.meaning}\n\n**Ejemplo ilustrativo:** ${t.example}`));
+            lines.push('**Actividad práctica propuesta:** dibuja los componentes de cada arquitectura, indica dónde se almacenan los datos, cómo se comunican y compara una ventaja y una limitación.');
             lines.push(`**Comprueba lo aprendido:** ${topics[0].verify}`);
           }else{
-            lines.push(`**Objetivo de aprendizaje:** identificar el propósito de «${title}» y relacionarlo con el tema de la semana.`);
-            lines.push('**Actividad de aprendizaje:** identifica las ideas principales del material, resume su significado con tus propias palabras y compáralas con el propósito del catálogo. Si el OCR no es legible, revisa visualmente el PDF.');
-            lines.push('**Comprueba lo aprendido:** ¿qué decisión o conocimiento debes poder justificar después de estudiar esta actividad?');
+            lines.push(`**Objetivo de estudio propuesto:** comprender la finalidad de «${title}» dentro del tema «${heading}».`);
+            lines.push('**Actividad práctica propuesta:** revisa los requisitos, la secuencia y las evidencias del documento; redacta con tus palabras el procedimiento y el resultado. Si sus capturas no son legibles, no se atribuyen pasos no confirmados.');
+            lines.push('**Comprueba lo aprendido:** ¿cuál es el resultado verificable que debería producir esta actividad?');
           }
           sections.push(lines.join('\n\n'));
         }
       }
-      sections.push('### Fuentes y límites\n\nLas frases con número de página son fragmentos OCR que deben comprobarse contra el documento. Las explicaciones del profesor son conocimiento general, no una transcripción del PDF. Los diagramas requieren revisión visual y el Cuervo no debe reconstruirlos a partir de OCR ilegible.');
+      sections.push('### Fuentes y límites\n\nEl propósito y los nombres proceden del catálogo. Los fragmentos con página vienen del OCR y necesitan cotejo visual. Las explicaciones y prácticas complementarias están identificadas como conocimiento general, no como citas de tus PDF.');
       return {answer:sections.join('\n\n'),sources:[...new Map(refs.map(p=>[`${p.k}/${p.wid}/${p.aid}/${p.page}`,p])).values()]};
     }
 
-        // ===== Cuervo 3.4 · clasificador explícito y tutor determinista =====
     let crowQuiz = null;
     const crowQuizBank = [
       {ask:'¿Para qué necesitas una cuenta y una suscripción de Microsoft Azure antes de crear recursos?', keys:['cuenta','suscripcion','recurso'], hint:'Permiten acceder al portal y administrar los recursos en la nube.',doc:'Manual Creación de cuenta en Azure'},
@@ -2995,6 +3024,19 @@ La base de datos contiene tablas; las tablas tienen columnas; cada fila o regist
     ];
     // Cuervo 3.4: una restricción sobre el formato («no muestres OCR ilegible»)
     // NO cambia el objetivo académico de la pregunta.
+    // Cuervo 3.5: glosario académico independiente de Qwen 0.5B.
+    // Evita confundir una base de datos con una tabla o un modelo de datos.
+    function crowConceptDefinition(question){
+      const q=crowNorm(question);
+      if(/^(?:que es|que significa|definicion de|explicame que es|puedes explicar que es|que son)\s+(?:una?\s+|las?\s+)?base(?:s)? de datos\??$/.test(q)
+        || /\b(?:define|definir)\s+(?:una?\s+)?base de datos\b/.test(q)){
+        return `## ¿Qué es una base de datos?\n\nUna **base de datos** es un conjunto organizado de datos que permite almacenar, consultar, actualizar y administrar información.\n\n**Ejemplo ilustrativo:** una universidad puede tener una base de datos «Grados y Títulos» que reúna información sobre estudiantes, facultades, escuelas y diplomas.\n\n**No es lo mismo que una tabla:** la base de datos puede contener muchas tablas; cada tabla organiza registros de un tema concreto.\n\n**Tampoco es un modelo de datos:** el modelo describe cómo se organizan y relacionan los datos.\n\n**Comprueba lo aprendido:** ¿por qué una tabla Estudiante no representa por sí sola toda la base de datos de una universidad?\n\n*Explicación general; no es una cita de tus PDF.*`;
+      }
+      if(/\b(?:que es|define|explica|diferencia)\b/.test(q) && /\b(?:dbms|sistema gestor de bases de datos)\b/.test(q)){
+        return `## ¿Qué es un DBMS?\n\nUn **sistema gestor de bases de datos (DBMS)** es un programa que permite crear, consultar, modificar y administrar bases de datos, gestionando además acceso, seguridad y otras funciones.\n\n**Ejemplo ilustrativo:** SQL Server es un DBMS; «Grados y Títulos» puede ser una base de datos administrada por ese sistema.\n\n**Comprueba lo aprendido:** ¿en qué se diferencia el programa SQL Server de una base de datos creada dentro de él?\n\n*Explicación general, no transcripción documental.*`;
+      }
+      return null;
+    }
     function crowIntent(question) {
       const q=crowNorm(question);
       const week=crowRequestedWeek(question);
@@ -3006,6 +3048,7 @@ La base de datos contiene tablas; las tablas tienen columnas; cada fila o regist
       // «Actúa como profesor» es una instrucción de estilo; solo preguntar/evaluar activa examen.
       if(/(?:hazme|preguntame|realiza|inicia|comienza|tomame|evalua|evaluame).{0,65}(?:preguntas|examen|evaluacion|quiz|una por una)|(?:examen|quiz|evaluacion|prueba de conocimientos)/.test(q)
         && !/(?:evalua|evaluacion)\s+(?:la\s+)?calidad\s+(?:del\s+)?ocr/.test(q))return 'quiz';
+      if(crowConceptDefinition(question))return 'basic_definition';
       if(week && teaching && !/(?:conect|ssms|management studio|cuenta de azure|crear base de datos en azure|codigo sql|script sql|sentencias? create table|create table|sql original|clave primaria|clave foranea)/.test(q))return 'week_guide';
       if(auditOnly)return 'ocr_audit';
       if(/(?:ssms|management studio)/.test(q)&&/(?:conect|configur|acced|entrar|firewall)/.test(q))return 'ssms';
@@ -3126,6 +3169,8 @@ La base de datos contiene tablas; las tablas tienen columnas; cada fila o regist
           answer=crowUnindexedSqlStatus();
         } else if (intent==='original_sql') {
           const verified=crowOriginalSqlReview(question);answer=verified.answer;sources=verified.sources;
+        } else if (intent==='basic_definition') {
+          answer=crowConceptDefinition(question);
         } else if (intent==='concepts') {
           answer=crowConceptLesson();
         } else if (intent==='week_guide') {
