@@ -2717,6 +2717,82 @@ Responde directamente. Define términos técnicos. Ordena el procedimiento en pa
       return answer;
     }
 
+    // ===== CUERVO 2.8 · rutas académicas verificables =====
+    // Las respuestas de precisión alta se resuelven sin generación libre del modelo de 0.5B.
+    function crowIsDatabaseConceptQuestion(question) {
+      const n = crowNorm(question);
+      return /base de datos/.test(n) && /tabla/.test(n) &&
+        /(diferencia|compar|columna|registro|fila)/.test(n);
+    }
+
+    function crowConceptLesson() {
+      return `## Base de datos, tabla, columna y registro
+
+**Base de datos:** conjunto organizado de información. En el proyecto Grados y Títulos puede reunir datos de estudiantes, facultades, grados y títulos.
+
+**Tabla:** estructura dentro de la base de datos para guardar registros sobre un tema. Por ejemplo, una tabla de estudiantes.
+
+**Columna:** característica definida en una tabla, como \`id_estudiante\` o \`nombre\`. Cada registro tiene un valor en cada columna pertinente.
+
+**Registro (fila):** conjunto de valores que describe una entidad concreta; por ejemplo, un estudiante con su identificador y nombre.
+
+### Cómo se relacionan
+La base de datos contiene tablas; las tablas tienen columnas; cada fila o registro almacena valores organizados según esas columnas.
+
+**Ejemplo ilustrativo (no es código extraído de tus PDF):** en una tabla Estudiante, las columnas podrían ser id_estudiante y nombre. La fila (1, Ana) sería un registro.
+
+**En SQL Server:** primero se crea o selecciona la base de datos; después se crean sus tablas y relaciones. Una tabla no equivale a una base de datos.
+
+*Esta explicación es conceptual y general; no atribuye datos ni código a una página específica del portafolio.*`.replace(/\`/g,'`');
+    }
+
+    function crowIsOriginalSqlRequest(question) {
+      const n=crowNorm(question);
+      return /sql|script|codigo|sentencia|create table/.test(n) &&
+        /(tabla|crea|crear|constru|ensena|muestr|explica|reproduc)/.test(n) &&
+        /(mis documentos|documentos|original|grados|titulos|semana)/.test(n);
+    }
+
+    function crowOriginalSqlReview(question) {
+      const wk=crowRequestedWeek(question) || '05';
+      const matches=crowWeekRows(wk);
+      if (!matches.length) return { answer:`La Semana ${wk} aún no figura en el catálogo público. No puedo atribuirle código SQL.`,sources:[] };
+      const pages=matches.flatMap(({k,week})=>crowAllWeekEvidence(k,week));
+      const sqlPages=pages.filter(c => /\bcreate\s+table\b|\balter\s+table\b|\bprimary\s+key\b|\bforeign\s+key\b|\bcreate\s+schema\b/i.test(String(c.text||'')));
+      // No regenerar SQL con Qwen. Mostrar ubicación de SQL extraído por OCR para verificarlo contra el PDF.
+      const selected=sqlPages.sort((a,b)=>{
+        const score=c=>/\bCREATE\s+TABLE\b/i.test(c.text||'')?3:/\bALTER\s+TABLE\b/i.test(c.text||'')?2:1;
+        return score(b)-score(a);
+      }).slice(0,6).map(c=>({k:c.k,wid:c.wid,aid:c.aid,week:c.week,title:c.title,page:c.page,text:''}));
+      const answer = selected.length
+        ? `## Código SQL de la Semana ${wk}\n\nEncontré **${sqlPages.length} página(s)** del índice OCR con palabras características de definición de tablas y relaciones.\n\n${selected.map((c,i)=>`${i+1}. **${c.title}**, página ${c.page}.`).join('\n')}\n\n**Cómo estudiarlo:** abre el documento desde las fuentes, localiza la sentencia \`CREATE TABLE\`, identifica el nombre real de la tabla, sus columnas, tipos de datos y claves, y verifica el script directamente en el PDF antes de ejecutarlo.\n\n**Límite de fiabilidad:** no reproduciré ni completaré SQL automáticamente mientras no pueda garantizar que el OCR conservó exactamente el código original. Así evito inventar tablas, DNI o columnas. `.replace(/\n/g,'\n').replace(/\`/g,'`')
+        : `No encontré una sentencia SQL de creación de tablas identificable en el OCR de la Semana ${wk}. Eso no demuestra que falte el código: puede estar en imágenes o en un archivo todavía sin indexar. Abre los documentos originales de la semana y revisa las páginas de scripts. No generaré un código supuesto como si fuera el tuyo.`;
+      return {answer,sources:selected};
+    }
+
+    function crowWeekStudyGuide(question, weekNum) {
+      const matches=crowWeekRows(weekNum);
+      if(!matches.length) return {answer:`La Semana ${weekNum} todavía no está registrada en el catálogo accesible.`,sources:[]};
+      const sections=[];const refs=[];
+      for (const {k,unit,week} of matches) {
+        sections.push(`## ${unit.nombre} · ${week.num}\n${week.title}`);
+        if(week.desc) sections.push(`**Propósito del catálogo:** ${week.desc}`);
+        const activities=week.activities||[];
+        if(!activities.length) sections.push('Todavía no hay actividades registradas en esta semana.');
+        for (let i=0;i<activities.length;i++) {
+          const a=activities[i];
+          const title=a.title||a.dispFilename||a.filename||a.label||'Actividad sin título';
+          const pages=crowAllWeekEvidence(k,week).filter(p=>p.aid===a.id);
+          const significant=pages.filter(p=>Number(p.page)>=3 && String(p.text||'').trim().length>130);
+          const main=significant.find(p=>/introducci[oó]n|objetivo|procedimiento|paso|configuraci[oó]n|consultas|script/i.test(p.text||'')) || significant[0];
+          sections.push(`### ${i+1}. ${title}\n${pages.length?`**Lectura:** ${pages.length} página(s) indexadas. ${main?`Empieza por la página ${main.page} para revisar el desarrollo del documento.`:'Consulta el PDF para conocer los procedimientos completos.'}`:'**Estado:** no hay texto OCR indexado asociado a esta actividad.'}`);
+          if(main) refs.push({k:main.k,wid:main.wid,aid:main.aid,week:main.week,title:main.title,page:main.page,text:''});
+        }
+      }
+      sections.push('### Ruta de estudio\n1. Revisa cada actividad en el orden del catálogo.\n2. Abre el PDF correspondiente y estudia sus objetivos y procedimiento real.\n3. Comprueba los resultados de cada actividad antes de continuar.\n\n*Esta guía describe el contenido registrado y las páginas disponibles; no sustituye una lectura completa de los PDF ni inventa pasos que el OCR no ha confirmado.*');
+      return {answer:sections.join('\n\n').replace(/\n/g,'\n'),sources:refs};
+    }
+
     async function askCrow(text) {
       const question = String(text || '').trim();
       if (!question) return;
@@ -2730,8 +2806,18 @@ Responde directamente. Define términos técnicos. Ordena el procedimiento en pa
         let answer = null;
         let sources = [];
 
+        // 0. Rutas de alta precisión: no permitir que el modelo local invente definiciones o SQL.
+        if (crowIsDatabaseConceptQuestion(question)) {
+          answer = crowConceptLesson();
+        } else if (crowIsOriginalSqlRequest(question)) {
+          const verified = crowOriginalSqlReview(question);
+          answer = verified.answer; sources = verified.sources;
+        } else if (weekNum && crowIsSummaryQuestion(question)) {
+          const guide = crowWeekStudyGuide(question, weekNum);
+          answer = guide.answer; sources = guide.sources;
+        }
         // 1. Inventario documental: compara catálogo, archivos y páginas indexadas.
-        if (crowIsMissingInventoryQuestion(question)) {
+        else if (crowIsMissingInventoryQuestion(question)) {
           const missing = await crowMissingInventory();
           if (!missing.length) {
             answer = 'Según el catálogo visible, no detecto semanas sin actividades registradas, archivos ausentes ni PDF pendientes de indexación. Esto no garantiza que el contenido de cada documento esté completo; solo comprueba los archivos y el índice accesibles.';
