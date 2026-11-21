@@ -381,15 +381,15 @@
     .btn-fullscreen:hover, .btn-download-modal:hover { filter: brightness(1.2); }
 
     /* ====== ACTIVIDADES ====== */
-    .activities-wrap { display: grid; gap: 16px; margin: 14px 0 4px; }
-    .activity-block { border: 1px solid var(--border); background: rgba(255, 255, 255, 0.015); padding: 12px; position: relative; }
+    .activities-wrap { display: grid; gap: 16px; margin: 14px 0 4px; align-items: stretch; }
+    .activity-block { border: 1px solid var(--border); background: rgba(255, 255, 255, 0.015); padding: 12px; position: relative; display:flex; flex-direction:column; min-height:100%; }
     .activity-label { display: flex; align-items: center; gap: 8px; font: 700 0.7rem 'Cinzel', serif; color: var(--gold2); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 2px; }
     .activity-block .card-pdf-thumb { height: 90px; margin: 10px 0; }
     .card-pdf-thumb { width: 100%; height: 110px; background: #0A0705; border: 1px solid var(--border); display: flex; align-items: center; justify-content: center; overflow: hidden; position: relative; margin: 14px 0; cursor: pointer; }
     .card-pdf-thumb .thumb-placeholder { display: flex; flex-direction: column; align-items: center; gap: 8px; color: var(--muted); font: 400 0.7rem 'Cinzel', serif; text-transform: uppercase; letter-spacing: 0.06em; }
     .card-pdf-thumb .thumb-placeholder svg { width: 30px; height: 30px; opacity: 0.5; color: var(--gold); }
     .card-pdf-thumb:hover .thumb-placeholder { color: var(--gold2); }
-    .card-actions { display: flex; gap: 8px; align-items: center; margin-top: 10px; }
+    .card-actions { display: flex; gap: 8px; align-items: center; margin-top: auto; padding-top: 10px; }
     .preview-btn { display: inline-flex; align-items: center; gap: 7px; padding: 10px 14px; background: linear-gradient(180deg, var(--blood), #4a1010); border: 1px solid var(--gold); color: var(--gold2); font: 700 0.7rem 'Cinzel', serif; letter-spacing: 0.06em; text-transform: uppercase; cursor: pointer; text-decoration: none; transition: 0.2s; flex: 1; justify-content: center; }
     .preview-btn:hover { filter: brightness(1.2); }
     .download-btn { display: inline-flex; align-items: center; justify-content: center; padding: 10px 13px; background: transparent; border: 1px solid var(--gold); color: var(--gold2); cursor: pointer; text-decoration: none; transition: 0.2s; }
@@ -402,6 +402,7 @@
     .dragon-eye-btn:hover .dragon-pupil { transform: scaleX(0.55); }
     .questions-btn { display: flex; align-items: center; justify-content: center; gap: 8px; width: 100%; margin-top: 12px; padding: 11px 14px; background: transparent; border: 1px dashed var(--gold); color: var(--gold2); font: 700 0.7rem 'Cinzel', serif; letter-spacing: 0.06em; text-transform: uppercase; cursor: pointer; transition: 0.2s; }
     .questions-btn:hover { background: color-mix(in srgb, var(--gold) 10%, transparent); }
+    .week-card .questions-btn { margin-top: 10px; }
     .questions-panel { display: none; grid-column: 1/-1; background: var(--panel); border: 1px solid var(--border); border-top: 3px solid var(--gold); padding: 26px; margin-top: 14px; }
     .questions-panel.open { display: block; }
     .questions-panel-head { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px; margin-bottom: 20px; }
@@ -433,7 +434,7 @@
     .act-hero .progress { max-width: 520px; margin: 18px auto 8px; }
     .act-prog { font: 400 0.7rem 'Cinzel', serif; color: var(--muted); text-transform: uppercase; letter-spacing: 0.05em; }
     .act-motto { margin-top: 18px; font-style: italic; color: var(--gold); letter-spacing: 0.06em; }
-    .act-grid { grid-template-columns: repeat(auto-fill, minmax(290px, 1fr)); gap: 20px; }
+    .act-grid { grid-template-columns: repeat(auto-fit, minmax(290px, 360px)); gap: 20px; justify-content: center; }
     .act-grid .activity-block { background: linear-gradient(180deg, var(--panel), var(--panel2)); border-top: 2px solid var(--gold); padding: 18px; }
     .act-grid .card-pdf-thumb { height: 170px; }
     .act-grid .activity-block:hover { border-color: var(--gold2); box-shadow: 0 14px 34px color-mix(in srgb, var(--gold) 20%, transparent); }
@@ -516,15 +517,17 @@
     .icon-btn.danger:hover { background: var(--danger); }
 
     /* ====== MODALES ====== */
-    .edit-modal-overlay { position: fixed; inset: 0; background: rgba(0, 0, 0, 0.85); backdrop-filter: blur(6px); z-index: 998; display: flex; align-items: center; justify-content: center; opacity: 0; pointer-events: none; transition: opacity 0.25s; padding: 20px; }
+    .edit-modal-overlay { position: fixed; inset: 0; background: rgba(0, 0, 0, 0.85); backdrop-filter: blur(6px); z-index: 998; display: flex; align-items: flex-start; justify-content: center; opacity: 0; pointer-events: none; transition: opacity 0.25s; padding: clamp(20px, 4vh, 42px) 20px; overflow-y: auto; }
     .edit-modal-overlay.open { opacity: 1; pointer-events: all; }
-    .edit-modal { width: min(560px, 100%); max-height: 86vh; overflow: auto; background: linear-gradient(180deg, var(--panel), var(--dark2)); border: 1px solid var(--gold); padding: 26px 28px; box-shadow: 0 30px 90px rgba(0, 0, 0, 0.8); }
+    .edit-modal { width: min(620px, 100%); max-height: none; overflow: visible; margin: auto; background: linear-gradient(180deg, var(--panel), var(--dark2)); border: 1px solid var(--gold); padding: 26px 28px; box-shadow: 0 30px 90px rgba(0, 0, 0, 0.8); }
     .edit-modal-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 18px; gap: 10px; }
     .edit-modal-head h3 { color: var(--gold2); font-size: 1.1rem; text-transform: uppercase; letter-spacing: 0.03em; }
     .edit-modal-head button { background: transparent; border: 1px solid var(--border); color: var(--muted); width: 30px; height: 30px; flex-shrink: 0; }
     .edit-field { display: grid; gap: 6px; margin-bottom: 14px; }
     .edit-field label { display: block; font: 700 0.68rem 'Cinzel', serif; color: var(--gold); text-transform: uppercase; letter-spacing: 0.06em; }
-    .edit-field input, .edit-field textarea { width: 100%; background: rgba(5, 4, 3, 0.7); border: 1px solid var(--border); color: var(--text); padding: 10px 12px; font-family: 'Cormorant Garamond', serif; font-size: 1rem; }
+    .edit-field input, .edit-field textarea { width: 100%; max-width: 100%; background: rgba(5, 4, 3, 0.7); border: 1px solid var(--border); color: var(--text); padding: 10px 12px; font-family: 'Cormorant Garamond', serif; font-size: 1rem; display:block; }
+    .edit-modal form { width:100%; }
+    .edit-modal * { box-sizing:border-box; }
     .edit-field textarea { min-height: 90px; resize: vertical; }
     .edit-field small { color: var(--muted); font-size: 0.75rem; font-style: italic; }
     .edit-modal-actions { display: flex; justify-content: flex-end; gap: 10px; margin-top: 8px; }
@@ -586,7 +589,10 @@
     .crow-local-actions { display:flex; gap:6px; padding:7px 10px; border-top:1px solid var(--border); }
     .crow-local-actions button { flex:1; padding:7px 6px; border:1px solid var(--border); background:var(--dark2); color:var(--gold2); font-size:.62rem; }
     .crow-local-actions button:disabled { opacity:.5; cursor:not-allowed; }
-    .crow-thinking { color:var(--gold2); font-style:italic; opacity:.85; }
+    .crow-thinking { color:var(--gold2); font-style:italic; opacity:.92; display:flex; align-items:center; gap:10px; }
+    .crow-thinking:before { content:''; width:12px; height:12px; border-radius:50%; border:2px solid color-mix(in srgb, var(--gold) 28%, transparent); border-top-color:var(--gold2); animation: spin .75s linear infinite; flex-shrink:0; }
+    .crow-thinking .thinking-dots::after { content:'...'; display:inline-block; width:1.2em; text-align:left; animation: thinkingDots 1.1s steps(4,end) infinite; overflow:hidden; vertical-align:bottom; }
+    @keyframes thinkingDots { 0% { width:0; } 100% { width:1.2em; } }
     .msg.bot p { margin:0 0 9px; line-height:1.55; }
     .msg.bot h3,.msg.bot h4 { margin:12px 0 6px; color:var(--gold2); }
     .msg.bot ul,.msg.bot ol { margin:6px 0 10px 20px; padding:0; }
@@ -1947,6 +1953,7 @@ footer { border-top:1px solid rgba(200,169,107,.24); background:#0D1725; color:#
         </button>
         <div class="progress"><i style="width:0%" data-progress="${w.progress}"></i></div>
         <small>${Number(w.progress).toFixed(2)}% de avance acumulado</small>
+        ${w.questionsBtn ? `<button type="button" class="questions-btn" onclick="toggleQuestions()">❖ Banco de preguntas</button>` : ''}
 
       </article>`;
     }
@@ -3922,13 +3929,16 @@ ${grounded}
       }
     }
 
+    function crowDelay(ms) { return new Promise(resolve => setTimeout(resolve, ms)); }
+
     async function askCrow(text) {
       const question = String(text || '').trim();
       if (!question) return;
       crowSafeMessage(question, 'user');
       crowChatInput.value = '';
-      const pending = crowSafeMessage('Consultando el catálogo y los documentos…', 'bot');
+      const pending = crowSafeMessage('El Cuervo consulta sus pergaminos<span class="thinking-dots"></span>', 'bot');
       pending.classList.add('crow-thinking');
+      const thinkingStartedAt = performance.now();
 
       try {
         const weekNum = crowRequestedWeek(question);
@@ -4037,6 +4047,8 @@ ${grounded}
           }
         }
 
+        const elapsedThinking = performance.now() - thinkingStartedAt;
+        if (elapsedThinking < 1200) await crowDelay(1200 - elapsedThinking);
         pending.classList.remove('crow-thinking');
         answer = crowCleanGeneratedAnswer(answer || '')
           .replace(/&#x20;|&#32;|&nbsp;/gi, ' ')
@@ -4083,6 +4095,8 @@ ${grounded}
         crowLocalHistory.push({role:'user',content:question},{role:'assistant',content:answer || ''});
         crowLocalHistory = crowLocalHistory.slice(-8);
       } catch (error) {
+        const elapsedThinking = performance.now() - thinkingStartedAt;
+        if (elapsedThinking < 1200) await crowDelay(1200 - elapsedThinking);
         pending.classList.remove('crow-thinking');
         pending.textContent = 'No pude completar la consulta: ' + (error.message || 'error local');
       }
