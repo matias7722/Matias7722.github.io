@@ -2908,7 +2908,7 @@ La base de datos contiene tablas; las tablas tienen columnas; cada fila o regist
       if(identified.length)return `Comprender ${identified.map(x=>x.name.toLowerCase()).join(' y ')} y poder ilustrarlo con un ejemplo propio.`;
       return `Explicar con tus palabras el tema «${title}» y reconocer su objetivo en el material original.`;
     }
-    // Cuervo 4.0: elegir el contenido por programa, actividad y evidencia legible.
+    // Cuervo 4.1: elegir el contenido por programa, actividad y evidencia legible.
     // No buscar términos en el OCR completo: infografías con ruido creaban
     // asociaciones falsas entre, por ejemplo, instalación y arquitectura multicapa.
     function crowActivityTopicCards(pages,title,weekHeading,alreadyUsed,weekNum='',ordinal=0){
@@ -3031,9 +3031,9 @@ La base de datos contiene tablas; las tablas tienen columnas; cada fila o regist
     ];
     // Cuervo 3.4: una restricción sobre el formato («no muestres OCR ilegible»)
     // NO cambia el objetivo académico de la pregunta.
-    // Cuervo 4.0: glosario académico independiente de Qwen 0.5B.
+    // Cuervo 4.1: glosario académico independiente de Qwen 0.5B.
     // Evita confundir una base de datos con una tabla o un modelo de datos.
-    // Cuervo 4.0: conceptos de alta frecuencia sin generación libre ni citas inventadas.
+    // Cuervo 4.1: conceptos de alta frecuencia sin generación libre ni citas inventadas.
     // Clasifica el tema por sus palabras clave aunque el usuario añada "con ejemplo".
     // 3.8: Las consultas técnicas tienen prioridad sobre palabras genéricas
     // como «base de datos», que aparecen en casi todas las preguntas.
@@ -3137,7 +3137,7 @@ Un **sistema gestor de bases de datos (DBMS)** es un programa que permite crear,
       }
       return null;
     }
-    // Cuervo 4.0: respuestas sobre la identidad del asistente, sin bibliografía ficticia.
+    // Cuervo 4.1: respuestas sobre la identidad del asistente, sin bibliografía ficticia.
     function crowSelfAnswer(question) {
       const q=crowNorm(question);
       const self=/(?:\b(?:tu|tus|eres|puedes|sirves|funcion|proposito|ayudas|haces|capacidades|limitaciones)\b)/.test(q);
@@ -3308,7 +3308,7 @@ Un **sistema gestor de bases de datos (DBMS)** es un programa que permite crear,
       const name=activity?.title||'Código SQL Grados y Títulos';
       return `## ${name}\n\nLa actividad está registrada en el catálogo de la Semana 05, pero **no encuentro texto OCR indexado asociado a ese archivo**. No puedo afirmar qué contiene ni transcribirlo.\n\nHay sentencias SQL legibles en el *Manual Creación de BD Grados y Títulos*, pág. 14; pertenecen a otro documento y no deben confundirse con el archivo faltante.`;
     }
-    // Cuervo 4.0: una clase por actividad, no una enumeración de cinco PDF.
+    // Cuervo 4.1: una clase por actividad, no una enumeración de cinco PDF.
     function crowLessonRequest(q) {
       const n=crowNorm(q);
       return !!crowRequestedWeek(q) && /(?:explic|ensena|aprender|estudi|paso a paso|desarroll|clase|profesor)/.test(n);
@@ -3329,7 +3329,7 @@ Un **sistema gestor de bases de datos (DBMS)** es un programa que permite crear,
       }
       return result;
     }
-    // Cuervo 4.0: los enlaces a los documentos dependen del catálogo, NO del OCR.
+    // Cuervo 4.1: los enlaces a los documentos dependen del catálogo, NO del OCR.
     function crowLessonFileRefs(item, pageRefs=[]) {
       const actual=pageRefs.slice(0,3).map(e=>({k:item.k,wid:item.week.id,aid:item.activity.id,week:item.week.num,title:item.title,page:e.page}));
       return actual.length?actual:[{k:item.k,wid:item.week.id,aid:item.activity.id,week:item.week.num,title:item.title,page:null}];
@@ -3371,6 +3371,100 @@ Un **sistema gestor de bases de datos (DBMS)** es un programa que permite crear,
       if(/instalacion|instalar|sql server developer/.test(t))return 'install';
       return 'generic';
     }
+    // CUERVO 4.1 — apoyo docente independiente del OCR y respuestas de seguimiento fiables.
+    const crow41Knowledge = {
+      indexes: {
+        explain:'Un índice de SQL Server es una estructura adicional que puede ayudar al motor a encontrar filas más eficientemente. No es una simple etiqueta ni una columna aislada. Puede reducir lecturas para ciertas consultas y aumentar el trabajo al insertar, actualizar o eliminar registros.',
+        analogy:'Imagina el índice alfabético de un libro. En lugar de recorrer todas las páginas, localizas el tema y saltas a las páginas correspondientes. En SQL Server, el motor decide si conviene usar un índice según la consulta y sus estadísticas.',
+        exercise:'En una tabla de estudiantes, identifica una consulta que busque por código. Compara su plan de ejecución y lecturas lógicas antes y después de crear un índice de prueba.',
+        verify:'¿Por qué crear un índice no garantiza que todas las consultas sean más rápidas?'
+      },
+      permissions: {
+        explain:'Un permiso en SQL Server autoriza una operación como SELECT, INSERT o UPDATE sobre un objeto. El mínimo privilegio consiste en conceder solo lo necesario. Un índice, en cambio, se utiliza para optimizar determinadas formas de acceder a los datos.',
+        analogy:'Piensa en una biblioteca: un visitante puede consultar libros, mientras que un administrador puede cambiar el catálogo. Dar permiso para consultar no equivale a reorganizar cómo se busca.',
+        exercise:'Propón un rol que solo lea reportes. Explica qué permisos necesita y cuáles no. Distingue esta decisión de una optimización con índices.',
+        verify:'¿Por qué el permiso SELECT no convierte una consulta en más rápida?'
+      },
+      architecture: {
+        explain:'La arquitectura centralizada reúne la administración de datos en un sistema principal. Una distribuida reparte datos o servicios entre nodos conectados. Cliente-servidor explica quién solicita y quién responde; multicapa separa responsabilidades como interfaz, lógica y almacenamiento.',
+        analogy:'Una oficina única representa un punto central; varias oficinas coordinadas ilustran distribución. Una ventanilla recibe solicitudes (interfaz), una oficina decide (lógica) y un archivo conserva documentos (datos).',
+        exercise:'Dibuja una aplicación universitaria e identifica dónde funciona la interfaz, la lógica y la base de datos. Justifica un riesgo de cada organización.',
+        verify:'¿Puede una aplicación usar cliente-servidor y al mismo tiempo una arquitectura multicapa?'
+      },
+      install: {
+        explain:'Instalar SQL Server prepara el gestor de bases de datos y una instancia que administra conexiones y bases. Crear una base de datos es un paso posterior que se realiza dentro del gestor. SSMS es una herramienta cliente, no el motor.',
+        analogy:'Instalar SQL Server es preparar una biblioteca y su sistema de gestión; crear una base es abrir una colección específica dentro de ella.',
+        exercise:'Indica cómo verificarías que la instancia está iniciada y que puedes conectarte con SSMS, sin confundir ambos programas.',
+        verify:'¿Por qué abrir SSMS no demuestra que el servicio de SQL Server esté disponible?'
+      },
+      physical: {
+        explain:'El modelamiento físico transforma un diseño de datos en objetos concretos del DBMS: tablas, columnas, tipos de datos, claves primarias, claves foráneas y restricciones. La estructura debe representar las relaciones y proteger la integridad de la información.',
+        analogy:'Un plano conceptual indica qué espacios necesita un edificio; el modelo físico decide materiales y medidas. En bases de datos, el modelo físico concreta columnas, tipos y restricciones.',
+        exercise:'Diseña de forma ilustrativa dos tablas, Facultad y Escuela, y explica una relación de clave foránea. No atribuyas estos nombres ni columnas al archivo sin comprobarlos.',
+        verify:'¿Qué evita una clave foránea que relaciona dos tablas?'
+      },
+      validation: {
+        explain:'Validar una infraestructura de datos significa comprobar con evidencias que la estructura, las conexiones, la integridad y las operaciones funcionan según los requisitos del proyecto. Una prueba de carga observa el rendimiento bajo un volumen y concurrencia definidos.',
+        analogy:'No basta con mostrar que el coche enciende: también hay que probar frenos y funcionamiento bajo condiciones definidas. En una base de datos se registran consultas, errores y tiempos reales.',
+        exercise:'Redacta una tabla de pruebas con objetivo, acción, resultado esperado, resultado observado y evidencia. No inventes mediciones.',
+        verify:'¿Por qué un resultado sin evidencia no demuestra que se superó una prueba?'
+      },
+      sql: {
+        explain:'Un archivo .sql es texto con instrucciones que pueden crear, consultar o modificar objetos y datos. CREATE TABLE define una tabla; PRIMARY KEY identifica filas y FOREIGN KEY define una referencia. El código debe revisarse antes de ejecutarlo.',
+        analogy:'Un script es una receta de acciones para el motor; una receta incompleta o leída con caracteres equivocados puede producir resultados incorrectos.',
+        exercise:'Identifica en el archivo original todas las sentencias CREATE TABLE y nombra las claves y sus referencias sin completar código faltante.',
+        verify:'¿Por qué conviene revisar un script antes de ejecutarlo?'
+      },
+      generic: {
+        explain:'Empezaremos por el propósito de esta semana y el objetivo de la actividad. Identificaremos los conceptos que podemos enseñar con seguridad; el procedimiento exacto solo puede atribuirse al archivo cuando su contenido sea accesible.',
+        analogy:'Una clase tiene dos partes: entender la idea y comprobar cómo se aplica. El material del curso sirve para verificar la segunda parte.',
+        exercise:'A partir del título de la actividad, formula qué problema podría resolver y señala qué evidencia necesitarías buscar en el archivo para confirmarlo.',
+        verify:'¿Qué información del archivo necesitas verificar antes de afirmar que completaste la actividad?'
+      }
+    };
+    function crow41Topic(item, evidence=[]) {
+      const activity=crowNorm(item.title||'');
+      const subject=crowNorm((item.week?.title||'')+' '+activity);
+      const ext=String(item.activity?.filename||'').toLowerCase();
+      if(/\.sql$/i.test(ext)) return 'sql';
+      if(/indice|index|esquema/.test(activity)) return 'indexes';
+      if(/permiso|privilegio|seguridad/.test(activity)) return 'permissions';
+      if(/instal|despliegue|motor de datos/.test(subject)) return 'install';
+      if(/modelamiento|modelado|integracion|modelo fisico/.test(subject)) return 'physical';
+      if(/sustentacion|validacion|pruebas de carga/.test(subject)) return 'validation';
+      if(/arquitectura|formulacion del proyecto/.test(subject)) return 'architecture';
+      const original=crowLessonTopic(item,evidence);
+      return crow41Knowledge[original] ? original : 'generic';
+    }
+    function crow41FollowUp(question,item,ev){
+      const n=crowNorm(question);
+      const chosen=/\bindice(?:s)?\b/.test(n)?'indexes':/(?:permis|privilegi)/.test(n)?'permissions':/(?:arquitectur|centralizad|distribuid|multicapa)/.test(n)?'architecture':/(?:modelamiento|modelo fisico|clave foranea|restriccion)/.test(n)?'physical':/(?:validacion|pruebas de carga|rendimiento)/.test(n)?'validation':crow41Topic(item,ev);
+      const k=crow41Knowledge[chosen]||crow41Knowledge.generic;
+      if(/(?:ejemplo|otra manera|sencill|no entiend|repite|analog)/.test(n)) return `### Vamos con un ejemplo más sencillo\n\n${k.analogy}\n\n**Lo importante:** ${k.explain}\n\n**Te pregunto:** ${k.verify}`;
+      if(/(?:ejercicio|practica|aplicar|como lo hago)/.test(n))return `### Practiquemos juntos\n\n${k.exercise}\n\n**Antes de realizar cambios**, comprueba los detalles concretos en el documento original.\n\n**Te pregunto:** ${k.verify}`;
+      if(/(?:por que|para que|ventaja|diferencia|explica|que es|que son|que significa|ayuda)/.test(n))return `### Lo explicamos paso a paso\n\n${k.explain}\n\n**Pensemos en un caso:** ${k.analogy}\n\n**Comprueba lo aprendido:** ${k.verify}`;
+      return null;
+    }
+    async function crow41SqlPreview(item){
+      const name=String(item.activity?.filename||'');
+      if(!/\.sql$/i.test(name))return null;
+      try{
+        const url=await actUrl(item.activity);
+        const r=await fetch(url,{cache:'no-store'});
+        if(!r.ok)throw new Error('archivo no accesible');
+        const t=await r.text();
+        if(t.length>2500000 || !t.trim())throw new Error('archivo vacío o demasiado grande');
+        const lines=t.replace(/\r\n?/g,'\n').split('\n');
+        const commands=[];
+        for(let i=0;i<lines.length;i++){
+          if(/^\s*(?:CREATE\s+TABLE|ALTER\s+TABLE|INSERT\s+INTO|SELECT\b|CREATE\s+(?:UNIQUE\s+)?INDEX|CREATE\s+SCHEMA)/i.test(lines[i]))
+            commands.push(`${i+1}: ${lines[i].trim().slice(0,145)}`);
+          if(commands.length>=6)break;
+        }
+        return {count:lines.length,commands};
+      }catch(e){return null;}
+    }
+
     function crowLessonTeaching(item,evidence){
       const topic=crowLessonTopic(item,evidence);
       const subjects={
@@ -3448,7 +3542,7 @@ Un **sistema gestor de bases de datos (DBMS)** es un programa que permite crear,
     }
     function crowLessonSuspicious(text){
       const v=String(text||'');
-      return !v || v.length<90 || /PaaS\s*\([^)]*(?:anonymity|public service)/i.test(v) || /planificaci[oó]n\s+(?:free|pro)|cl[uú]ster\s*:\s*contiene las tablas|no cl[uú]ster\s*:\s*contiene|un [ií]ndice es una columna|permisos? para trabajar en|¿UNA pregunta|QU[eÉ] aprender[aá] el estudiante hoy\?/i.test(v) || /(?:¿qu[eé] significan los conceptos del fragmento\?|un ejemplo ilustrativo identificado como general|s[oó]lo si se acredita en el fragmento)/i.test(v) || (/\b(?:instrucci[oó]n|fragmento)\b/i.test(v) && /(?:paso a paso solo|pregunta para el estudiante)/i.test(v));
+      return !v || v.length<90 || /un [ií]ndice es (?:una etiqueta|una forma de etiquetar)/i.test(v) || /PaaS\s*\([^)]*(?:anonymity|public service)/i.test(v) || /planificaci[oó]n\s+(?:free|pro)|cl[uú]ster\s*:\s*contiene las tablas|no cl[uú]ster\s*:\s*contiene|un [ií]ndice es una columna|permisos? para trabajar en|¿UNA pregunta|QU[eÉ] aprender[aá] el estudiante hoy\?/i.test(v) || /(?:¿qu[eé] significan los conceptos del fragmento\?|un ejemplo ilustrativo identificado como general|s[oó]lo si se acredita en el fragmento)/i.test(v) || (/\b(?:instrucci[oó]n|fragmento)\b/i.test(v) && /(?:paso a paso solo|pregunta para el estudiante)/i.test(v));
     }
     function crowLessonGroundedBody(item,evidence){
       const card=crowLessonTeaching(item,evidence);
@@ -3456,7 +3550,30 @@ Un **sistema gestor de bases de datos (DBMS)** es un programa que permite crear,
         'El archivo está registrado, pero no dispongo de párrafos OCR suficientemente fiables de esta actividad. **Puedes abrir el PDF original desde el enlace inferior**, aunque no esté indexado.';
       if(card){return `### Antes de empezar\n\n${card.goal}\n\n### Lo que sabemos del material\n\n${docs}\n\n### Ahora sí, aprendamos\n\n${card.teach}\n\n### Ejemplo para entenderlo\n\n${card.example}\n\n### Practiquemos\n\n${card.practice}\n\n**Te pregunto:** ${card.check}\n\n*La explicación y el ejemplo son conocimientos generales de apoyo; los extractos citados son los únicos atribuibles al documento.*`;
       }
-      return `### ¿Qué vamos a estudiar?\n\nEsta actividad forma parte de **${item.week.title}**. Antes de realizarla, necesitaremos identificar su objetivo y las evidencias del procedimiento.\n\n### Lo que podemos comprobar\n\n${docs}\n\n### Cómo avanzar en esta actividad\n\n1. Abre el documento original desde el enlace.\n2. Identifica el problema, los recursos utilizados y el resultado que se espera obtener.\n3. Resume con tus palabras el procedimiento que muestra el archivo.\n\n**Pregunta para empezar:** ¿Qué objetivo concreto aparece en la primera parte de esta actividad?\n\n*No dispongo de evidencia suficiente para desarrollar un procedimiento técnico específico; no lo inventaré.*`;
+      const k=crow41Knowledge[crow41Topic(item,evidence)]||crow41Knowledge.generic;
+      return `### Empecemos por comprender el tema
+
+Esta actividad pertenece a **${item.week.title}**. No conozco todos sus pasos específicos sin leer el archivo original.
+
+### Explicación del profesor (conocimiento general)
+
+${k.explain}
+
+### Ejemplo para visualizarlo
+
+${k.analogy}
+
+### El material original
+
+${docs}
+
+### Tu ejercicio
+
+${k.exercise}
+
+**Comprueba lo aprendido:** ${k.verify}
+
+*Los conceptos y ejercicios son una introducción general, no una transcripción de la actividad. Comprueba el procedimiento real en el archivo vinculado.*`;
     }
     async function crowLessonOne(question,isNew=false){
       const session=crowTeachingSession;
@@ -3468,6 +3585,19 @@ Un **sistema gestor de bases de datos (DBMS)** es un programa que permite crear,
       const overview=isNew?crowLessonIntro(session):'';
       const header=`## Clase ${session.index+1} de ${session.activities.length}: ${item.title}\n\n`;
       let body=crowLessonGroundedBody(item,evidence);
+      const sqlPreview=await crow41SqlPreview(item);
+      if(sqlPreview){
+        body+=`
+
+### Archivo SQL leído directamente (sin OCR)
+
+El archivo contiene ${sqlPreview.count} líneas de texto. `;
+        body+=sqlPreview.commands.length?`He localizado estas instrucciones y líneas:
+
+${sqlPreview.commands.map(x=>'- `'+x.replace(/`/g,'')+'`').join('\n')}
+
+Abre el SQL original para verificar el procedimiento completo antes de ejecutarlo.`:'No detecté sentencias SQL entre las instrucciones buscadas; abre el archivo original para inspeccionarlo.';
+      }
       let mode='Guía docente verificable';
       // El modelo local pequeño puede generar datos falsos aun con un PDF correcto.
       // Mantenemos siempre una explicación fiable como base; la IA se usa para seguimiento adaptativo.
@@ -3490,10 +3620,16 @@ Un **sistema gestor de bases de datos (DBMS)** es un programa que permite crear,
       if(other && crowLessonRequest(question))return await crowStartLesson(question,other);
       const item=session.activities[session.index];
       if(!item)return null;
-      if(!/(?:pregunta|explica|no entiendo|por que|para que|como|ejemplo|ayuda|repite|diferencia|que es|que significa|practica|ejercicio)/.test(crowNorm(question)))return null;
+      if(!/(?:pregunta|explica|no entiendo|no entendi|por que|para que|como|ejemplo|ayuda|repite|diferencia|que es|que son|que significa|practica|ejercicio)/.test(crowNorm(question)))return null;
       const ev=crowLessonSources(item);
       const refs=crowLessonFileRefs(item,ev);
       const fallback=crowLessonGroundedBody(item,ev);
+      const grounded=crow41FollowUp(question,item,ev);
+      if(grounded){return {answer:`**Seguimos con «${item.title}».**
+
+${grounded}
+
+*Explicación general revisada, no generada por la IA local ni atribuida literalmente al PDF. Puedes consultar el documento original abajo.*`,sources:refs,mode:'Tutor verificado'};}
       if(!crowLocalEngine){return {answer:`**Seguimos en «${item.title}».**\n\n${fallback}\n\n*Para preguntas adaptativas adicionales, activa Profesor IA local. El PDF sigue disponible en los enlaces.*`,sources:refs,mode:'Guía docente'};}
       if(!ev.length){return {answer:`No cuento con OCR legible de «${item.title}» para que la IA cite ese documento. Abre el archivo original que aparece abajo.\n\n${fallback}`,sources:refs,mode:'Guía docente'};}
       try{
