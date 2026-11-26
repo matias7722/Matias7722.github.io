@@ -1990,6 +1990,36 @@ body > #pdfModalOverlay { z-index:9999 !important; }
     };
     const UNIT_ICONS = { '1': '🐺', '2': '🦁', '3': '🐉', '4': '🦌' };
 
+    // Al volver a una pestaña pública, los candados pueden haber cambiado en GitHub.
+    // La sincronización no altera actividades, preguntas ni borradores del administrador.
+    let lastUnitAccessCheck = 0;
+    async function refreshPublishedUnitLocks(force = false) {
+      if (!appState || role === 'admin' || document.visibilityState !== 'visible') return;
+      if (!force && Date.now() - lastUnitAccessCheck < 15000) return;
+      lastUnitAccessCheck = Date.now();
+      try {
+        const r = await fetch(DATA_PATH + '?access=' + Date.now(), {cache:'no-store'});
+        if (!r.ok) return;
+        const published = await r.json();
+        if (!published.units) return;
+        let changed = false;
+        for (const [k,u] of Object.entries(appState.units)) {
+          if (!published.units[k]) continue;
+          const next = Boolean(published.units[k].locked);
+          if (u.locked !== next) { u.locked = next; changed = true; }
+        }
+        if (changed) {
+          renderUnitTabs(); renderUnitPanel(currentUnit); updateStats();
+          const active = appState.units[currentUnit];
+          if (active?.locked && role !== 'admin') {
+            const firstOpen = Object.keys(appState.units).find(k => !appState.units[k].locked);
+            if (firstOpen) { currentUnit = firstOpen; renderUnitTabs(); renderUnitPanel(currentUnit); }
+          }
+          showToast('Los accesos de las unidades fueron actualizados.');
+        }
+      } catch(e) { console.warn('Sincronización de accesos no disponible',e); }
+    }
+    document.addEventListener('visibilitychange', () => refreshPublishedUnitLocks(false));
     function renderUnitTabs() {
       const wrap = document.getElementById('unitTabs');
       wrap.innerHTML = Object.keys(appState.units).map(k => {
@@ -1999,7 +2029,7 @@ body > #pdfModalOverlay { z-index:9999 !important; }
         const h = HOUSES[k] || { n: '' };
         return `<button type="button" data-house="${k}" class="unit-tab ${k === currentUnit ? 'active' : ''} ${u.locked ? 'locked' : ''}" onclick="selectUnit('${k}')">
           <span class="ut-main"><span class="unit-icon">${u.locked ? '🔒' : icon}</span>${esc(u.nombre)}${lockToggle}</span>
-          <span class="ut-house">${esc(h.n)}</span>
+          <span class="ut-house">${esc(h.n)} · ${u.locked ? 'Cerrada' : 'Abierta'}</span>
         </button>`;
       }).join('');
     }
@@ -2017,13 +2047,66 @@ body > #pdfModalOverlay { z-index:9999 !important; }
       crowSay('Has entrado a la ' + u.nombre + '. ' + (HOUSES[k] ? '«' + HOUSES[k].m + '»' : '') + ' Explora las semanas y sus actividades.');
     }
 
-    function toggleUnitLock(k) {
+    // Las unidades tienen un estado público que debe sincronizarse entre navegadores.
+    // Los cambios no publicados se conservan como borradores locales, sin ocultarlos.
+    const UNIT_LOCK_DRAFT_KEY = 'gotPendingUnitLocksV1';
+    const unitLockBusy = new Set();
+    function unitLockDrafts() {
+      try { return JSON.parse(localStorage.getItem(UNIT_LOCK_DRAFT_KEY) || '{}') || {}; }
+      catch (e) { return {}; }
+    }
+    function saveUnitLockDraft(k, locked) {
+      const drafts = unitLockDrafts();
+      drafts[k] = Boolean(locked);
+      localStorage.setItem(UNIT_LOCK_DRAFT_KEY, JSON.stringify(drafts));
+    }
+    function clearUnitLockDraft(k) {
+      const drafts = unitLockDrafts();
+      delete drafts[k];
+      if (Object.keys(drafts).length) localStorage.setItem(UNIT_LOCK_DRAFT_KEY, JSON.stringify(drafts));
+      else localStorage.removeItem(UNIT_LOCK_DRAFT_KEY);
+    }
+    async function publishUnitLock(k, locked) {
+      if (!ghCfg()) return false;
+      // Solo se cambia el campo locked: NO reemplazar el catálogo remoto con
+      // el contenido de una pestaña vieja ni borrar actividades o preguntas.
+      const response = await fetch(ghUrl(DATA_PATH) + '?ref=' + encodeURIComponent(ghCfg().branch), { headers: ghHdr(), cache: 'no-store' });
+      if (!response.ok) throw new Error('No se pudo consultar el catálogo público (GitHub ' + response.status + ')');
+      const file = await response.json();
+      const encoded = (file.content || '').replace(/\s/g, '');
+      const bytes = Uint8Array.from(atob(encoded), ch => ch.charCodeAt(0));
+      const publicState = JSON.parse(new TextDecoder().decode(bytes));
+      if (!publicState.units || !publicState.units[k]) throw new Error('La unidad no existe en el catálogo publicado');
+      publicState.units[k].locked = Boolean(locked);
+      await ghPut(DATA_PATH, toB64(JSON.stringify(publicState)), 'Actualizar acceso a ' + publicState.units[k].nombre);
+      return true;
+    }
+    async function toggleUnitLock(k) {
+      if (role !== 'admin' || unitLockBusy.has(k)) return;
       const u = appState.units[k];
-      u.locked = !u.locked;
+      if (!u) return;
+      const previous = Boolean(u.locked);
+      const next = !previous;
+      u.locked = next;
+      saveUnitLockDraft(k, next);
       saveState(); renderUnitTabs();
       if (currentUnit === k) renderUnitPanel(k);
       updateStats();
-      showToast(u.locked ? 'Unidad bloqueada para usuarios.' : 'Unidad habilitada para todos.');
+      if (!ghCfg()) {
+        showToast('Estado guardado SOLO en este navegador. Conecta GitHub y pulsa ☁ Publicar para compartirlo.');
+        return;
+      }
+      unitLockBusy.add(k);
+      showToast('Guardando el nuevo estado de la unidad en GitHub…');
+      try {
+        await publishUnitLock(k, next);
+        clearUnitLockDraft(k);
+        showToast(next ? 'Unidad CERRADA y publicada para todos.' : 'Unidad ABIERTA y publicada para todos.');
+      } catch (e) {
+        // Se conserva el cambio local, pero se comunica que aún no se aplicó fuera.
+        console.error('No se pudo publicar el estado de la unidad:', e);
+        showToast('No se publicó en GitHub: ' + e.message + '. Estado pendiente en este navegador.');
+      } finally { unitLockBusy.delete(k); }
     }
 
     function renderUnitPanel(k) {
@@ -2316,6 +2399,7 @@ body > #pdfModalOverlay { z-index:9999 !important; }
         }
         saveState();
         await ghPut(DATA_PATH, toB64(JSON.stringify(appState)), 'Actualizar portafolio');
+        localStorage.removeItem(UNIT_LOCK_DRAFT_KEY); // La publicación general sincroniza los candados.
                           if (pdfIdxState.ready && pdfIndex.length) await ghPut(PDF_IDX_PATH, toB64(JSON.stringify({ sig: pdfIdxSig, ts: Date.now(), data: stripIdx(pdfIndex) })), 'Actualizar índice de PDF');
         renderUnitPanel(currentUnit); if (actView) renderActivityPage();
         showToast('✓ Publicado. GitHub Pages puede tardar ~1 min en mostrarlo a los demás.');
@@ -2356,11 +2440,21 @@ body > #pdfModalOverlay { z-index:9999 !important; }
         if (portfolioCatalogScore(item.state) > portfolioCatalogScore(best.state)) best = item;
       }
       if (local && best.state !== local && portfolioCatalogScore(best.state) > portfolioCatalogScore(local)) {
-        // No borra ni sustituye datos locales. Se conserva el original para revisión.
         console.warn('Se ha detectado un catálogo local menos completo. Se mostrará:', best.origin);
       }
-      console.info('Catálogo elegido:', best.origin, '— integridad:', portfolioCatalogScore(best.state));
-      return ensureDefaults(best.state);
+      // El número de actividades mide integridad del CATÁLOGO, no la vigencia
+      // de los candados. Los estados PUBLICADOS prevalecen en cualquier navegador.
+      const chosen = structuredClone(best.state);
+      const drafts = unitLockDrafts();
+      if (published && published.units) {
+        for (const [k, unit] of Object.entries(chosen.units)) {
+          if (published.units[k]) unit.locked = Boolean(published.units[k].locked);
+        }
+      }
+      // No aplicar borradores en el arranque público: deben mostrarse los
+      // candados PUBLICADOS incluso si el admin usó este mismo navegador.
+      console.info('Catálogo elegido:', best.origin, '— accesos:', published ? 'GitHub' : 'sincronización no disponible');
+      return ensureDefaults(chosen);
     }
 
     function renderQuestionsPanel() {
@@ -3068,7 +3162,7 @@ body > #pdfModalOverlay { z-index:9999 !important; }
         '\n\nEsta respuesta se basa en los fragmentos recuperados. Si necesitas una explicación más amplia, activa la IA local cuando tu equipo sea compatible.';
     }
 
-    async function crowAskLocalModel(question, evidence, fullWeek = false) {
+    async function crowAskLocalModel(question, evidence, fullWeek = false, generalMode = false) {
       if (!crowLocalEngine) return null;
       const weekNum = crowRequestedWeek(question);
       const weekRows = weekNum ? crowWeekRows(weekNum) : [];
@@ -3077,7 +3171,7 @@ body > #pdfModalOverlay { z-index:9999 !important; }
         return `${unit.nombre} · ${week.num} — ${week.title}. Actividades: ${activities||'ninguna'}`;
       }).join('\n').slice(0,900);
 
-      const system = `Eres el Cuervo de Tres Ojos, profesor universitario y guía del portafolio. Enseña en español claro, con rigor y sin inventar.
+      const system = generalMode ? `Eres el Cuervo de Tres Ojos, profesor de Base de Datos II. La consulta es de CONOCIMIENTO GENERAL, no procede de los PDF. Responde en español de forma precisa y breve. Incluye definición, funcionamiento y ejemplo didáctico. No inventes citas, fuentes, sentencias SQL exactas ni experiencias propias. Si no sabes una respuesta, reconoce la limitación.` : `Eres el Cuervo de Tres Ojos, profesor universitario y guía del portafolio. Enseña en español claro, con rigor y sin inventar.
 REGLAS:
 - Los extractos son la única evidencia de lo que dicen los PDF. El catálogo solo acredita actividades registradas.
 - No inventes procedimientos, botones, nombres de tablas, columnas, cifras ni código SQL.
@@ -4105,6 +4199,50 @@ ${grounded}
       }
     }
 
+    // Cuervo 4.8 — rutas explícitas y bibliografía trazable.
+    // No presentar un resultado de búsqueda por palabras como si fuera prueba documental.
+    function crow48ConceptQuestion(question) {
+      const q = crowNorm(question);
+      if (crowRequestedWeek(question) || /\b(?:este|esta|ese|esa)\s+(?:archivo|actividad|documento|pdf|script|tema)\b/.test(q)) return false;
+      if (/\b(?:segun|mis documentos|mi pdf|portafolio|pagina|paginas|fuentes|cita|localiza|busca en|encuentra en|en el documento|en los archivos)\b/.test(q)) return false;
+      return /^(?:(?:por favor|dime|puedes|podrias|quiero que|necesito que|me puedes|me podrias)\s+)*(?:que es|que son|que significa|explica(?:me)?(?: que es| que son)?|define|definicion de|para que sirve|en que consiste|como funciona|dame un ejemplo de|cual es la diferencia entre)\b/.test(q);
+    }
+    function crow48KnownConcept(question) {
+      const q=crowNorm(question);
+      if (/\b(?:infraestructura de datos?|infraestructura de la informacion|infraestructura de almacenamiento de datos?)\b/.test(q)) {
+        return `## Infraestructura de datos\n\nUna **infraestructura de datos** es el conjunto de recursos tecnológicos y procedimientos que permiten **recopilar, almacenar, procesar, integrar, proteger y consultar** información.\n\n**Componentes habituales:** servidores o servicios en la nube, almacenamiento, redes, bases de datos, sistemas de procesamiento, copias de seguridad y controles de acceso.\n\n**Ejemplo ilustrativo:** una universidad registra grados y títulos en SQL Server; un servidor o servicio en la nube aloja las bases de datos, la red permite que las aplicaciones accedan a ellas y las copias de seguridad protegen la información. Todo ello forma parte de la infraestructura, pero ninguna pieza aislada representa por sí sola la infraestructura completa.\n\n**Comprueba lo aprendido:** ¿qué funciones cumplen la red, el motor de base de datos y las copias de seguridad?\n\n*Explicación conceptual general; no atribuida a un PDF del portafolio.*`;
+      }
+      return null;
+    }
+    function crow48DocumentRequest(question){
+      const q=crowNorm(question);
+      return !!crowRequestedWeek(question) || /\b(?:segun|mis documentos|mi pdf|en el pdf|en el documento|en este documento|en esta actividad|en el portafolio|cita la pagina|cita paginas|fuentes documentales|busca en|localiza en|texto original|segun mis archivos)\b/.test(q);
+    }
+    function crow48TopicMatch(question, answer) {
+      const stop=new Set(['que','son','es','como','cual','para','sirve','explica','explicame','con','ejemplo','dame','una','unos','unas','los','las','del','datos','base','de','en','por','sobre','quiero','puedes','me','definicion']);
+      const words=crowNorm(question).split(' ').filter(x=>x.length>4&&!stop.has(x));
+      if(!words.length)return true;
+      const normAnswer=crowNorm(answer);
+      return words.some(w=>normAnswer.includes(w)||normAnswer.includes(w.slice(0,-1)));
+    }
+    function crow48AcceptFreeResponse(question, answer){
+      const a=String(answer||'').trim();
+      if(a.length<65 || a.length>3000 || !crow48TopicMatch(question,a))return false;
+      if(/\b(?:no tengo acceso a internet pero|soy un modelo de lenguaje de openai|no puedo ver documentos adjuntos)\b/i.test(a))return false;
+      if(/\b(?:mysql y postgresql (?:son|estan) (?:parte|dentro) de sql server|un indice es una (?:etiqueta|forma de etiquetar)|servidor de la tienda)\b/i.test(a))return false;
+      if(crowLessonSuspicious(a))return false;
+      return true;
+    }
+    function crow48UniqueSources(sources){
+      const seen=new Set();
+      return (sources||[]).filter(e=>{
+        if(!e||!e.k||!e.wid||!e.aid)return false;
+        const key=[e.k,e.wid,e.aid,e.page||''].join('|');
+        if(seen.has(key))return false;
+        seen.add(key);return true;
+      });
+    }
+
     function crowDelay(ms) { return new Promise(resolve => setTimeout(resolve, ms)); }
 
     async function askCrow(text) {
@@ -4112,7 +4250,7 @@ ${grounded}
       if (!question) return;
       crowSafeMessage(question, 'user');
       crowChatInput.value = '';
-      const pending = crowSafeMessage('El Cuervo consulta sus pergaminos<span class="thinking-dots"></span>', 'bot');
+      const pending = crowSafeMessage('El Cuervo consulta sus pergaminos…', 'bot');
       pending.classList.add('crow-thinking');
       const thinkingStartedAt = performance.now();
 
@@ -4130,19 +4268,34 @@ ${grounded}
           const active=Boolean(crowLocalEngine);
           lessonResult={answer:active?'**Profesor IA local cargado.** El modelo WebLLM está disponible, pero las explicaciones verificadas del portafolio pueden contestarse automáticamente sin llamarlo. Para una pregunta abierta fuera de la clase se intentará usar el modelo; esto no garantiza precisión académica.':'**Profesor IA local no está cargado.** Las respuestas actuales proceden del catálogo, los documentos indexados y las explicaciones verificadas. Utiliza el control «Profesor IA local» para intentar cargar WebLLM en un navegador compatible con WebGPU.',sources:[],mode:'Estado real del motor'};
         }
-        if(!crowQuiz && !lessonResult && crowTeachingSession)lessonResult=await crowLessonFollowUp(question);
+        const standaloneConcept=crow48ConceptQuestion(question);
+        if(!crowQuiz && !lessonResult && crowTeachingSession && !standaloneConcept)lessonResult=await crowLessonFollowUp(question);
         if(!crowQuiz && !lessonResult && crowLessonRequest(question))lessonResult=await crowStartLesson(question,weekNum);
-        if(lessonResult){answer=lessonResult.answer;sources=lessonResult.sources||[];crowLastRoute=lessonResult.mode||'documental';}
+        let responseOrigin='Orientación documental';
+        if(lessonResult){answer=lessonResult.answer;sources=lessonResult.sources||[];responseOrigin=lessonResult.mode||'Guía documental';crowLastRoute=responseOrigin;}
+        else if (!crowQuiz && standaloneConcept) {
+          const verified=crow48KnownConcept(question)||crowTechnicalAnswer(question)||crowConceptDefinition(question)||crowAdvancedConceptAnswer(question);
+          if(verified){answer=verified;responseOrigin='Conocimiento académico verificado · sin IA';}
+          else if(crowLocalEngine){
+            try{
+              const prompt='Pregunta conceptual general (no documental): '+question+'\nDefine con precisión, explica cómo funciona y ofrece un ejemplo sencillo relacionado con bases de datos. No afirmes haber leído ningún PDF, no inventes referencias o nombres de tablas, no repitas la pregunta. Responde en español en 90-170 palabras.';
+              const generated=await crowAskLocalModel(prompt,[],false,true);
+              if(crow48AcceptFreeResponse(question,generated)){answer=generated;responseOrigin='IA local WebLLM · respuesta sin verificación documental';}
+            }catch(e){console.warn('Cuervo 4.8: no se pudo generar explicación general',e);}
+          }
+          if(!answer){answer=crowLocalEngine?'No puedo verificar una explicación fiable sobre ese concepto con el modelo local actual. Reformula la pregunta con un término técnico más específico o consulta una fuente académica.':'No tengo una explicación verificada de ese concepto en mi base local. Puedes activar «Profesor IA local», aunque sus respuestas requieren comprobación.';responseOrigin='Limitación reconocida';}
+          sources=[]; // Una pregunta general no acredita documentos del portafolio.
+        }
         else if (crowQuiz) {
           answer=crowQuizReply(question);
         } else if (intent==='quiz') {
-          answer=crowQuizStart();
+          answer=crowQuizStart();responseOrigin='Banco de evaluación · sin IA';
         } else if (intent==='self') {
-          answer=crowSelfAnswer(question);
+          answer=crowSelfAnswer(question);responseOrigin='Identidad del Cuervo · sin IA';
         } else if (intent==='technical') {
-          answer=crowTechnicalAnswer(question);
+          answer=crowTechnicalAnswer(question);responseOrigin='Conocimiento académico verificado · sin IA';
         } else if (intent==='advanced_concept') {
-          answer=crowAdvancedConceptAnswer(question);
+          answer=crowAdvancedConceptAnswer(question);responseOrigin='Conocimiento académico verificado · sin IA';
         } else if (intent==='ocr_audit') {
           const audit=crowAuditOcr(question); answer=audit.answer;sources=audit.sources;
         } else if (intent==='ssms'||intent==='azure_account'||intent==='azure_database') {
@@ -4157,9 +4310,9 @@ ${grounded}
         } else if (intent==='original_sql') {
           const verified=crowOriginalSqlReview(question);answer=verified.answer;sources=verified.sources;
         } else if (intent==='basic_definition') {
-          answer=crowConceptDefinition(question);
+          answer=crowConceptDefinition(question);responseOrigin='Conocimiento académico verificado · sin IA';
         } else if (intent==='concepts') {
-          answer=crowConceptLesson();
+          answer=crowConceptLesson();responseOrigin='Conocimiento académico verificado · sin IA';
         } else if (intent==='week_guide') {
           const guide=crowWeekStudyGuide(question,weekNum);answer=guide.answer;sources=guide.sources;
         }
@@ -4207,19 +4360,26 @@ ${grounded}
         }
         // 4. Pregunta sobre una semana sin categoría clara: recuperar solo esa semana.
         else {
-          const evidence = crowRelevantEvidence(question, 8, weekNum);
-          sources = evidence;
-          if (crowLocalEngine) {
-            try { answer = await crowAskLocalModel(question, evidence); }
-            catch (e) {
-              console.warn('IA local no disponible:',e);
-              crowSetLocalStatus(/context|token|length|window/i.test(String(e?.message||e)) ? 'Contexto reducido; consulta documental disponible' : 'Falló la generación local · consulta documental disponible', false);
-            }
+          const documentSpecific=crow48DocumentRequest(question);
+          const evidence=documentSpecific ? crowRelevantEvidence(question,6,weekNum).filter(e=>e.coverage>=0.5 && String(e.text||'').length>=80) : [];
+          sources=documentSpecific ? crow48UniqueSources(evidence) : [];
+          if(crowLocalEngine){
+            try{
+              const generated=await crowAskLocalModel(question,evidence,false,!documentSpecific);
+              if(documentSpecific){
+                if(evidence.length && crow48AcceptFreeResponse(question,generated)){
+                  answer=generated;responseOrigin='IA local WebLLM · contrastar con las fuentes';
+                }
+              } else if(crow48AcceptFreeResponse(question,generated)){
+                answer=generated;responseOrigin='IA local WebLLM · respuesta sin verificación documental';
+              }
+            }catch(e){console.warn('Cuervo: generación local no disponible',e);}
           }
-          if (!answer) {
-            answer = evidence.length
-              ? crowEvidenceAnswer(evidence)
-              : 'No encontré fragmentos documentales suficientemente relacionados con tu pregunta. Para evitar darte información inventada, no voy a atribuir una respuesta a tus PDF. Prueba indicando la semana, el nombre del manual o el tema exacto. Si deseas una explicación general que no dependa de tus documentos, indícalo.';
+          if(!answer){
+            answer=documentSpecific
+              ? (evidence.length ? crowEvidenceAnswer(evidence) : 'No encontré fragmentos suficientemente claros que respondan a esa pregunta en los documentos indexados. No citaré páginas por una simple coincidencia de palabras. Puedes abrir el archivo original desde su semana.')
+              : 'No encontré una explicación verificada para esta consulta. Si buscas el contenido de tus PDF, indica la semana y el documento; para preguntas generales puedes activar Profesor IA local.';
+            responseOrigin=documentSpecific?'Consulta documental · coincidencias no verificadas':'Limitación reconocida';
           }
         }
 
@@ -4235,12 +4395,12 @@ ${grounded}
           answer += '\n\n*El profesor IA no está activo: esta respuesta utiliza únicamente el catálogo y el índice.*';
         }
         pending.innerHTML = crowRenderMarkdown(answer || 'No encontré suficiente información verificable en el catálogo o en los documentos indexados.');
-        if(lessonResult?.mode){
-          const origin=document.createElement('div');
-          origin.style.cssText='font-size:11px;opacity:.75;margin-top:8px';
-          origin.textContent='Origen de la respuesta: '+lessonResult.mode;
-          pending.appendChild(origin);
-        }
+        const origin=document.createElement('div');
+        origin.className='crow-response-origin';
+        origin.style.cssText='font-size:11px;opacity:.82;margin-top:10px;padding-top:6px;border-top:1px solid var(--border)';
+        origin.textContent='Origen: '+responseOrigin;
+        pending.appendChild(origin);
+        sources=crow48UniqueSources(sources);
         if (sources.length) {
           const box = document.createElement('div');
           box.className = 'crow-answer-sources';
